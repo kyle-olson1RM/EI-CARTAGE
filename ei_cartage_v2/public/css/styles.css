@@ -19,18 +19,18 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);min-
 .screen{display:none;min-height:100vh;flex-direction:column;}.screen.active{display:flex;}
 
 /* LOGIN */
-#login{background:linear-gradient(145deg,#b91c1c 0%,#E31837 60%,#ef4444 100%);align-items:center;justify-content:center;padding:16px;min-height:100vh;overflow-y:auto;}
-.login-logo{font-family:Barlow Condensed,sans-serif;font-size:72px;font-weight:800;color:white;letter-spacing:-2px;line-height:1;text-align:center;margin-bottom:4px;}
-.login-sub{font-family:Barlow Condensed,sans-serif;font-size:18px;color:rgba(255,255,255,.6);letter-spacing:4px;text-transform:uppercase;text-align:center;margin-bottom:36px;}
-.login-card{background:white;border-radius:12px;padding:20px 20px;width:100%;max-width:380px;box-shadow:0 8px 32px rgba(0,0,0,.25);}
-.login-card h2{font-family:Barlow Condensed,sans-serif;font-size:22px;font-weight:700;margin-bottom:20px;text-align:center;text-transform:uppercase;letter-spacing:1px;}
-.lf{margin-bottom:12px;}.lf label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px;}
-.lf select,.lf input{width:100%;height:46px;padding:0 14px;border:2px solid var(--border);border-radius:8px;font-family:'Barlow',sans-serif;font-size:16px;color:var(--text);background:white;-webkit-appearance:none;}
+#login{background:linear-gradient(145deg,#b91c1c 0%,#E31837 60%,#ef4444 100%);align-items:center;justify-content:center;padding:12px;height:100vh;max-height:100vh;overflow:hidden;box-sizing:border-box;}
+.login-logo{font-family:Barlow Condensed,sans-serif;font-size:48px;font-weight:800;color:white;letter-spacing:-2px;line-height:1;text-align:center;margin-bottom:4px;}
+.login-sub{font-family:Barlow Condensed,sans-serif;font-size:15px;color:rgba(255,255,255,.6);letter-spacing:4px;text-transform:uppercase;text-align:center;margin-bottom:14px;}
+.login-card{background:white;border-radius:12px;padding:16px 18px;width:100%;max-width:380px;box-shadow:0 8px 32px rgba(0,0,0,.25);}
+.login-card h2{font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:700;margin-bottom:14px;text-align:center;text-transform:uppercase;letter-spacing:1px;}
+.lf{margin-bottom:10px;}.lf label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px;}
+.lf select,.lf input{width:100%;height:42px;padding:0 12px;border:2px solid var(--border);border-radius:8px;font-family:'Barlow',sans-serif;font-size:15px;color:var(--text);background:white;-webkit-appearance:none;}
 .lf select:focus,.lf input:focus{outline:none;border-color:var(--accent2);}
 .login-btn{width:100%;height:54px;margin-top:20px;border-radius:8px;border:none;background:var(--accent);color:white;cursor:pointer;font-family:Barlow Condensed,sans-serif;font-size:22px;font-weight:700;letter-spacing:1px;text-transform:uppercase;}
 .login-btn:hover{background:var(--accent2);}
 .login-err{color:var(--danger);font-size:13px;text-align:center;margin-top:10px;min-height:18px;}
-.login-divider{text-align:center;margin-top:16px;font-size:13px;color:var(--muted);}
+.login-divider{text-align:center;margin-top:10px;font-size:13px;color:var(--muted);}
 .mgr-link{background:none;border:none;color:var(--accent2);cursor:pointer;font-size:13px;font-weight:600;text-decoration:underline;padding:0;}
 
 /* HOME */
