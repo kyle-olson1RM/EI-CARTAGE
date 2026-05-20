@@ -73,9 +73,6 @@ bootApp();
 
 
 
-let toastT;
-function showToast(msg,dur=2200){const t=document.getElementById('toast');t.innerHTML=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),dur);}
-
 // INIT
 
 
