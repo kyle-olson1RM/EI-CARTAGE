@@ -21,22 +21,40 @@ function bootApp(){
   // Load manifests
   try{var m=localStorage.getItem('ei_manifests');if(m)manifests=JSON.parse(m);}catch(e){}
 
-  // Initialise roster - bump ROSTER_VERSION when adding new drivers
+  // Initialise roster - merge UNIT_MAP defaults with any stored roster
+  // This ensures all default drivers always appear even if roster was previously saved
   try{
-    var ROSTER_VERSION='v5';
-    var stored=localStorage.getItem('ei_driver_roster');
+    var ROSTER_VERSION='v6';
     var rv=localStorage.getItem('ei_roster_version');
-    if(!stored||rv!==ROSTER_VERSION){
-      var def=Object.entries(UNIT_MAP).map(function(e){
-        var name=e[0],unit=e[1];
-        return{name:name,unit:unit,rate:unit.toUpperCase().startsWith('ST')?TRUCK_RATES.ST:TRUCK_RATES.TT};
-      });
-      localStorage.setItem('ei_driver_roster',JSON.stringify(def));
-      localStorage.setItem('ei_roster_version',ROSTER_VERSION);
-    }
+    var stored=localStorage.getItem('ei_driver_roster');
+    var storedRoster=stored?JSON.parse(stored):[];
+
+    // Build default roster from UNIT_MAP
+    var defaultRoster=Object.entries(UNIT_MAP).map(function(e){
+      var name=e[0],unit=e[1];
+      return{name:name,unit:unit,rate:unit.toUpperCase().startsWith('ST')?TRUCK_RATES.ST:TRUCK_RATES.TT};
+    });
+
+    // Merge: start with defaults, then overlay any stored customisations
+    // Add any stored drivers not in UNIT_MAP (custom added drivers)
+    var merged=defaultRoster.slice();
+    storedRoster.forEach(function(sd){
+      var exists=merged.find(function(d){return d.name===sd.name;});
+      if(!exists){
+        // Custom driver added by manager - keep them
+        merged.push(sd);
+      } else {
+        // Use stored rate/driverNum in case manager changed it
+        exists.rate=sd.rate||exists.rate;
+        exists.driverNum=sd.driverNum||exists.driverNum;
+      }
+    });
+
+    localStorage.setItem('ei_driver_roster',JSON.stringify(merged));
+    localStorage.setItem('ei_roster_version',ROSTER_VERSION);
   }catch(e){}
 
-  // Always rebuild dropdown from roster so it stays in sync
+  // Always rebuild dropdown from roster
   rebuildUnitMap(getDriverRoster());
 
   // Restore session
