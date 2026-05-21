@@ -9,8 +9,8 @@ const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
-  console.error('ERROR: SUPABASE_URL and SUPABASE_SERVICE_KEY must be set');
-  process.exit(1);
+  console.warn('WARNING: SUPABASE_URL and/or SUPABASE_SERVICE_KEY not set.');
+  console.warn('API routes will return errors until env vars are configured.');
 }
 
 // Helper: call Supabase REST API

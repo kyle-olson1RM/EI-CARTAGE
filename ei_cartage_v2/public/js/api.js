@@ -212,20 +212,6 @@ function toggleCard(el){
   exp.style.display=open?'none':'block';
   if(arr)arr.style.transform=open?'':'rotate(180deg)';
 }
-function openMgrLogin(){
-  document.getElementById('mgrEmpErr').textContent='';
-  document.getElementById('mgrEmpNum').value='';
-  document.getElementById('mgrLoginOv').classList.add('open');
-  setTimeout(()=>document.getElementById('mgrEmpNum').focus(),100);
-}
-function closeMgrLogin(){document.getElementById('mgrLoginOv').classList.remove('open');}
-function doMgrLogin(){
-  const val=document.getElementById('mgrEmpNum').value.trim();
-  const stored=cacheGet('ei_manager_emp')||'1234';
-  if(!val){document.getElementById('mgrEmpErr').textContent='Please enter your employee #';return;}
-  if(val!==stored){document.getElementById('mgrEmpErr').textContent='Incorrect employee #. Try again.';document.getElementById('mgrEmpNum').value='';return;}
-  closeMgrLogin();refreshMgr();ss('manager');
-}
 
 // FORM
 function onDateChange(){

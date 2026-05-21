@@ -57,3 +57,8 @@ function ss(id){
   else{stopAutoSave();}
   if(id==='home'){setTimeout(checkForDraft,150);}
 }
+// Direct manager dashboard access (bypasses login - for internal use)
+function goMgr(){
+  refreshMgr();
+  ss('manager');
+}
