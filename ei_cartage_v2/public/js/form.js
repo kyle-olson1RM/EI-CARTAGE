@@ -27,7 +27,7 @@ function addSubDrop(stopId,type){
   if(type==='d'){
     div.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.5px">Additional Drop '+n+'</span><button data-sid="'+sid+'" data-stopid="'+stopId+'" data-type="'+type+'" onclick="removeSubDrop(parseInt(this.dataset.sid),parseInt(this.dataset.stopid),this.dataset.type)" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 6px;touch-action:manipulation">&#215;</button></div><div class="fg fg3"><div class="field"><label>Pro # / AWB # / Ref #</label><input type="text" id="sdref_'+sid+'" placeholder="Reference number" inputmode="tel" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div><div class="field"><label>Pieces</label><input type="number" id="sdpcs_'+sid+'" placeholder="0" inputmode="tel" oninput="updateTotals()" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div><div class="field"><label>Weight (lbs)</label><input type="number" id="sdwt_'+sid+'" placeholder="0" inputmode="decimal" oninput="updateTotals()" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div></div><div style="margin-top:6px;font-size:11px;color:var(--muted)">&#9432; Consignee, city &amp; times same as above</div>';
   }else{
-    div.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.5px">Additional Pick Up '+n+'</span><button data-sid="'+sid+'" data-stopid="'+stopId+'" data-type="'+type+'" onclick="removeSubDrop(parseInt(this.dataset.sid),parseInt(this.dataset.stopid),this.dataset.type)" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 6px;touch-action:manipulation">&#215;</button></div><div class="fg fg2" style="margin-bottom:8px"><div class="field"><label>Consignee</label><input type="text" id="sdcons_'+sid+'" placeholder="Consignee" autocapitalize="words" oninput="capWords(this)" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div><div class="field"><label>City</label><input type="text" id="sdcity_'+sid+'" placeholder="City" autocapitalize="words" oninput="capWords(this)" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div></div><div class="field"><label>Time In &rarr; Time Out</label><div class="time-pair"><input type="time" id="sdtin_'+sid+'"><span>&rarr;</span><input type="time" id="sdtout_'+sid+'"></div></div>';
+    div.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.5px">Additional Pick Up '+n+'</span><button data-sid="'+sid+'" data-stopid="'+stopId+'" data-type="'+type+'" onclick="removeSubDrop(parseInt(this.dataset.sid),parseInt(this.dataset.stopid),this.dataset.type)" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 6px;touch-action:manipulation">&#215;</button></div><div class="fg fg2" style="margin-bottom:8px"><div class="field"><label>Consignee</label><input type="text" id="sdcons_'+sid+'" placeholder="Consignee" autocapitalize="characters" oninput="this.value=this.value.toUpperCase()" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div><div class="field"><label>City</label><input type="text" id="sdcity_'+sid+'" placeholder="City" autocapitalize="characters" oninput="this.value=this.value.toUpperCase()" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div></div><div class="field"><label>Time In &rarr; Time Out</label><div class="time-pair"><input type="time" id="sdtin_'+sid+'"><span>&rarr;</span><input type="time" id="sdtout_'+sid+'"></div></div>';
   }
   container.appendChild(div);
   setTimeout(function(){div.scrollIntoView({behavior:'smooth',block:'center'});},100);
@@ -101,9 +101,9 @@ function addDel(){
     <div class="fg fg3" style="margin-bottom:8px">
       <div class="field"><label>Pieces *</label><input type="number" id="dp_${id}" placeholder="0" inputmode="tel" pattern="[0-9]*" oninput="updateTotals()"></div>
       <div class="field"><label>Weight (lbs) *</label><input type="number" id="dw_${id}" placeholder="0" inputmode="decimal" oninput="updWt(${id},'d')"></div>
-      <div class="field"><label>City</label><input type="text" id="dcity_${id}" placeholder="City" autocapitalize="words" oninput="capWords(this)"></div>
+      <div class="field"><label>City</label><input type="text" id="dcity_${id}" placeholder="City" autocapitalize="characters" oninput="this.value=this.value.toUpperCase()"></div>
     </div>
-    <div class="field" style="margin-bottom:8px"><label>Consignee</label><input type="text" id="dcons_${id}" placeholder="Consignee / company name" autocapitalize="words" oninput="capWords(this)"></div>
+    <div class="field" style="margin-bottom:8px"><label>Consignee</label><input type="text" id="dcons_${id}" placeholder="Consignee / company name" autocapitalize="characters" oninput="this.value=this.value.toUpperCase()"></div>
     <div class="field"><label>Time In &rarr; Time Out — 24hr</label><div class="time-pair"><input type="time" id="dtin_${id}"><span>&rarr;</span><input type="time" id="dtout_${id}"></div></div>
     <div id="dnote_wrap_${id}" style="display:none;margin-top:8px"><div class="field"><label>Note</label><textarea id="dnote_${id}" placeholder="e.g. Sub driver, weight corrected..." rows="2" style="width:100%;padding:8px 10px;border:1.5px solid var(--warn);border-radius:6px;font-family:Barlow,sans-serif;font-size:14px;resize:vertical;background:var(--warn-light)"></textarea></div></div>
     <button class="add-note-btn" id="dnotebtn_${id}" onclick="toggleNote(\'dnote_wrap_${id}\', this)">&#128221; Add Note</button>
@@ -130,7 +130,7 @@ function addPU(){
         <div class="fg fg3">
           <div class="field"><label>Pieces *</label><input type="number" id="pp_${id}" placeholder="0" inputmode="tel" pattern="[0-9]*" oninput="updateTotals()"></div>
           <div class="field"><label>Weight (lbs) *</label><input type="number" id="pw_${id}" placeholder="0" inputmode="decimal" oninput="updWt(${id},'p')"></div>
-          <div class="field"><label>Shipper</label><input type="text" id="pship_${id}" placeholder="Shipper" autocapitalize="words" oninput="capWords(this)"></div>
+          <div class="field"><label>Shipper</label><input type="text" id="pship_${id}" placeholder="Shipper" autocapitalize="characters" oninput="this.value=this.value.toUpperCase()"></div>
         </div>
       </div>
     </div>
@@ -169,14 +169,19 @@ function renum(t){const ids=t==='d'?delIds:puIds;const lbl=t==='d'?'Stop':'Pick 
 function startForm(){startNewManifest();}
 
 function startNewManifest(){
-  // Check if there's a draft for today
   var draft=loadDraft();
-  if(draft&&draft.driverName===( session?session.name:'')&&draft.date===localDateStr()){
+  if(draft&&draft.driverName===(session?session.name:'')&&draft.date===localDateStr()){
     if(!confirm('You have an unfinished manifest for today. Starting a new one will discard it. Continue?'))return;
   }
   clearDraft();
   clearForm();
-  if(session)document.getElementById('fName').value=session.name;
+  if(session){
+    document.getElementById('fName').value=session.name;
+    var meta=document.getElementById('frmMeta');
+    if(session.isSub&&session.subFor&&meta){
+      meta.textContent='SUB for '+session.subFor;
+    }
+  }
   document.getElementById('fDate').value=localDateStr();
   onDateChange();
   ss('driverForm');
@@ -203,6 +208,10 @@ function submitManifest(){
   const[sh,sm2]=st.split(':').map(Number),[eh,em2]=et.split(':').map(Number);
   const totalHours=Math.round(((eh*60+em2-sh*60-sm2)/60-0.5)*100)/100;
   const deliveries=delIds.map(id=>gD(id)),pickups=puIds.map(id=>gP(id));
+  // Count sub-drops as additional deliveries/pickups
+  var extraDel=0,extraPU=0;
+  delIds.forEach(function(id){extraDel+=(delSubDrops[id]||[]).length;});
+  puIds.forEach(function(id){extraPU+=(puSubDrops[id]||[]).length;});
   const totalWeight=deliveries.reduce((s,r)=>s+r.weight,0)+pickups.reduce((s,r)=>s+r.weight,0);
   // Count unique MAWBs (pro#/ref#) - each unique MAWB = one shipment
   var allRefs=[];
@@ -219,7 +228,7 @@ function submitManifest(){
   pickups.forEach(function(p){if(p.note)noteCount++;});
   if(noteCount>0)flags.push(noteCount+' driver note'+(noteCount>1?'s':''));
 
-  const m={id:Date.now().toString(),submittedAt:new Date().toISOString(),status:'pending',flags,driverName:name,driverNum:session?.driverNum||'',truckNum:truck,date,dayOfWeek,startTime:st,endTime:et,totalMiles,totalHours,ttlDeliveries:deliveries.length,ttlPickups:pickups.length,ttlShipments:uniqueMAWBs,ttlWeight:totalWeight,deliveries,pickups};
+  const m={id:Date.now().toString(),submittedAt:new Date().toISOString(),status:'pending',flags,driverName:name,driverNum:session?.driverNum||'',isSubstitute:session?!!session.isSub:false,subFor:session?session.subFor||'':'',truckNum:truck,date,dayOfWeek,startTime:st,endTime:et,totalMiles,totalHours,ttlDeliveries:deliveries.length+extraDel,ttlPickups:pickups.length+extraPU,ttlShipments:uniqueMAWBs,ttlWeight:totalWeight,deliveries,pickups};
   manifests.push(m);saveToStore('ei_manifests',JSON.stringify(manifests));
   clearDraft();stopAutoSave();clearForm();showToast('&#10003; Manifest submitted!');setTimeout(function(){ss(session?'home':'login');checkForDraft();},1500);
 }

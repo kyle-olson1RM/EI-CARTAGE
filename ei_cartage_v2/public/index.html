@@ -31,7 +31,19 @@
         <option>Armando G</option>
       </select></div>
     <div class="lf"><label>Driver # (Your Permanent ID)</label>
-      <input type="text" id="loginNum" placeholder="Driver Number" inputmode="tel" pattern="[0-9]*" oninput="this.value=this.value.replace(/\D/g,'')"></div>
+      <input type="text" id="loginNum" placeholder="e.g. 751" inputmode="tel" pattern="[0-9]*" oninput="this.value=this.value.replace(/\D/g,'')"></div>
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;margin-bottom:4px">
+      <input type="checkbox" id="loginSubCheck" onchange="toggleSubDriver()" style="width:20px;height:20px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;touch-action:manipulation">
+      <label for="loginSubCheck" style="font-size:14px;color:var(--text2);cursor:pointer">Substitute Driver</label>
+    </div>
+    <div id="loginSubWrap" style="display:none;margin-bottom:8px">
+      <div class="lf" style="margin-bottom:0">
+        <label>Substituting for (Original Driver)</label>
+        <select id="loginSubFor">
+          <option value="">Select original driver...</option>
+        </select>
+      </div>
+    </div>
     <div class="login-err" id="loginErr"></div>
     <button class="login-btn" onclick="doLogin()">Sign In &rarr;</button>
     <div class="login-divider">Manager? <button class="mgr-link" onclick="openMgrLogin()">Open Dashboard</button>
@@ -73,7 +85,7 @@
       <div class="fsec-body">
         <div class="fg fg2" style="margin-bottom:10px">
           <div class="field"><label>Driver Name</label><input type="text" id="fName" readonly style="background:var(--surface2);color:var(--text2)"></div>
-          <div class="field"><label>Truck # (Today)</label><input type="text" id="fTruck" placeholder="e.g. 5819" inputmode="tel" pattern="[0-9]*" onchange="saveDraft()" oninput="saveDraft()"></div>
+          <div class="field"><label>Truck # (Today)</label><input type="text" id="fTruck" placeholder="e.g. 5819" autocapitalize="characters" oninput="this.value=this.value.toUpperCase();saveDraft()" onchange="saveDraft()"></div>
         </div>
         <div class="fg fg3" style="margin-bottom:10px">
           <div class="field"><label>Date *</label><input type="date" id="fDate" onchange="onDateChange();saveDraft()"></div>

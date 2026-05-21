@@ -57,7 +57,7 @@ function dlRangeReport(){
   var dateLabel=from&&to?from+' to '+to:from?'From '+from:to?'Through '+to:'All Time';
   var gD=0,gP=0,gS=0,gW=0,gM=0,gH=0,gC=0;
   var csv='EI Cartage Report - '+dateLabel+'\n\nDriver,Unit,TTL Deliveries,TTL Pick Ups,TTL Shipments,TTL Weight (lbs),TTL Miles,TTL Hours,Charges\n';
-  Object.entries(UNIT_MAP).forEach(function(e){var name=e[0],unit=e[1],d=dm[name],r=rate(name);if(!d)return;var c=d.hrs*r;csv+=name+','+unit+','+d.del+','+d.pu+','+d.ship+','+d.wt+','+d.mi+','+d.hrs.toFixed(2)+',$'+c.toFixed(2)+'\n';gD+=d.del;gP+=d.pu;gS+=d.ship;gW+=d.wt;gM+=d.mi;gH+=d.hrs;gC+=c;});
+  getDriverRoster().forEach(function(drv){var name=drv.name,unit=drv.unit,d=dm[name],r=rate(name);if(!d)return;var c=d.hrs*r;csv+=name+','+unit+','+d.del+','+d.pu+','+d.ship+','+d.wt+','+d.mi+','+d.hrs.toFixed(2)+',$'+c.toFixed(2)+'\n';gD+=d.del;gP+=d.pu;gS+=d.ship;gW+=d.wt;gM+=d.mi;gH+=d.hrs;gC+=c;});
   csv+='\nTOTAL,,'+gD+','+gP+','+gS+','+gW+','+gM+','+gH.toFixed(2)+',$'+gC.toFixed(2)+'\n';
   var acps=gS>0?gC/gS:0,acpl=gW>0?gC/gW:0,asph=gH>0?gS/gH:0,acpm=gM>0?gC/gM:0;
   csv+='\nAvg Cost/Shipment,$'+acps.toFixed(2)+'\nAvg Cost/lb,$'+acpl.toFixed(4)+'\nShipments/Hr,'+asph.toFixed(2)+'\nAvg Cost/Mile,$'+acpm.toFixed(2)+'\n';
@@ -101,8 +101,8 @@ function renderCustomerDash(){
   var gD=0,gP=0,gS=0,gW=0,gM=0,gH=0,gC=0;
   drivers.forEach(function(n){var r=rate(n);dm[n].forEach(function(m){gD+=m.ttlDeliveries||0;gP+=m.ttlPickups||0;gS+=m.ttlShipments||0;gW+=m.ttlWeight||0;gM+=m.totalMiles||0;gH+=m.totalHours||0;gC+=(m.totalHours||0)*r;});});
   var acps=gS>0?gC/gS:0,acpl=gW>0?gC/gW:0,asph=gH>0?gS/gH:0,amd=gM/5,acpm=gM>0?gC/gM:0;
-  var tbodyHtml=Object.entries(UNIT_MAP).map(function(e){
-    var name=e[0],unit=e[1],d=dm[name],r=rate(name);
+  var tbodyHtml=getDriverRoster().map(function(drv){
+    var name=drv.name,unit=drv.unit,d=dm[name],r=rate(name);
     if(!d)return '<tr class="zero-row"><td><strong>'+unit+'</strong></td><td>'+name+'</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0.00</td><td>$0.00</td></tr>';
     var wD=0,wP=0,wS=0,wW=0,wM=0,wH=0;d.forEach(function(m){wD+=m.ttlDeliveries||0;wP+=m.ttlPickups||0;wS+=m.ttlShipments||0;wW+=m.ttlWeight||0;wM+=m.totalMiles||0;wH+=m.totalHours||0;});var wC=wH*r;
     return '<tr class="data-row"><td><strong>'+unit+'</strong></td><td>'+name+'</td><td>'+wD+'</td><td>'+wP+'</td><td>'+wS+'</td><td>'+wW.toLocaleString()+'</td><td>'+wM+'</td><td>'+wH.toFixed(2)+'</td><td class="chg-cell">$'+wC.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td></tr>';
@@ -298,7 +298,7 @@ function dlRangeReport(){
   var dateLabel=from&&to?from+' to '+to:from?'From '+from:to?'Through '+to:'All Time';
   var gD=0,gP=0,gS=0,gW=0,gM=0,gH=0,gC=0;
   var csv='EI Cartage Report - '+dateLabel+'\n\nDriver,Unit,TTL Deliveries,TTL Pick Ups,TTL Shipments,TTL Weight (lbs),TTL Miles,TTL Hours,Charges\n';
-  Object.entries(UNIT_MAP).forEach(function(e){var name=e[0],unit=e[1],d=dm[name],r=rate(name);if(!d)return;var c=d.hrs*r;csv+=name+','+unit+','+d.del+','+d.pu+','+d.ship+','+d.wt+','+d.mi+','+d.hrs.toFixed(2)+',$'+c.toFixed(2)+'\n';gD+=d.del;gP+=d.pu;gS+=d.ship;gW+=d.wt;gM+=d.mi;gH+=d.hrs;gC+=c;});
+  getDriverRoster().forEach(function(drv){var name=drv.name,unit=drv.unit,d=dm[name],r=rate(name);if(!d)return;var c=d.hrs*r;csv+=name+','+unit+','+d.del+','+d.pu+','+d.ship+','+d.wt+','+d.mi+','+d.hrs.toFixed(2)+',$'+c.toFixed(2)+'\n';gD+=d.del;gP+=d.pu;gS+=d.ship;gW+=d.wt;gM+=d.mi;gH+=d.hrs;gC+=c;});
   csv+='\nTOTAL,,'+gD+','+gP+','+gS+','+gW+','+gM+','+gH.toFixed(2)+',$'+gC.toFixed(2)+'\n';
   var acps=gS>0?gC/gS:0,acpl=gW>0?gC/gW:0,asph=gH>0?gS/gH:0,acpm=gM>0?gC/gM:0;
   csv+='\nAvg Cost/Shipment,$'+acps.toFixed(2)+'\nAvg Cost/lb,$'+acpl.toFixed(4)+'\nShipments/Hr,'+asph.toFixed(2)+'\nAvg Cost/Mile,$'+acpm.toFixed(2)+'\n';
@@ -344,8 +344,8 @@ function renderCustomerDash(){
   var gD=0,gP=0,gS=0,gW=0,gM=0,gH=0,gC=0;
   drivers.forEach(function(n){var r=rate(n);dm[n].forEach(function(m){gD+=m.ttlDeliveries||0;gP+=m.ttlPickups||0;gS+=m.ttlShipments||0;gW+=m.ttlWeight||0;gM+=m.totalMiles||0;gH+=m.totalHours||0;gC+=(m.totalHours||0)*r;});});
   var acps=gS>0?gC/gS:0,acpl=gW>0?gC/gW:0,asph=gH>0?gS/gH:0,amd=gM/5,acpm=gM>0?gC/gM:0;
-  var tbodyHtml=Object.entries(UNIT_MAP).map(function(e){
-    var name=e[0],unit=e[1],d=dm[name],r=rate(name);
+  var tbodyHtml=getDriverRoster().map(function(drv){
+    var name=drv.name,unit=drv.unit,d=dm[name],r=rate(name);
     if(!d)return '<tr class="zero-row"><td><strong>'+unit+'</strong></td><td>'+name+'</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0.00</td><td>$0.00</td></tr>';
     var wD=0,wP=0,wS=0,wW=0,wM=0,wH=0;d.forEach(function(m){wD+=m.ttlDeliveries||0;wP+=m.ttlPickups||0;wS+=m.ttlShipments||0;wW+=m.ttlWeight||0;wM+=m.totalMiles||0;wH+=m.totalHours||0;});var wC=wH*r;
     return '<tr class="data-row"><td><strong>'+unit+'</strong></td><td>'+name+'</td><td>'+wD+'</td><td>'+wP+'</td><td>'+wS+'</td><td>'+wW.toLocaleString()+'</td><td>'+wM+'</td><td>'+wH.toFixed(2)+'</td><td class="chg-cell">$'+wC.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td></tr>';
