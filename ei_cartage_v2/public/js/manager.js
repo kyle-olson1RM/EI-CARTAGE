@@ -112,6 +112,7 @@ function renderCards(){
         '</div>'+
         detailTbls+
         '<div style="display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--border)">'+
+          '<button class="ea-btn" title="Edit" data-mid="'+m.id+'" onclick="editManifest(this.dataset.mid)" style="background:var(--accent-light);color:var(--accent);border-color:var(--accent)">&#9998;</button>'+
           '<button class="ea-btn ea-del" title="Delete manifest" data-mid="'+m.id+'" onclick="if(confirm(\'Delete this manifest?\'))delM(this.dataset.mid)">&#128465;</button>'+
           '<button class="ea-btn ea-ok" style="font-size:13px;height:36px" data-mid="'+m.id+'" onclick="appM(this.dataset.mid)">'+(m.status==='reviewed'?'&#10003; Reviewed':'Mark Reviewed &#10003;')+'</button>'+
         '</div>'+
@@ -138,31 +139,93 @@ function renderCards(){
 }
 
 function openMod(id){
-  const m=manifests.find(x=>x.id===id);if(!m)return;
-  const r=rate(m.driverName),chg=(m.totalHours||0)*r;
-  const ds=new Date(m.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
-  const fh=m.flags&&m.flags.length>0?m.flags.map(f=>`<div class="flag-bar" style="margin:0 0 8px">&#9888; ${f}</div>`).join(''):'<div style="color:var(--success);font-size:12px;margin-bottom:10px">&#10003; No flags</div>';
-  const delH=m.deliveries.length?`<div style="font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;margin:12px 0 6px">DELIVERIES</div><div style="overflow-x:auto"><table class="det-tbl"><thead><tr><th>#</th><th>Ref #</th><th>Consignee</th><th>City</th><th style="text-align:center">Pcs</th><th style="text-align:center">Wt (lbs)</th><th>Times</th></tr></thead><tbody>${m.deliveries.map((d,i)=>`<tr><td>${i+1}</td><td>${d.proNum||'&mdash;'}</td><td>${d.consignee||'&mdash;'}</td><td>${d.city||'&mdash;'}</td><td style="text-align:center">${d.pieces}</td><td style="text-align:center;font-weight:600">${d.weight.toLocaleString()}</td><td>${d.timeIn||'&mdash;'}&rarr;${d.timeOut||'&mdash;'}</td></tr>`).join('')}</tbody></table></div>`:'';
-  const puH=m.pickups.length?`<div style="font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;margin:12px 0 6px">PICK UPS</div>${m.pickups.map((p,i)=>`<div style="border:1.5px solid var(--border);border-radius:6px;margin-bottom:8px;overflow:hidden;font-size:12px"><div style="background:var(--surface2);padding:7px 10px;font-weight:700;color:var(--accent);font-family:Barlow Condensed,sans-serif;font-size:13px">Pick Up ${i+1}</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:8px 10px 4px;text-align:center;border-bottom:1px solid var(--border)"><div><div style="font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:700;color:var(--accent)">${p.pieces}</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Pieces</div></div><div><div style="font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:700;color:var(--accent)">${p.weight.toLocaleString()}</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Weight (lbs)</div></div></div><div style="padding:8px 10px;display:grid;gap:5px"><div><b>Ref:</b> ${p.proNum||'&mdash;'} &nbsp;<b>Exp:</b> ${p.expRef||'&mdash;'} &nbsp;<b>Shipper:</b> ${p.shipper||'&mdash;'}</div><div>&#9313; <b>At Shipper:</b> In ${p.pickupIn||'&mdash;'} &rarr; Out ${p.pickupOut||'&mdash;'}</div><div>&#9314; <b>Drop at Expeditors ${p.dropLocation||'&mdash;'}:</b> Arrive ${p.arriveExp||'&mdash;'} &rarr; Depart ${p.departExp||'&mdash;'}</div></div></div>`).join('')}`:'';
-  document.getElementById('modContent').innerHTML=`<h2>${m.driverName} &mdash; ${m.dayOfWeek}</h2>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">${ds} &middot; Truck ${m.truckNum||'&mdash;'} &middot; Driver #${m.driverNum||'&mdash;'}</div>${fh}
-    <div class="det-grid">
-      <div class="det-item"><div class="det-lbl">Deliveries</div><div class="det-val">${m.ttlDeliveries}</div></div>
-      <div class="det-item"><div class="det-lbl">Pick Ups</div><div class="det-val">${m.ttlPickups}</div></div>
-      <div class="det-item"><div class="det-lbl">Shipments</div><div class="det-val">${m.ttlShipments}</div></div>
-      <div class="det-item"><div class="det-lbl">Total Weight</div><div class="det-val">${(m.ttlWeight||0).toLocaleString()} lbs</div></div>
-      <div class="det-item"><div class="det-lbl">Total Miles</div><div class="det-val">${m.totalMiles}</div></div>
-      <div class="det-item"><div class="det-lbl">Total Hours</div><div class="det-val">${m.totalHours}</div></div>
-      <div class="det-item"><div class="det-lbl">Start &rarr; End</div><div class="det-val">${m.startTime} &rarr; ${m.endTime}</div></div>
-      <div class="det-item"><div class="det-lbl">Charges ($${r}/hr)</div><div class="det-val" style="color:var(--accent)">$${chg.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
-    </div>${delH}${puH}
-    <div class="modal-actions">
-      <button class="mbtn" onclick="editManifest('${id}')" style="background:var(--accent-light);color:var(--accent);border:1.5px solid var(--accent)">&#9998; Edit</button>
-      <button class="mbtn mbtn-del" onclick="delM('${id}')">&#128465; Delete</button>
-      <button class="mbtn mbtn-ok" onclick="appM('${id}')">${m.status==='reviewed'?'&#10003; Reviewed':'Mark Reviewed &#10003;'}</button>
-    </div>`;
+  var m=manifests.find(function(x){return x.id===id;});
+  if(!m)return;
+  var r=rate(m.driverName),chg=(m.totalHours||0)*r;
+  var ds=new Date(m.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  var fh=m.flags&&m.flags.length>0?m.flags.join(' &middot; '):'';
+
+  // Build deliveries table rows
+  var delRows='';
+  (m.deliveries||[]).forEach(function(d){
+    delRows+='<tr'+(d.isSubDrop?' style="background:var(--accent-light)"':'')+'>'+
+      '<td>'+(d.proNum||'&mdash;')+'</td>'+
+      '<td>'+(d.shipper||'&mdash;')+'</td>'+
+      '<td>'+(d.pieces||0)+'</td>'+
+      '<td>'+(d.wt||d.weight||0)+' lbs</td>'+
+      '<td>'+(d.city||'&mdash;')+'</td>'+
+      '<td>'+(d.consignee||'&mdash;')+'</td>'+
+      '<td>'+(d.timeIn||'&mdash;')+' &rarr; '+(d.timeOut||'&mdash;')+'</td>'+
+      (d.note?'<td><em>'+d.note+'</em></td>':'<td></td>')+
+    '</tr>';
+  });
+
+  // Build pickups table rows
+  var puRows='';
+  (m.pickups||[]).forEach(function(p){
+    puRows+='<tr'+(p.isSubDrop?' style="background:var(--accent-light)"':'')+'>'+
+      '<td>'+(p.proNum||'&mdash;')+'</td>'+
+      '<td>'+(p.expRef||'&mdash;')+'</td>'+
+      '<td>'+(p.shipper||'&mdash;')+'</td>'+
+      '<td>'+(p.pieces||0)+'</td>'+
+      '<td>'+(p.wt||p.weight||0)+' lbs</td>'+
+      '<td>'+(p.pickupIn||'&mdash;')+' &rarr; '+(p.pickupOut||'&mdash;')+'</td>'+
+      '<td>'+(p.dropLocation||'&mdash;')+'</td>'+
+      '<td>'+(p.arriveExp||'&mdash;')+' &rarr; '+(p.departExp||'&mdash;')+'</td>'+
+      (p.note?'<td><em>'+p.note+'</em></td>':'<td></td>')+
+    '</tr>';
+  });
+
+  var html='';
+  if(fh) html+='<div class="flag-bar" style="margin:0 0 8px">'+fh+'</div>';
+
+  html+='<h2>'+m.driverName+' &mdash; '+m.dayOfWeek+'</h2>';
+  html+='<div style="font-size:12px;color:var(--muted);margin-bottom:12px">'+ds+
+    ' &middot; Truck '+(m.truckNum||'&mdash;')+
+    ' &middot; Driver #'+(m.driverNum||'&mdash;')+
+    (m.isSubstitute?' &middot; <span style="color:var(--warn);font-weight:700">SUB for '+(m.subFor||'?')+'</span>':'')+
+  '</div>';
+
+  html+='<div class="mod-stats">'+
+    '<div class="ms"><div class="ms-v">'+(m.ttlDeliveries||0)+'</div><div class="ms-l">Deliveries</div></div>'+
+    '<div class="ms"><div class="ms-v">'+(m.ttlPickups||0)+'</div><div class="ms-l">Pick Ups</div></div>'+
+    '<div class="ms"><div class="ms-v">'+(m.ttlShipments||0)+'</div><div class="ms-l">Shipments</div></div>'+
+    '<div class="ms"><div class="ms-v">'+(m.ttlWeight||0).toLocaleString()+'</div><div class="ms-l">lbs</div></div>'+
+    '<div class="ms"><div class="ms-v">'+(m.totalMiles||0)+'</div><div class="ms-l">Miles</div></div>'+
+    '<div class="ms"><div class="ms-v">'+(m.totalHours||0).toFixed(2)+'</div><div class="ms-l">Hours</div></div>'+
+    '<div class="ms"><div class="ms-v ms-chg">$'+chg.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div><div class="ms-l">Charges</div></div>'+
+  '</div>';
+
+  html+='<div class="mod-times">'+
+    '<div><span>Start:</span> '+(m.startTime||'&mdash;')+'</div>'+
+    '<div><span>End:</span> '+(m.endTime||'&mdash;')+'</div>'+
+    '<div><span>Miles:</span> '+(m.totalMiles||0)+'</div>'+
+  '</div>';
+
+  if(delRows){
+    html+='<div class="mod-section-head">Deliveries ('+(m.deliveries||[]).length+')</div>';
+    html+='<div style="overflow-x:auto"><table class="mod-tbl">'+
+      '<thead><tr><th>Pro #</th><th>Shipper</th><th>Pcs</th><th>Weight</th><th>City</th><th>Consignee</th><th>Time In/Out</th><th>Note</th></tr></thead>'+
+      '<tbody>'+delRows+'</tbody></table></div>';
+  }
+
+  if(puRows){
+    html+='<div class="mod-section-head">Pick Ups ('+(m.pickups||[]).length+')</div>';
+    html+='<div style="overflow-x:auto"><table class="mod-tbl">'+
+      '<thead><tr><th>Pro #</th><th>Exp Ref</th><th>Shipper</th><th>Pcs</th><th>Weight</th><th>Time</th><th>Drop</th><th>At Exp</th><th>Note</th></tr></thead>'+
+      '<tbody>'+puRows+'</tbody></table></div>';
+  }
+
+  html+='<div class="modal-actions">';
+  html+='<button class="mbtn" data-mid="'+id+'" onclick="editManifest(this.dataset.mid)" style="background:var(--accent-light);color:var(--accent);border:1.5px solid var(--accent)">&#9998; Edit</button>';
+  html+='<button class="mbtn mbtn-del" data-mid="'+id+'" onclick="delM(this.dataset.mid)">&#128465; Delete</button>';
+  html+='<button class="mbtn mbtn-ok" data-mid="'+id+'" onclick="appM(this.dataset.mid)">'+(m.status==='reviewed'?'&#10003; Reviewed':'Mark Reviewed &#10003;')+'</button>';
+  html+='</div>';
+
+  document.getElementById('modContent').innerHTML=html;
   document.getElementById('modOv').classList.add('open');
 }
+
 
 // ── EDIT MANIFEST ─────────────────────────────────────────────────────────────
 function editManifest(id){
