@@ -157,11 +157,100 @@ function openMod(id){
       <div class="det-item"><div class="det-lbl">Charges ($${r}/hr)</div><div class="det-val" style="color:var(--accent)">$${chg.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div></div>
     </div>${delH}${puH}
     <div class="modal-actions">
+      <button class="mbtn" onclick="editManifest('${id}')" style="background:var(--accent-light);color:var(--accent);border:1.5px solid var(--accent)">&#9998; Edit</button>
       <button class="mbtn mbtn-del" onclick="delM('${id}')">&#128465; Delete</button>
       <button class="mbtn mbtn-ok" onclick="appM('${id}')">${m.status==='reviewed'?'&#10003; Reviewed':'Mark Reviewed &#10003;'}</button>
     </div>`;
   document.getElementById('modOv').classList.add('open');
 }
+
+// ── EDIT MANIFEST ─────────────────────────────────────────────────────────────
+function editManifest(id){
+  var m=manifests.find(function(x){return x.id===id;});
+  if(!m)return;
+  if(!confirm('Edit this manifest? Changes will be saved immediately.'))return;
+
+  // Store the manifest ID being edited
+  editingManifestId=id;
+
+  // Close modal
+  document.getElementById('modOv').classList.remove('open');
+
+  // Pre-fill the form
+  clearForm();
+  ss('driverForm');
+
+  setTimeout(function(){
+    var set=function(elId,val){var e=document.getElementById(elId);if(e)e.value=val||'';};
+    set('fName', m.driverName);
+    set('fTruck', m.truckNum);
+    set('fDate', m.date);
+    set('fStart', m.startTime);
+    set('fEnd', m.endTime);
+    // Restore mileage from totalMiles if we have it
+    if(m.totalMiles){
+      set('fSMi', m.startMileage||0);
+      set('fEMi', m.endMileage||0);
+    }
+    onDateChange();calcHours();calcMiles();
+
+    // Restore deliveries
+    (m.deliveries||[]).forEach(function(d){
+      addDel();
+      var id2=delIds[delIds.length-1];
+      var set2=function(fid,val){var e=document.getElementById(fid);if(e)e.value=val||'';};
+      set2('dref_'+id2, d.proNum);
+      set2('dp_'+id2, d.pieces);
+      set2('dw_'+id2, d.weight);
+      set2('dcity_'+id2, d.city);
+      set2('dcons_'+id2, d.consignee);
+      set2('dtin_'+id2, d.timeIn);
+      set2('dtout_'+id2, d.timeOut);
+      if(d.note){
+        var nw=document.getElementById('dnote_wrap_'+id2);
+        var nt=document.getElementById('dnote_'+id2);
+        if(nt)nt.value=d.note;
+        if(nw)nw.style.display='block';
+      }
+    });
+
+    // Restore pickups
+    (m.pickups||[]).forEach(function(p){
+      addPU();
+      var id2=puIds[puIds.length-1];
+      var set2=function(fid,val){var e=document.getElementById(fid);if(e)e.value=val||'';};
+      set2('pref_'+id2, p.proNum);
+      set2('pexpref_'+id2, p.expRef);
+      set2('pp_'+id2, p.pieces);
+      set2('pw_'+id2, p.weight);
+      set2('pship_'+id2, p.shipper);
+      set2('ptin_'+id2, p.pickupIn);
+      set2('ptout_'+id2, p.pickupOut);
+      set2('pdrop_'+id2, p.dropLocation);
+      set2('parr_'+id2, p.arriveExp);
+      set2('pdep2_'+id2, p.departExp);
+      if(p.note){
+        var nw=document.getElementById('pnote_wrap_'+id2);
+        var nt=document.getElementById('pnote_'+id2);
+        if(nt)nt.value=p.note;
+        if(nw)nw.style.display='block';
+      }
+    });
+
+    updateTotals();
+
+    // Change form header to show EDITING mode
+    var header=document.querySelector('#driverForm .app-header h1');
+    if(header)header.textContent='Edit Manifest';
+    var indicator=document.getElementById('draftIndicator');
+    if(indicator){indicator.textContent='Editing saved manifest';indicator.style.color='var(--warn)';}
+
+    showToast('\u270e Editing manifest — submit to save changes');
+  }, 250);
+}
+
+var editingManifestId=null;
+
 
 function closeMod(e){if(e.target===document.getElementById('modOv'))document.getElementById('modOv').classList.remove('open');}
 

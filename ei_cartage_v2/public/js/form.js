@@ -72,10 +72,20 @@ function updateTotals(){
   let dP=0,dW=0,pP=0,pW=0;
   delIds.forEach(id=>{dP+=parseInt(document.getElementById('dp_'+id)?.value)||0;dW+=parseFloat(document.getElementById('dw_'+id)?.value)||0;(delSubDrops[id]||[]).forEach(function(sid){dP+=parseInt(document.getElementById('sdpcs_'+sid)?.value)||0;dW+=parseFloat(document.getElementById('sdwt_'+sid)?.value)||0;});});
   puIds.forEach(id=>{pP+=parseInt(document.getElementById('pp_'+id)?.value)||0;pW+=parseFloat(document.getElementById('pw_'+id)?.value)||0;});
-  document.getElementById('dCnt').textContent=delIds.length;document.getElementById('dPcs').textContent=dP.toLocaleString();document.getElementById('dWt').textContent=dW.toLocaleString();
-  document.getElementById('delLbl').textContent=delIds.length+' stop'+(delIds.length!==1?'s':'');
-  document.getElementById('pCnt').textContent=puIds.length;document.getElementById('pPcs').textContent=pP.toLocaleString();document.getElementById('pWt').textContent=pW.toLocaleString();
-  document.getElementById('puLbl').textContent=puIds.length+' stop'+(puIds.length!==1?'s':'');
+  // Count sub-drops for display
+  var subDelCount=0,subPUCount=0;
+  delIds.forEach(function(id){subDelCount+=(delSubDrops[id]||[]).length;});
+  puIds.forEach(function(id){subPUCount+=(puSubDrops[id]||[]).length;});
+  var totalDelStops=delIds.length+subDelCount;
+  var totalPUStops=puIds.length+subPUCount;
+  document.getElementById('dCnt').textContent=totalDelStops;
+  document.getElementById('dPcs').textContent=dP.toLocaleString();
+  document.getElementById('dWt').textContent=dW.toLocaleString();
+  document.getElementById('delLbl').textContent=totalDelStops+' stop'+(totalDelStops!==1?'s':'');
+  document.getElementById('pCnt').textContent=totalPUStops;
+  document.getElementById('pPcs').textContent=pP.toLocaleString();
+  document.getElementById('pWt').textContent=pW.toLocaleString();
+  document.getElementById('puLbl').textContent=totalPUStops+' stop'+(totalPUStops!==1?'s':'');
   document.getElementById('tDel').textContent=delIds.length;document.getElementById('tPU').textContent=puIds.length;// Count unique MAWBs for live display
   var liveRefs=[];
   delIds.forEach(function(id){var v=document.getElementById('dref_'+id)?.value.trim().toUpperCase();if(v)liveRefs.push(v);});
@@ -207,11 +217,63 @@ function submitManifest(){
   const totalMiles=em>sm?em-sm:0;
   const[sh,sm2]=st.split(':').map(Number),[eh,em2]=et.split(':').map(Number);
   const totalHours=Math.round(((eh*60+em2-sh*60-sm2)/60-0.5)*100)/100;
-  const deliveries=delIds.map(id=>gD(id)),pickups=puIds.map(id=>gP(id));
-  // Count sub-drops as additional deliveries/pickups
-  var extraDel=0,extraPU=0;
-  delIds.forEach(function(id){extraDel+=(delSubDrops[id]||[]).length;});
-  puIds.forEach(function(id){extraPU+=(puSubDrops[id]||[]).length;});
+  // Build full deliveries array - each sub-drop becomes its own delivery record
+  var deliveries=[];
+  delIds.forEach(function(id){
+    var main=gD(id);
+    deliveries.push(main); // main stop
+    // Each sub-drop is a full delivery inheriting location/times from parent
+    (delSubDrops[id]||[]).forEach(function(sid){
+      var sub=getSubDrops(id,'d').find(function(s){return true;}) || {};
+      // Get this specific sub-drop's data
+      var sdRef=document.getElementById('sdref_'+sid)?.value||'';
+      var sdPcs=parseInt(document.getElementById('sdpcs_'+sid)?.value)||0;
+      var sdWt=parseFloat(document.getElementById('sdwt_'+sid)?.value)||0;
+      deliveries.push({
+        proNum: sdRef,
+        shipper: main.shipper,
+        pieces: sdPcs,
+        weight: sdWt,
+        city: main.city,        // inherited from parent stop
+        consignee: main.consignee, // inherited from parent stop
+        timeIn: main.timeIn,    // inherited from parent stop
+        timeOut: main.timeOut,  // inherited from parent stop
+        note: '',
+        isSubDrop: true,
+        parentProNum: main.proNum
+      });
+    });
+  });
+
+  // Build full pickups array - each sub-pickup becomes its own PU record
+  var pickups=[];
+  puIds.forEach(function(id){
+    var main=gP(id);
+    pickups.push(main); // main stop
+    (puSubDrops[id]||[]).forEach(function(sid){
+      var sdCons=document.getElementById('sdcons_'+sid)?.value||'';
+      var sdCity=document.getElementById('sdcity_'+sid)?.value||'';
+      var sdTin=document.getElementById('sdtin_'+sid)?.value||'';
+      var sdTout=document.getElementById('sdtout_'+sid)?.value||'';
+      pickups.push({
+        proNum: main.proNum,
+        expRef: main.expRef,
+        pieces: main.pieces,
+        weight: main.weight,
+        shipper: main.shipper,
+        pickupIn: sdTin,
+        pickupOut: sdTout,
+        dropLocation: main.dropLocation,
+        arriveExp: main.arriveExp,
+        departExp: main.departExp,
+        consignee: sdCons,
+        note: '',
+        isSubDrop: true
+      });
+    });
+  });
+
+  var extraDel=0,extraPU=0; // no longer needed - sub-drops are full records now
   const totalWeight=deliveries.reduce((s,r)=>s+r.weight,0)+pickups.reduce((s,r)=>s+r.weight,0);
   // Count unique MAWBs (pro#/ref#) - each unique MAWB = one shipment
   var allRefs=[];
@@ -228,9 +290,30 @@ function submitManifest(){
   pickups.forEach(function(p){if(p.note)noteCount++;});
   if(noteCount>0)flags.push(noteCount+' driver note'+(noteCount>1?'s':''));
 
-  const m={id:Date.now().toString(),submittedAt:new Date().toISOString(),status:'pending',flags,driverName:name,driverNum:session?.driverNum||'',isSubstitute:session?!!session.isSub:false,subFor:session?session.subFor||'':'',truckNum:truck,date,dayOfWeek,startTime:st,endTime:et,totalMiles,totalHours,ttlDeliveries:deliveries.length+extraDel,ttlPickups:pickups.length+extraPU,ttlShipments:uniqueMAWBs,ttlWeight:totalWeight,deliveries,pickups};
-  manifests.push(m);saveToStore('ei_manifests',JSON.stringify(manifests));
-  clearDraft();stopAutoSave();clearForm();showToast('&#10003; Manifest submitted!');setTimeout(function(){ss(session?'home':'login');checkForDraft();},1500);
+  const m={id:Date.now().toString(),submittedAt:new Date().toISOString(),status:'pending',flags,driverName:name,driverNum:session?.driverNum||'',isSubstitute:session?!!session.isSub:false,subFor:session?session.subFor||'':'',truckNum:truck,date,dayOfWeek,startTime:st,endTime:et,totalMiles,startMileage:sm,endMileage:em,totalHours,ttlDeliveries:deliveries.length,ttlPickups:pickups.length,ttlShipments:uniqueMAWBs,ttlWeight:totalWeight,deliveries,pickups};
+  // If editing an existing manifest, replace it; otherwise add new
+  if(typeof editingManifestId!=='undefined'&&editingManifestId){
+    var editIdx=manifests.findIndex(function(x){return x.id===editingManifestId;});
+    if(editIdx>=0){
+      m.id=editingManifestId;
+      m.status=manifests[editIdx].status;
+      manifests[editIdx]=m;
+    }else{manifests.push(m);}
+    editingManifestId=null;
+    showToast('\u2713 Manifest updated!');
+  }else{
+    manifests.push(m);
+    showToast('\u2713 Manifest submitted!');
+  }
+  saveToStore('ei_manifests',JSON.stringify(manifests));
+  clearDraft();stopAutoSave();clearForm();
+  var hdr=document.querySelector('#driverForm .app-header h1');
+  if(hdr)hdr.textContent='New Manifest';
+  setTimeout(function(){
+    if(typeof refreshMgr==='function')refreshMgr();
+    ss(session?'home':'login');
+    checkForDraft();
+  },1500);
 }
 
 function capWords(el){
