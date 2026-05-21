@@ -1278,5 +1278,158 @@ function printSummary(){
   </div>
 </div>
 
+<!-- DRIVER MANAGEMENT SCREEN -->
+<div class="screen" id="driverMgr">
+  <div class="app-header">
+    <button class="hdr-back" onclick="ss('manager')">&#8592; Back</button>
+    <h1>Driver Management</h1>
+    <button style="background:rgba(255,255,255,.15);border:none;color:white;padding:7px 12px;border-radius:4px;cursor:pointer;font-size:14px;font-family:'Barlow',sans-serif;" onclick="addDriverRow()">+ Add Driver</button>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:14px;padding-bottom:90px">
+
+    <div style="background:var(--accent-light);border:1px solid #ffc0cb;border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:var(--accent)">
+      &#9432; Changes here update the driver list and summary report immediately. Driver names must match exactly what drivers select at sign-in.
+    </div>
+
+    <!-- Truck Type Rates -->
+    <div style="background:var(--surface);border-radius:8px;box-shadow:var(--shadow);margin-bottom:14px;overflow:hidden">
+      <div style="background:var(--surface2);padding:10px 14px;border-bottom:1px solid var(--border);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--accent)">&#128666; Truck Type Rates ($/hr)</div>
+      <div style="padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <label style="display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px">Tractor Trailer (TT) Rate</label>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--muted)">$</span>
+            <input type="number" id="rateTT" inputmode="decimal" placeholder="92"
+              style="flex:1;height:44px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:var(--accent)">
+            <span style="font-size:13px;color:var(--muted)">/hr</span>
+          </div>
+        </div>
+        <div>
+          <label style="display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px">Straight Truck (ST) Rate</label>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--muted)">$</span>
+            <input type="number" id="rateST" inputmode="decimal" placeholder="87"
+              style="flex:1;height:44px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:var(--accent)">
+            <span style="font-size:13px;color:var(--muted)">/hr</span>
+          </div>
+        </div>
+      </div>
+      <div style="padding:0 14px 14px;display:flex;gap:10px;align-items:center">
+        <button onclick="saveTruckRates()" style="height:40px;padding:0 20px;border-radius:6px;border:none;background:var(--accent);color:white;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer">Update Rates</button>
+        <div id="rateMsg" style="font-size:12px;color:var(--success);min-height:16px"></div>
+      </div>
+    </div>
+
+    <!-- Expeditors Drop Locations -->
+    <div style="background:var(--surface);border-radius:8px;box-shadow:var(--shadow);margin-bottom:14px;overflow:hidden">
+      <div style="background:var(--surface2);padding:10px 14px;border-bottom:1px solid var(--border);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--accent)">&#128205; Expeditors Drop Locations</div>
+      <div style="padding:14px">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px">These are the locations drivers can select when dropping off at Expeditors. Update if addresses change.</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div>
+            <label style="display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px">Location 1</label>
+            <input type="text" id="dropLoc1" placeholder="e.g. 849" style="width:100%;height:44px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--accent)">
+          </div>
+          <div>
+            <label style="display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px">Location 2</label>
+            <input type="text" id="dropLoc2" placeholder="e.g. 2000" style="width:100%;height:44px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--accent)">
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <button onclick="saveDropLocations()" style="height:40px;padding:0 20px;border-radius:6px;border:none;background:var(--accent);color:white;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer;touch-action:manipulation">Update Locations</button>
+          <div id="dropLocMsg" style="font-size:12px;color:var(--success);min-height:16px"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Manager PIN change -->
+    <div style="background:var(--surface);border-radius:8px;box-shadow:var(--shadow);margin-bottom:14px;overflow:hidden">
+      <div style="background:var(--surface2);padding:10px 14px;border-bottom:1px solid var(--border);font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--accent)">&#128274; Manager Employee #</div>
+      <div style="padding:14px;display:flex;gap:10px;align-items:flex-end">
+        <div style="flex:1">
+          <label style="display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px">Current Employee #</label>
+          <input type="text" id="mgrPinCurrent" placeholder="Current #" inputmode="tel"
+            style="width:100%;height:44px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;font-family:'Barlow',sans-serif">
+        </div>
+        <div style="flex:1">
+          <label style="display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px">New Employee #</label>
+          <input type="text" id="mgrPinNew" placeholder="New #" inputmode="tel"
+            style="width:100%;height:44px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;font-family:'Barlow',sans-serif">
+        </div>
+        <button onclick="changeMgrPin()" style="height:44px;padding:0 16px;border-radius:6px;border:none;background:var(--accent);color:white;font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;cursor:pointer;touch-action:manipulation;white-space:nowrap">Update</button>
+      </div>
+      <div id="mgrPinMsg" style="padding:0 14px 12px;font-size:12px;color:var(--success);min-height:20px"></div>
+    </div>
+
+    <!-- Driver list -->
+    <div style="background:var(--surface);border-radius:8px;box-shadow:var(--shadow);overflow:hidden">
+      <div style="background:var(--surface2);padding:10px 14px;border-bottom:1px solid var(--border);font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--accent)">&#128101; Driver Roster</div>
+      <div id="driverList" style="padding:12px"></div>
+    </div>
+  </div>
+  <div class="bot-bar">
+    <button class="bot-btn bot-btn-s" onclick="ss('manager')">Back</button>
+    <button class="bot-btn bot-btn-p" onclick="saveDrivers()">&#10003; Save Changes</button>
+  </div>
+</div>
+<!-- CUSTOM DATE RANGE STATS SCREEN -->
+<div class="screen" id="rangeStats">
+  <div class="app-header">
+    <button class="hdr-back" onclick="ss('summary')">&#8592; Back</button>
+    <h1>Custom Date Range</h1>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:14px;padding-bottom:80px">
+    <div style="background:var(--surface);border-radius:8px;padding:14px;margin-bottom:14px;box-shadow:var(--shadow)">
+      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:flex-end">
+        <div>
+          <label style="display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px">From Date</label>
+          <input type="date" id="rsFrom" style="width:100%;height:44px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;font-family:'Barlow',sans-serif">
+        </div>
+        <div>
+          <label style="display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px">To Date</label>
+          <input type="date" id="rsTo" style="width:100%;height:44px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;font-family:'Barlow',sans-serif">
+        </div>
+        <button onclick="renderRangeStats()" style="height:44px;padding:0 16px;border-radius:6px;border:none;background:var(--accent);color:white;font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:700;cursor:pointer;touch-action:manipulation;white-space:nowrap">Run Report</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+        <button class="drb-preset" onclick="rsPreset('month')">This Month</button>
+        <button class="drb-preset" onclick="rsPreset('last30')">Last 30 Days</button>
+        <button class="drb-preset" onclick="rsPreset('quarter')">Last 90 Days</button>
+        <button class="drb-preset" onclick="rsPreset('year')">This Year</button>
+        <button class="drb-preset" onclick="rsPreset('all')">All Time</button>
+      </div>
+    </div>
+    <div id="rsContent"></div>
+  </div>
+  <div class="bot-bar">
+    <button class="bot-btn bot-btn-s" onclick="ss('summary')">Back</button>
+    <button class="bot-btn bot-btn-p" onclick="dlRangeReport()">&#8595; Download Report</button>
+  </div>
+</div>
+<!-- MANAGER ACCESS SCREEN -->
+<div class="screen" id="managerAccess">
+  <div class="app-header">
+    <button class="hdr-back" onclick="ss('manager')">&#8592; Back</button>
+    <h1>Manager Access</h1>
+    <button style="background:rgba(255,255,255,.15);border:none;color:white;padding:7px 12px;border-radius:4px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:14px;" onclick="addManagerRow()">+ Add</button>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:14px;padding-bottom:90px">
+
+    <div style="background:var(--accent-light);border:1px solid #ffc0cb;border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:var(--accent)">
+      &#9432; Manager names and badge numbers listed here. Badge number will be used as the manager login password — functionality to be wired up by developer.
+    </div>
+
+    <!-- Manager list -->
+    <div style="background:var(--surface);border-radius:8px;box-shadow:var(--shadow);overflow:hidden">
+      <div style="background:var(--surface2);padding:10px 14px;border-bottom:1px solid var(--border);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--accent)">&#128100; Manager Roster</div>
+      <div id="managerList" style="padding:12px"></div>
+    </div>
+
+  </div>
+  <div class="bot-bar">
+    <button class="bot-btn bot-btn-s" onclick="ss('manager')">Back</button>
+    <button class="bot-btn bot-btn-p" onclick="saveManagers()">&#10003; Save</button>
+  </div>
+</div>
 </body>
 </html>
