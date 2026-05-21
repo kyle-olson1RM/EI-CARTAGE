@@ -136,10 +136,13 @@ function renderSum(){
   const fri=new Date(mon+'T12:00:00');fri.setDate(fri.getDate()+4);const friday=fri.toISOString().split('T')[0];
   if(ml)ml.textContent='W/E '+fs(friday);
 
-  // Aggregate each driver's full week
-  const wm=manifests.filter(m=>m.date>=mon&&m.date<=friday);
+  // Get live roster - includes any drivers added in Driver Management
+  const roster=getDriverRoster();
+
+  // Aggregate each driver's full week from submitted manifests
+  const wm=manifests.filter(function(m){return m.date>=mon&&m.date<=friday;});
   const dm={};
-  wm.forEach(m=>{
+  wm.forEach(function(m){
     if(!dm[m.driverName]){dm[m.driverName]={del:0,pu:0,ship:0,wt:0,mi:0,hrs:0};}
     dm[m.driverName].del  += m.ttlDeliveries||0;
     dm[m.driverName].pu   += m.ttlPickups||0;
@@ -149,86 +152,62 @@ function renderSum(){
     dm[m.driverName].hrs  += m.totalHours||0;
   });
 
-  // Grand totals
-  let gD=0,gP=0,gS=0,gW=0,gM=0,gH=0,gC=0;
-  ALL_DRIVERS.forEach(name=>{
-    const d=dm[name];if(!d)return;
-    const r=rate(name);const c=d.hrs*r;
+  // Grand totals across all roster drivers
+  var gD=0,gP=0,gS=0,gW=0,gM=0,gH=0,gC=0;
+  roster.forEach(function(drv){
+    var d=dm[drv.name]; if(!d)return;
+    var r=rate(drv.name),c=d.hrs*r;
     gD+=d.del;gP+=d.pu;gS+=d.ship;gW+=d.wt;gM+=d.mi;gH+=d.hrs;gC+=c;
   });
 
-  // Program-level stats (match spreadsheet exactly)
-  const avgCostPerShip  = gS>0  ? gC/gS  : 0;
-  const avgCostPerLb    = gW>0  ? gC/gW  : 0;
-  const avgShipPerHour  = gH>0  ? gS/gH  : 0;
-  const avgMilesPerDay  = gM/5;
-  const avgCostPerMile  = gM>0  ? gC/gM  : 0;
+  // Program stats
+  var avgCostPerShip = gS>0 ? gC/gS : 0;
+  var avgCostPerLb   = gW>0 ? gC/gW : 0;
+  var avgShipPerHour = gH>0 ? gS/gH : 0;
+  var avgMilesPerDay = gM/5;
+  var avgCostPerMile = gM>0 ? gC/gM : 0;
 
-  // Build table rows — ALL drivers in order, zero rows for those with no data
-  const rowsHtml = ALL_DRIVERS.map(name=>{
-    const d=dm[name];
-    const r=rate(name);
-    const unit=UNIT_MAP[name];
+  // Build table rows — ALL roster drivers, zero rows for those with no data
+  var rowsHtml=roster.map(function(drv){
+    var name=drv.name,unit=drv.unit,d=dm[name],r=rate(name);
     if(!d){
-      return `<tr class="zero-row">
-        <td>${unit}</td><td>${name}</td>
-        <td>0</td><td>0</td><td>0</td>
-        <td>0</td><td>0</td><td>0.00</td>
-        <td>$0.00</td>
-      </tr>`;
+      return '<tr class="zero-row"><td><strong>'+unit+'</strong></td><td>'+name+'</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0.00</td><td>$0.00</td></tr>';
     }
-    const c=d.hrs*r;
-    const hasData = d.ship > 0;
-    return `<tr class="${hasData?'data-row':'zero-row'}">
-      <td><strong>${unit}</strong></td><td>${name}</td>
-      <td>${d.del}</td><td>${d.pu}</td><td>${d.ship}</td>
-      <td>${d.wt.toLocaleString()}</td><td>${d.mi}</td>
-      <td>${d.hrs.toFixed(2)}</td>
-      <td class="chg-cell">$${c.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
-    </tr>`;
+    var c=d.hrs*r;
+    return '<tr class="'+(d.ship>0?'data-row':'zero-row')+'"><td><strong>'+unit+'</strong></td><td>'+name+'</td><td>'+d.del+'</td><td>'+d.pu+'</td><td>'+d.ship+'</td><td>'+d.wt.toLocaleString()+'</td><td>'+d.mi+'</td><td>'+d.hrs.toFixed(2)+'</td><td class="chg-cell">$'+c.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td></tr>';
   }).join('');
 
-  el.innerHTML = `
-  <div class="sum-report">
-    <div class="sum-report-head">
-      <div class="srh-title">Expeditors Cartage Program</div>
-      <div class="srh-week">Summary Week Ending &nbsp;<strong>${fs(friday)}</strong></div>
-    </div>
-
-    <div style="overflow-x:auto">
-      <table class="sum-tbl">
-        <thead>
-          <tr>
-            <th>Unit</th><th>Driver</th>
-            <th>TTL Deliveries</th><th>TTL Pick Ups</th><th>TTL Shipments</th>
-            <th>TTL Weight - LBS</th><th>TTL Miles</th><th>TTL Hours</th>
-            <th>Charges</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${rowsHtml}
-        </tbody>
-        <tfoot>
-          <tr class="total-row">
-            <td colspan="2"><strong>TOTAL</strong></td>
-            <td>${gD}</td><td>${gP}</td><td>${gS}</td>
-            <td>${gW.toLocaleString()}</td><td>${gM}</td>
-            <td>${gH.toFixed(2)}</td>
-            <td class="chg-cell">$${gC.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
-          </tr>
-        </tfoot>
-      </table>
-    </div>
-
-    <div class="sum-stats">
-      <div class="ss-row"><div class="ss-lbl">Average Cost Per Shipment</div><div class="ss-val">$${avgCostPerShip.toFixed(2)}</div></div>
-      <div class="ss-row"><div class="ss-lbl">Average Cost Per Pound</div><div class="ss-val">$${avgCostPerLb.toFixed(4)}</div></div>
-      <div class="ss-row"><div class="ss-lbl">Average Shipments Per Hour</div><div class="ss-val">${avgShipPerHour.toFixed(2)}</div></div>
-      <div class="ss-row"><div class="ss-lbl">Average Miles Per Day</div><div class="ss-val">${avgMilesPerDay.toFixed(1)}</div></div>
-      <div class="ss-row"><div class="ss-lbl">Average Cost Per Mile</div><div class="ss-val">$${avgCostPerMile.toFixed(2)}</div></div>
-    </div>
-  </div>`;
+  el.innerHTML=
+    '<div class="sum-report">'+
+      '<div class="sum-report-head">'+
+        '<div class="srh-title">Expeditors Cartage Program</div>'+
+        '<div class="srh-week">Summary Week Ending &nbsp;<strong>'+fs(friday)+'</strong></div>'+
+      '</div>'+
+      '<div style="overflow-x:auto"><table class="sum-tbl">'+
+        '<thead><tr>'+
+          '<th>Unit</th><th>Driver</th>'+
+          '<th>TTL Deliveries</th><th>TTL Pick Ups</th><th>TTL Shipments</th>'+
+          '<th>TTL Weight - LBS</th><th>TTL Miles</th><th>TTL Hours</th><th>Charges</th>'+
+        '</tr></thead>'+
+        '<tbody>'+rowsHtml+'</tbody>'+
+        '<tfoot><tr class="total-row">'+
+          '<td colspan="2"><strong>TOTAL</strong></td>'+
+          '<td>'+gD+'</td><td>'+gP+'</td><td>'+gS+'</td>'+
+          '<td>'+gW.toLocaleString()+'</td><td>'+gM+'</td>'+
+          '<td>'+gH.toFixed(2)+'</td>'+
+          '<td class="chg-cell">$'+gC.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'+
+        '</tr></tfoot>'+
+      '</table></div>'+
+      '<div class="sum-stats">'+
+        '<div class="ss-row"><div class="ss-lbl">Average Cost Per Shipment</div><div class="ss-val">$'+avgCostPerShip.toFixed(2)+'</div></div>'+
+        '<div class="ss-row"><div class="ss-lbl">Average Cost Per Pound</div><div class="ss-val">$'+avgCostPerLb.toFixed(4)+'</div></div>'+
+        '<div class="ss-row"><div class="ss-lbl">Average Shipments Per Hour</div><div class="ss-val">'+avgShipPerHour.toFixed(2)+'</div></div>'+
+        '<div class="ss-row"><div class="ss-lbl">Average Miles Per Day</div><div class="ss-val">'+avgMilesPerDay.toFixed(1)+'</div></div>'+
+        '<div class="ss-row"><div class="ss-lbl">Average Cost Per Mile</div><div class="ss-val">$'+avgCostPerMile.toFixed(2)+'</div></div>'+
+      '</div>'+
+    '</div>';
 }
+
 
 function dlWeekly(){
   const mon=document.getElementById('weekSel').value;if(!mon){showToast('No week selected');return;}
