@@ -116,7 +116,7 @@ function renderCards(){
           '<div class="cs" style="padding:8px;border-right:1px solid var(--border)"><div class="cs-val">'+m.ttlDeliveries+'</div><div class="cs-lbl">Del</div></div>'+
           '<div class="cs" style="padding:8px;border-right:1px solid var(--border)"><div class="cs-val">'+m.ttlPickups+'</div><div class="cs-lbl">PU</div></div>'+
           '<div class="cs" style="padding:8px;border-right:1px solid var(--border)"><div class="cs-val">'+((m.ttlWeight||0).toLocaleString())+'</div><div class="cs-lbl">lbs</div></div>'+
-          '<div class="cs" style="padding:8px;border-right:1px solid var(--border)"><div class="cs-val">'+(m.totalMiles||0)+'</div><div class="cs-lbl">Miles</div></div>'+
+          '<div class="cs" style="padding:8px;border-right:1px solid var(--border)"><div class="cs-val">'+(m.totalMiles||0)+'</div><div class="cs-lbl">Miles</div></div>'+'<div class="cs" style="padding:8px;border-right:1px solid var(--border)"><div class="cs-val">'+(m.totalHours||0).toFixed(2)+'</div><div class="cs-lbl">Hours</div></div>'+
           '<div class="cs" style="padding:8px"><div class="cs-val">$'+acps.toFixed(2)+'</div><div class="cs-lbl">$/Ship</div></div>'+
         '</div>'+
         detailTbls+
@@ -200,7 +200,7 @@ function openMod(id){
     '<div class="ms"><div class="ms-v">'+(m.ttlPickups||0)+'</div><div class="ms-l">Pick Ups</div></div>'+
     '<div class="ms"><div class="ms-v">'+(m.ttlShipments||0)+'</div><div class="ms-l">Shipments</div></div>'+
     '<div class="ms"><div class="ms-v">'+(m.ttlWeight||0).toLocaleString()+'</div><div class="ms-l">lbs</div></div>'+
-    '<div class="ms"><div class="ms-v">'+(m.totalMiles||0)+'</div><div class="ms-l">Miles</div></div>'+
+    '<div class="ms"><div class="ms-v">'+(m.totalMiles||0)+'</div><div class="ms-l">Miles</div></div>'+'<div class="ms"><div class="ms-v">'+(m.totalHours||0).toFixed(2)+'</div><div class="ms-l">Hours</div></div>'+
     '<div class="ms"><div class="ms-v">'+(m.totalHours||0).toFixed(2)+'</div><div class="ms-l">Hours</div></div>'+
     '<div class="ms"><div class="ms-v ms-chg">$'+chg.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div><div class="ms-l">Charges</div></div>'+
   '</div>';
@@ -208,7 +208,7 @@ function openMod(id){
   html+='<div class="mod-times">'+
     '<div><span>Start:</span> '+(m.startTime||'&mdash;')+'</div>'+
     '<div><span>End:</span> '+(m.endTime||'&mdash;')+'</div>'+
-    '<div><span>Miles:</span> '+(m.totalMiles||0)+'</div>'+
+    '<div><span>Miles:</span> '+(m.totalMiles||0)+'</div>'+'<div><span>Hours:</span> '+(m.totalHours||0).toFixed(2)+'</div>'+
   '</div>';
 
   if(delRows){
