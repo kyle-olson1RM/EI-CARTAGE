@@ -327,18 +327,20 @@ var editingManifestId=null;
 function closeMod(e){if(e.target===document.getElementById('modOv'))document.getElementById('modOv').classList.remove('open');}
 
 function appM(id){
-  const m=manifests.find(x=>x.id===id);
+  var m=manifests.find(function(x){return x.id===id;});
   if(!m)return;
   m.status='reviewed';
   save();
-  // Find which driver group this belongs to so we can re-open it
-  var driverName=m.driverName;
-  // Update just the button and badge without re-rendering everything
+  // Update card expand button
   var btn=document.querySelector('[data-mid="'+id+'"].ea-btn.ea-ok');
-  if(btn){btn.textContent='Reviewed';}
+  if(btn)btn.textContent='Reviewed';
+  // Update card badge
   var badge=btn?btn.closest('.day-entry')?.querySelector('.mbadge'):null;
   if(badge){badge.className='mbadge br';badge.textContent='REVIEWED';}
-  // Update the driver group header badge if all are now reviewed
+  // Update modal button if open
+  var mBtn=document.querySelector('[data-mid="'+id+'"].mbtn-ok');
+  if(mBtn)mBtn.textContent='Reviewed';
+  // Update driver group header badge
   var group=btn?btn.closest('.driver-group'):null;
   if(group){
     var allReviewed=Array.from(group.querySelectorAll('.day-entry')).every(function(de){
@@ -347,8 +349,7 @@ function appM(id){
     var groupBadge=group.querySelector('.dg-header .mbadge');
     if(groupBadge&&allReviewed){groupBadge.className='mbadge br';groupBadge.textContent='REVIEWED';}
   }
-  // Update stats counts
-  document.getElementById('stPend').textContent=manifests.filter(m=>m.status==='pending').length;
+  document.getElementById('stPend').textContent=manifests.filter(function(x){return x.status==='pending';}).length;
   showToast('Marked reviewed');
 }
 
