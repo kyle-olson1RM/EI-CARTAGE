@@ -12,38 +12,52 @@ function localDateStr(){
 
 
 function doLogin(){
-  const n=document.getElementById('loginName').value;
-  const d=document.getElementById('loginNum').value.trim();
-  const e=document.getElementById('loginErr');
-  const isSub=document.getElementById('loginSubCheck')?.checked||false;
-  const subFor=document.getElementById('loginSubFor')?.value||'';
-  if(!n){e.textContent='Please select your name';return;}
-  if(!d){e.textContent='Please enter your Driver #';return;}
-  if(isSub&&!subFor){e.textContent='Please select the driver you are substituting for';return;}
-  session={name:n,driverNum:d,isSub:isSub,subFor:isSub?subFor:''};
-  sessionStorage.setItem('ei_session',JSON.stringify(session));
-  e.textContent='';
-  var welcomeMsg='Welcome, '+n+(isSub?' (Sub for '+subFor+')':'')+' · Driver #'+d;
-  document.getElementById('homeWelcome').textContent=welcomeMsg;
-  ss('home');
+  var e=document.getElementById('loginErr');
+  var isSub=document.getElementById('loginSubCheck')?.checked||false;
+
+  if(isSub){
+    // Sub driver flow - uses typed name, no driver #
+    var subName=document.getElementById('loginSubName')?.value.trim();
+    var subFor=document.getElementById('loginSubFor')?.value||'';
+    if(!subName){e.textContent='Please enter your name';return;}
+    if(!subFor){e.textContent='Please select the driver you are covering for';return;}
+    session={name:subName,driverNum:'',isSub:true,subFor:subFor};
+    sessionStorage.setItem('ei_session',JSON.stringify(session));
+    e.textContent='';
+    document.getElementById('homeWelcome').textContent='Welcome, '+subName+' (Sub for '+subFor+')';
+    ss('home');
+  } else {
+    // Regular driver flow
+    var n=document.getElementById('loginName').value;
+    var d=document.getElementById('loginNum').value.trim();
+    if(!n){e.textContent='Please select your name';return;}
+    if(!d){e.textContent='Please enter your Driver #';return;}
+    session={name:n,driverNum:d,isSub:false,subFor:''};
+    sessionStorage.setItem('ei_session',JSON.stringify(session));
+    e.textContent='';
+    document.getElementById('homeWelcome').textContent='Welcome, '+n+' · Driver #'+d;
+    ss('home');
+  }
 }
 
 function toggleSubDriver(){
   var checked=document.getElementById('loginSubCheck')?.checked;
   var wrap=document.getElementById('loginSubWrap');
+  var regularFields=document.getElementById('regularDriverFields');
   if(wrap)wrap.style.display=checked?'block':'none';
+  // Hide regular fields when sub is checked
+  if(regularFields)regularFields.style.display=checked?'none':'block';
   if(checked){
-    // Populate sub driver select from roster
+    // Populate the "covering for" dropdown with full roster
     var sel=document.getElementById('loginSubFor');
-    var mainSel=document.getElementById('loginName');
-    var currentName=mainSel?.value||'';
     sel.innerHTML='<option value="">Select original driver...</option>';
     getDriverRoster().forEach(function(d){
-      if(d.name===currentName)return; // can't sub for yourself
       var o=document.createElement('option');
       o.value=o.textContent=d.name;
       sel.appendChild(o);
     });
+    // Focus the name field
+    setTimeout(function(){document.getElementById('loginSubName')?.focus();},100);
   }
 }
 
