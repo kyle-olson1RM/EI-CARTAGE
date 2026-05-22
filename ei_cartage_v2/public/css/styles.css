@@ -205,7 +205,7 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);min-
 .grand-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
 .gi{text-align:center;}.gi-val{font-family:Barlow Condensed,sans-serif;font-size:32px;font-weight:800;color:white;line-height:1;}
 .gi-lbl{font-size:11px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.8px;margin-top:4px;}
-.gi-charges{font-family:Barlow Condensed,sans-serif;font-size:42px;font-weight:800;color:#f5a623;}
+.gi-charges{font-family:Barlow Condensed,sans-serif;font-size:32px;font-weight:800;color:white;}
 .dsc{background:var(--surface);border-radius:8px;margin-bottom:12px;box-shadow:var(--shadow);overflow:hidden;}
 .dsc-head{background:var(--surface2);padding:11px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
 .dsc-av{width:34px;height:34px;border-radius:50%;background:#E31837;color:white;display:flex;align-items:center;justify-content:center;font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;flex-shrink:0;}
