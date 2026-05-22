@@ -310,8 +310,10 @@ function submitManifest(){
       manifests[editIdx]=m;
     }else{manifests.push(m);}
     editingManifestId=null;
+    wasEditingFromMgr=true;
     showToast('\u2713 Manifest updated!');
   }else{
+    wasEditingFromMgr=false;
     manifests.push(m);
     showToast('\u2713 Manifest submitted!');
   }
@@ -320,9 +322,14 @@ function submitManifest(){
   var hdr=document.querySelector('#driverForm .app-header h1');
   if(hdr)hdr.textContent='New Manifest';
   setTimeout(function(){
-    if(typeof refreshMgr==='function')refreshMgr();
-    ss(session?'home':'login');
-    checkForDraft();
+    if(wasEditingFromMgr){
+      wasEditingFromMgr=false;
+      if(typeof refreshMgr==='function')refreshMgr();
+      ss('manager');
+    } else {
+      ss(session?'home':'login');
+      checkForDraft();
+    }
   },1500);
 }
 

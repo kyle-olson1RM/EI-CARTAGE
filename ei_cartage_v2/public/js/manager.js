@@ -72,6 +72,14 @@ function renderCards(){
     var totChg=totHrs*r;
     var anyPending=entries.some(function(m){return m.status==='pending';});
     var anyFlag=entries.some(function(m){return m.flags&&m.flags.length>0;});
+    // Collect all notes from deliveries and pickups for tooltip
+    var flagNotes=[];
+    entries.forEach(function(m){
+      (m.deliveries||[]).forEach(function(d){if(d.note&&d.note.trim())flagNotes.push(d.note.trim());});
+      (m.pickups||[]).forEach(function(p){if(p.note&&p.note.trim())flagNotes.push(p.note.trim());});
+      if(m.flags&&m.flags.length)m.flags.forEach(function(f){if(f&&f.trim())flagNotes.push(f.trim());});
+    });
+    var flagTooltip=flagNotes.length?flagNotes.join(' | '):'Has driver notes';
 
     // Build daily rows for this driver
     var dayRows=entries.map(function(m){
@@ -123,11 +131,11 @@ function renderCards(){
       '<div class="dg-header" onclick="toggleGroup(this)">'+
         '<div class="avatar">'+init+'</div>'+
         '<div style="flex:1">'+
-          '<div class="mcard-driver">'+name+' <span style="font-size:11px;color:var(--muted);font-weight:400">&middot; '+unit+'</span></div>'+
+          '<div class="mcard-driver">'+name+' <span style="font-size:12px;font-weight:700;color:'+(unit.toUpperCase().startsWith('ST')?'var(--success)':'var(--accent)')+';margin-left:6px;background:'+(unit.toUpperCase().startsWith('ST')?'var(--success-light)':'var(--accent-light)')+';padding:1px 6px;border-radius:3px">'+(unit.toUpperCase().startsWith('ST')?'ST':'TT')+'</span> <span style="font-size:11px;color:var(--muted);font-weight:400">'+unit+'</span></div>'+
           '<div class="mcard-meta">'+entries.length+' day'+(entries.length!==1?'s':'')+' &middot; '+totDel+' del &middot; '+totPU+' PU &middot; '+totWt.toLocaleString()+' lbs &middot; '+totMi+' mi</div>'+
         '</div>'+
         '<div style="display:flex;align-items:center;gap:8px">'+
-          (anyFlag?'<span style="font-size:16px" title="Has flags">&#9888;</span>':'')+
+          (anyFlag?'<span style="font-size:16px;cursor:help" title="'+flagTooltip.replace(/"/g,"&quot;")+'">&#9888;</span>':'')+
           '<span class="mbadge '+(anyPending?'bp':'br')+'">'+(anyPending?'PENDING':'REVIEWED')+'</span>'+
           '<div style="font-family:Barlow Condensed,sans-serif;font-size:17px;font-weight:800;color:var(--accent)">$'+totChg.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div>'+
           '<span class="dg-arrow" style="color:var(--muted);font-size:20px;transition:transform .25s;display:inline-block">&#8964;</span>'+
