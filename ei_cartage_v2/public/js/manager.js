@@ -80,6 +80,7 @@ function renderCards(){
       if(m.flags&&m.flags.length)m.flags.forEach(function(f){if(f&&f.trim())flagNotes.push(f.trim());});
     });
     var flagTooltip=flagNotes.length?flagNotes.join(' | '):'Has driver notes';
+    flagNotesMap[name]=flagNotes;
 
     // Build daily rows for this driver
     var dayRows=entries.map(function(m){
@@ -135,7 +136,7 @@ function renderCards(){
           '<div class="mcard-meta">'+entries.length+' day'+(entries.length!==1?'s':'')+' &middot; '+totDel+' del &middot; '+totPU+' PU &middot; '+totWt.toLocaleString()+' lbs &middot; '+totMi+' mi</div>'+
         '</div>'+
         '<div style="display:flex;align-items:center;gap:8px">'+
-          (anyFlag?'<span style="font-size:16px;cursor:help" title="'+flagTooltip.replace(/"/g,"&quot;")+'">&#9888;</span>':'')+
+          (anyFlag?'<span class="flag-icon" style="font-size:16px;cursor:pointer" onclick="showFlagPopup(this)" data-gid="'+name+'">&#9888;</span>':'')+
           '<span class="mbadge '+(anyPending?'bp':'br')+'">'+(anyPending?'PENDING':'REVIEWED')+'</span>'+
           '<div style="font-family:Barlow Condensed,sans-serif;font-size:17px;font-weight:800;color:var(--accent)">$'+totChg.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div>'+
           '<span class="dg-arrow" style="color:var(--muted);font-size:20px;transition:transform .25s;display:inline-block">&#8964;</span>'+
@@ -447,4 +448,53 @@ function showSum(){
   if(!wks.length){sel.innerHTML='<option value="">No data yet</option>';}
   else{sel.innerHTML=wks.map(w=>`<option value="${w}" ${w===cur?'selected':''}>${wkLbl(w)}</option>`).join('');if(!cur||!wks.includes(cur))sel.value=wks[0];}
   renderSum();ss('summary');
+}
+
+// ── FLAG NOTES POPUP ──────────────────────────────────────────────────────────
+var flagNotesMap={};
+
+function showFlagPopup(el){
+  var gid=el.dataset.gid;
+  var notes=flagNotesMap[gid]||['No notes found'];
+  // Remove any existing popup
+  var existing = document.getElementById('flagPopup');
+  if(existing){ existing.remove(); return; }
+
+  var notes = el.dataset.notes || 'No notes';
+  var popup = document.createElement('div');
+  popup.id = 'flagPopup';
+  popup.style.cssText = 'position:fixed;z-index:9999;background:#1a1a1a;color:white;'+
+    'padding:10px 14px;border-radius:8px;font-size:13px;max-width:280px;'+
+    'box-shadow:0 4px 20px rgba(0,0,0,.4);line-height:1.5;';
+
+  // Position near the tapped element
+  var rect = el.getBoundingClientRect();
+  var top = rect.bottom + 8;
+  var left = Math.min(rect.left, window.innerWidth - 300);
+  popup.style.top = top + 'px';
+  popup.style.left = Math.max(8, left) + 'px';
+
+  // Header
+  popup.innerHTML = '<div style="font-family:Barlow Condensed,sans-serif;font-size:11px;'+
+    'font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:rgba(255,255,255,.5);'+
+    'margin-bottom:6px">Driver Notes</div>'+
+    '<div>'+notes.split(' | ').map(function(n){
+      return '<div style="padding:3px 0;border-bottom:1px solid rgba(255,255,255,.1)">&#9888; '+n+'</div>';
+    }).join('')+'</div>';
+
+  document.body.appendChild(popup);
+
+  // Close on any tap outside
+  setTimeout(function(){
+    document.addEventListener('click', function removePop(){
+      var p = document.getElementById('flagPopup');
+      if(p) p.remove();
+      document.removeEventListener('click', removePop);
+    });
+    document.addEventListener('touchend', function removePop2(){
+      var p = document.getElementById('flagPopup');
+      if(p) p.remove();
+      document.removeEventListener('touchend', removePop2);
+    });
+  }, 100);
 }

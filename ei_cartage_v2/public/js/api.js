@@ -385,7 +385,7 @@ function submitManifest(){
 
   const m={id:Date.now().toString(),submittedAt:new Date().toISOString(),status:'pending',flags,driverName:name,driverNum:session?.driverNum||'',truckNum:truck,date,dayOfWeek,startTime:st,endTime:et,totalMiles,totalHours,ttlDeliveries:deliveries.length,ttlPickups:pickups.length,ttlShipments:uniqueMAWBs,ttlWeight:totalWeight,deliveries,pickups};
   manifests.push(m);saveToStore('ei_manifests',JSON.stringify(manifests));
-  clearDraft();stopAutoSave();clearForm();showToast('&#10003; Manifest submitted!');setTimeout(function(){ss(session?'home':'login');checkForDraft();},1500);
+  clearDraft();stopAutoSave();clearForm();showToast('Manifest submitted!');setTimeout(function(){ss(session?'home':'login');checkForDraft();},1500);
 }
 
 // MANAGER
@@ -496,7 +496,7 @@ function renderCards(){
         detailTbls+
         '<div style="display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--border)">'+
           '<button class="ea-btn ea-del" title="Delete manifest" data-mid="'+m.id+'" onclick="if(confirm(\'Delete this manifest?\'))delM(this.dataset.mid)">&#128465;</button>'+
-          '<button class="ea-btn ea-ok" style="font-size:13px;height:36px" data-mid="'+m.id+'" onclick="appM(this.dataset.mid)">'+(m.status==='reviewed'?'&#10003; Reviewed':'Mark Reviewed &#10003;')+'</button>'+
+          '<button class="ea-btn ea-ok" style="font-size:13px;height:36px" data-mid="'+m.id+'" onclick="appM(this.dataset.mid)">'+(m.status==='reviewed'?'Reviewed':'Mark Reviewed')+'</button>'+
         '</div>'+
       '</div>';
     }).join('');
@@ -525,7 +525,7 @@ function openMod(id){
   const m=manifests.find(x=>x.id===id);if(!m)return;
   const r=rate(m.driverName),chg=(m.totalHours||0)*r;
   const ds=new Date(m.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
-  const fh=m.flags&&m.flags.length>0?m.flags.map(f=>`<div class="flag-bar" style="margin:0 0 8px">&#9888; ${f}</div>`).join(''):'<div style="color:var(--success);font-size:12px;margin-bottom:10px">&#10003; No flags</div>';
+  const fh=m.flags&&m.flags.length>0?m.flags.map(f=>`<div class="flag-bar" style="margin:0 0 8px">&#9888; ${f}</div>`).join(''):'<div style="color:var(--success);font-size:12px;margin-bottom:10px">No flags</div>';
   const delH=m.deliveries.length?`<div style="font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;margin:12px 0 6px">DELIVERIES</div><div style="overflow-x:auto"><table class="det-tbl"><thead><tr><th>#</th><th>Ref #</th><th>Consignee</th><th>City</th><th style="text-align:center">Pcs</th><th style="text-align:center">Wt (lbs)</th><th>Times</th></tr></thead><tbody>${m.deliveries.map((d,i)=>`<tr><td>${i+1}</td><td>${d.proNum||'&mdash;'}</td><td>${d.consignee||'&mdash;'}</td><td>${d.city||'&mdash;'}</td><td style="text-align:center">${d.pieces}</td><td style="text-align:center;font-weight:600">${d.weight.toLocaleString()}</td><td>${d.timeIn||'&mdash;'}&rarr;${d.timeOut||'&mdash;'}</td></tr>`).join('')}</tbody></table></div>`:'';
   const puH=m.pickups.length?`<div style="font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;margin:12px 0 6px">PICK UPS</div>${m.pickups.map((p,i)=>`<div style="border:1.5px solid var(--border);border-radius:6px;margin-bottom:8px;overflow:hidden;font-size:12px"><div style="background:var(--surface2);padding:7px 10px;font-weight:700;color:var(--accent);font-family:Barlow Condensed,sans-serif;font-size:13px">Pick Up ${i+1}</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:8px 10px 4px;text-align:center;border-bottom:1px solid var(--border)"><div><div style="font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:700;color:var(--accent)">${p.pieces}</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Pieces</div></div><div><div style="font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:700;color:var(--accent)">${p.weight.toLocaleString()}</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Weight (lbs)</div></div></div><div style="padding:8px 10px;display:grid;gap:5px"><div><b>Ref:</b> ${p.proNum||'&mdash;'} &nbsp;<b>Exp:</b> ${p.expRef||'&mdash;'} &nbsp;<b>Shipper:</b> ${p.shipper||'&mdash;'}</div><div>&#9313; <b>At Shipper:</b> In ${p.pickupIn||'&mdash;'} &rarr; Out ${p.pickupOut||'&mdash;'}</div><div>&#9314; <b>Drop at Expeditors ${p.dropLocation||'&mdash;'}:</b> Arrive ${p.arriveExp||'&mdash;'} &rarr; Depart ${p.departExp||'&mdash;'}</div></div></div>`).join('')}`:'';
   document.getElementById('modContent').innerHTML=`<h2>${m.driverName} &mdash; ${m.dayOfWeek}</h2>
@@ -542,7 +542,7 @@ function openMod(id){
     </div>${delH}${puH}
     <div class="modal-actions">
       <button class="mbtn mbtn-del" onclick="delM('${id}')">&#128465; Delete</button>
-      <button class="mbtn mbtn-ok" onclick="appM('${id}')">${m.status==='reviewed'?'&#10003; Reviewed':'Mark Reviewed &#10003;'}</button>
+      <button class="mbtn mbtn-ok" onclick="appM('${id}')">${m.status==='reviewed'?'Reviewed':'Mark Reviewed'}</button>
     </div>`;
   document.getElementById('modOv').classList.add('open');
 }
@@ -556,7 +556,7 @@ function appM(id){
   var driverName=m.driverName;
   // Update just the button and badge without re-rendering everything
   var btn=document.querySelector('[data-mid="'+id+'"].ea-btn.ea-ok');
-  if(btn){btn.textContent='&#10003; Reviewed';}
+  if(btn){btn.textContent='Reviewed';}
   var badge=btn?btn.closest('.day-entry')?.querySelector('.mbadge'):null;
   if(badge){badge.className='mbadge br';badge.textContent='REVIEWED';}
   // Update the driver group header badge if all are now reviewed
@@ -570,7 +570,7 @@ function appM(id){
   }
   // Update stats counts
   document.getElementById('stPend').textContent=manifests.filter(m=>m.status==='pending').length;
-  showToast('&#10003; Marked reviewed');
+  showToast('Marked reviewed');
 }
 function delM(id){if(!confirm('Delete this manifest?'))return;manifests=manifests.filter(m=>m.id!==id);save();document.getElementById('modOv').classList.remove('open');refreshMgr();showToast('Deleted');}
 function clearAll(){if(!confirm('Delete ALL manifests? Cannot be undone.'))return;manifests=[];save();refreshMgr();showToast('All cleared');}
