@@ -122,7 +122,7 @@ function renderCards(){
         '<div style="display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--border)">'+
           '<button class="ea-btn" title="Edit" data-mid="'+m.id+'" onclick="editManifest(this.dataset.mid)" style="background:var(--accent-light);color:var(--accent);border-color:var(--accent)">&#9998;</button>'+
           '<button class="ea-btn ea-del" title="Delete manifest" data-mid="'+m.id+'" onclick="if(confirm(\'Delete this manifest?\'))delM(this.dataset.mid)">&#128465;</button>'+
-          '<button class="ea-btn ea-ok" style="font-size:13px;height:36px" data-mid="'+m.id+'" onclick="appM(this.dataset.mid)">'+(m.status==='reviewed'?'&#10003; Reviewed':'Mark Reviewed &#10003;')+'</button>'+
+          '<button class="ea-btn ea-ok" style="font-size:13px;height:36px" data-mid="'+m.id+'" onclick="appM(this.dataset.mid)">'+(m.status==='reviewed'?'Reviewed':'Mark Reviewed')+'</button>'+
         '</div>'+
       '</div>';
     }).join('');
@@ -227,7 +227,7 @@ function openMod(id){
   html+='<div class="modal-actions">';
   html+='<button class="mbtn" data-mid="'+id+'" onclick="editManifest(this.dataset.mid)" style="background:var(--accent-light);color:var(--accent);border:1.5px solid var(--accent)">&#9998; Edit</button>';
   html+='<button class="mbtn mbtn-del" data-mid="'+id+'" onclick="delM(this.dataset.mid)">&#128465; Delete</button>';
-  html+='<button class="mbtn mbtn-ok" data-mid="'+id+'" onclick="appM(this.dataset.mid)">'+(m.status==='reviewed'?'&#10003; Reviewed':'Mark Reviewed &#10003;')+'</button>';
+  html+='<button class="mbtn mbtn-ok" data-mid="'+id+'" onclick="appM(this.dataset.mid)">'+(m.status==='reviewed'?'Reviewed':'Mark Reviewed')+'</button>';
   html+='</div>';
 
   document.getElementById('modContent').innerHTML=html;
@@ -334,7 +334,7 @@ function appM(id){
   var driverName=m.driverName;
   // Update just the button and badge without re-rendering everything
   var btn=document.querySelector('[data-mid="'+id+'"].ea-btn.ea-ok');
-  if(btn){btn.textContent='&#10003; Reviewed';}
+  if(btn){btn.textContent='Reviewed';}
   var badge=btn?btn.closest('.day-entry')?.querySelector('.mbadge'):null;
   if(badge){badge.className='mbadge br';badge.textContent='REVIEWED';}
   // Update the driver group header badge if all are now reviewed
@@ -348,7 +348,7 @@ function appM(id){
   }
   // Update stats counts
   document.getElementById('stPend').textContent=manifests.filter(m=>m.status==='pending').length;
-  showToast('&#10003; Marked reviewed');
+  showToast('Marked reviewed');
 }
 
 function delM(id){if(!confirm('Delete this manifest?'))return;manifests=manifests.filter(m=>m.id!==id);save();document.getElementById('modOv').classList.remove('open');refreshMgr();showToast('Deleted');}
