@@ -62,10 +62,18 @@ function fmt12(t){if(!t)return'';const[h,m]=t.split(':').map(Number);const ap=h>
 function calcMiles(){const s=parseInt(document.getElementById('fSMi').value)||0;const e=parseInt(document.getElementById('fEMi').value)||0;const m=e>s?e-s:0;document.getElementById('fTotMi').textContent=m>0?m:'—';updateTotals();}
 
 function calcHours(){
-  const s=document.getElementById('fStart').value,e=document.getElementById('fEnd').value;
+  var s=document.getElementById('fStart').value,e=document.getElementById('fEnd').value;
   document.getElementById('tStart').textContent=s||'—';
   document.getElementById('tEnd').textContent=e||'—';
-  if(s&&e){const[sh,sm]=s.split(':').map(Number),[eh,em]=e.split(':').map(Number);const h=(eh*60+em-sh*60-sm)/60-0.5;document.getElementById('tHrs').textContent=h>0?h.toFixed(2)+' hrs':'—';}
+  if(s&&e){
+    var sp=s.split(':').map(Number),ep=e.split(':').map(Number);
+    var startMin=sp[0]*60+sp[1];
+    var endMin=ep[0]*60+ep[1];
+    // If end is before or equal to start, driver worked past midnight — add 24hrs
+    if(endMin<=startMin) endMin+=1440;
+    var h=(endMin-startMin)/60-0.5; // subtract 0.5hr break
+    document.getElementById('tHrs').textContent=h>0?h.toFixed(2)+' hrs':'—';
+  }
 }
 
 function updateTotals(){
@@ -215,8 +223,10 @@ function submitManifest(){
 
   const dt=new Date(date+'T12:00:00');const dayOfWeek=DAYS[dt.getDay()];
   const totalMiles=em>sm?em-sm:0;
-  const[sh,sm2]=st.split(':').map(Number),[eh,em2]=et.split(':').map(Number);
-  const totalHours=Math.round(((eh*60+em2-sh*60-sm2)/60-0.5)*100)/100;
+  var sArr=st.split(':').map(Number),eArr=et.split(':').map(Number);
+  var sMin2=sArr[0]*60+sArr[1],eMin2=eArr[0]*60+eArr[1];
+  if(eMin2<=sMin2)eMin2+=1440; // past midnight
+  const totalHours=Math.round(((eMin2-sMin2)/60-0.5)*100)/100;
   // Build full deliveries array - each sub-drop becomes its own delivery record
   var deliveries=[];
   delIds.forEach(function(id){
