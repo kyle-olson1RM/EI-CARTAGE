@@ -232,3 +232,18 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);min-
 .toast.show{opacity:1;}
 
 @media(max-width:480px){.mgr-stats{grid-template-columns:repeat(2,1fr);}.grand-grid{grid-template-columns:repeat(2,1fr);}.fg3{grid-template-columns:1fr 1fr;}}
+
+/* ── NEW STOP CARDS ─────────────────────────────────────────────── */
+.stop-card{background:var(--surface);border-radius:0 8px 8px 0;margin-bottom:12px;border:1.5px solid var(--border);border-left:4px solid var(--border);overflow:hidden;transition:box-shadow .15s;}
+.stop-card.del-card{border-left-color:#E31837;}
+.stop-card.pu-card{border-left-color:#185FA5;}
+.stop-card-head{padding:11px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;background:var(--surface2);}
+.stop-badge{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap;letter-spacing:.3px;}
+.stop-badge.del-badge{background:#E31837;color:white;}
+.stop-badge.pu-badge{background:#185FA5;color:white;}
+.stop-card-summary{flex:1;font-size:13px;font-weight:500;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.stop-card-done{width:22px;height:22px;border-radius:50%;background:var(--success-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.stop-card-body{padding:12px 14px;border-top:1px solid var(--border);}
+.stop-card-body.collapsed{display:none;}
+.done-stop-btn{width:100%;margin-top:10px;padding:11px;border-radius:6px;border:none;background:var(--success-light);color:var(--success);font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer;touch-action:manipulation;}
+.done-stop-btn:active{opacity:.8;}

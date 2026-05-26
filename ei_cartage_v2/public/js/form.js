@@ -345,4 +345,151 @@ function capWords(el){
   var v=el.value,pos=el.selectionStart;
   var c=v.replace(/(^|\s)([a-z])/g,function(m,p1,p2){return p1+p2.toUpperCase();});
   if(c!==v){el.value=c;try{el.setSelectionRange(pos,pos);}catch(e){}}
+
+
+// ── STOP CARDS (new visual layer over addDel/addPU) ─────────────────────────
+var stopOrder = []; // [{type:'d'|'p', id:N}] tracks manifest order
+
+function addDelStop(){
+  addDel();
+  var id = delIds[delIds.length-1];
+  stopOrder.push({type:'d', id:id});
+  _renderStopCard('d', id);
+  _updateStopsLbl();
+}
+
+function addPUStop(){
+  addPU();
+  var id = puIds[puIds.length-1];
+  stopOrder.push({type:'p', id:id});
+  _renderStopCard('p', id);
+  _updateStopsLbl();
+}
+
+function _updateStopsLbl(){
+  var el = document.getElementById('stopsLbl');
+  if(el) el.textContent = stopOrder.length + ' stop' + (stopOrder.length!==1?'s':'');
+}
+
+function _renderStopCard(type, id){
+  var container = document.getElementById('allStopsRows');
+  if(!container) return;
+
+  var delN = delIds.indexOf(id)+1;
+  var puN  = puIds.indexOf(id)+1;
+  var badgeClass = type==='d' ? 'del-badge' : 'pu-badge';
+  var cardClass  = type==='d' ? 'del-card'  : 'pu-card';
+  var badgeTxt   = type==='d' ? 'DEL '+delN : 'P/U '+puN;
+  var stopNum    = stopOrder.length;
+
+  // Get the row content from the hidden div that addDel/addPU created
+  var srcRow = document.getElementById('row_'+id);
+  if(!srcRow) return;
+
+  // Create the card wrapper
+  var card = document.createElement('div');
+  card.className = 'stop-card ' + cardClass;
+  card.id = 'stopcard_'+id;
+
+  // Header
+  var head = document.createElement('div');
+  head.className = 'stop-card-head';
+  head.setAttribute('onclick', '_toggleStop('+id+')');
+  head.innerHTML =
+    '<span class="stop-badge '+badgeClass+'">'+badgeTxt+'</span>'+
+    '<span class="stop-card-summary" id="stsum_'+id+'">Stop '+stopNum+'</span>'+
+    '<span id="stdone_'+id+'" class="stop-card-done" style="display:none">'+
+      '<svg width="12" height="12" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" stroke="#16a34a" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>'+
+    '</span>'+
+    '<svg id="stchev_'+id+'" width="14" height="14" viewBox="0 0 14 14" style="flex-shrink:0"><polyline points="3,5 7,9 11,5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+  // Body - clone the src row contents
+  var body = document.createElement('div');
+  body.className = 'stop-card-body';
+  body.id = 'stopbody_'+id;
+  // Move src row children into body
+  while(srcRow.firstChild){
+    // Skip the row-entry-head (old style header)
+    if(srcRow.firstChild.className && srcRow.firstChild.className.indexOf('row-entry-head') >= 0){
+      srcRow.removeChild(srcRow.firstChild);
+    } else {
+      body.appendChild(srcRow.firstChild);
+    }
+  }
+
+  // Add "Done with this stop" button
+  var doneBtn = document.createElement('button');
+  doneBtn.className = 'done-stop-btn';
+  doneBtn.setAttribute('onclick', '_doneStop('+id+')');
+  doneBtn.textContent = '✓ Done with this stop';
+  body.appendChild(doneBtn);
+
+  card.appendChild(head);
+  card.appendChild(body);
+
+  // Remove the old hidden row
+  srcRow.remove();
+
+  // Insert at bottom of stops list, ABOVE the add buttons
+  container.appendChild(card);
+
+  // Scroll to new card
+  setTimeout(function(){card.scrollIntoView({behavior:'smooth',block:'center'});}, 100);
+}
+
+function _toggleStop(id){
+  var body = document.getElementById('stopbody_'+id);
+  var chev = document.getElementById('stchev_'+id);
+  if(!body) return;
+  var open = !body.classList.contains('collapsed');
+  if(open){
+    body.classList.add('collapsed');
+    if(chev) chev.style.transform = 'rotate(-90deg)';
+  } else {
+    body.classList.remove('collapsed');
+    if(chev) chev.style.transform = '';
+  }
+}
+
+function _doneStop(id){
+  // Update summary line with key info
+  var type = stopOrder.find(function(s){return s.id===id;});
+  if(type){
+    var isD = type.type === 'd';
+    var ref  = document.getElementById((isD?'dref_':'pref_')+id)?.value || '';
+    var pcs  = document.getElementById((isD?'dp_':'pp_')+id)?.value || '0';
+    var wt   = document.getElementById((isD?'dw_':'pw_')+id)?.value || '0';
+    var sum  = document.getElementById('stsum_'+id);
+    if(sum) sum.textContent = (ref?'Pro# '+ref+' · ':'')+pcs+' pcs · '+wt+' lbs';
+  }
+  // Show done tick, collapse body
+  var done = document.getElementById('stdone_'+id);
+  if(done) done.style.display = 'flex';
+  var body = document.getElementById('stopbody_'+id);
+  if(body) body.classList.add('collapsed');
+  var chev = document.getElementById('stchev_'+id);
+  if(chev) chev.style.transform = 'rotate(-90deg)';
+  updateTotals();
+  saveDraft();
+}
+
+// Make sure rmRow also removes the stop card
+var _origRmRow = rmRow;
+rmRow = function(id, type){
+  _origRmRow(id, type);
+  var card = document.getElementById('stopcard_'+id);
+  if(card) card.remove();
+  stopOrder = stopOrder.filter(function(s){return s.id!==id;});
+  _updateStopsLbl();
+};
+
+// Override addSubDrop to keep "Add Another Drop" button below latest drop in card
+var _origAddSubDrop = addSubDrop;
+addSubDrop = function(stopId, type){
+  _origAddSubDrop(stopId, type);
+  // Move the add drop button to after the container (already handled in addSubDrop)
+  // but also ensure it scrolls into view
+  var addBtn = document.getElementById('adddrop_'+stopId);
+  if(addBtn) setTimeout(function(){addBtn.scrollIntoView({behavior:'smooth',block:'center'});}, 200);
+};
 }

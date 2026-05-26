@@ -102,32 +102,29 @@
         </div>
       </div>
     </div>
-    <!-- 2. DELIVERIES -->
+    <!-- 2 & 3. STOPS (deliveries + pickups in manifest order) -->
     <div class="fsec">
-      <div class="fsec-head"><h2>2 &mdash; Deliveries</h2><span class="fsec-meta" id="delLbl">0 stops</span></div>
+      <div class="fsec-head"><h2>2 &mdash; Stops</h2><span class="fsec-meta" id="stopsLbl">0 stops</span></div>
       <div class="fsec-body">
-        <div id="delRows"></div>
-        <button class="add-btn" onclick="addDel()">+ Add Delivery Stop</button>
+        <div id="allStopsRows"></div>
+        <!-- hidden legacy containers so JS still works -->
+        <div id="delRows" style="display:none"></div>
+        <div id="puRows" style="display:none"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px">
+          <button class="add-btn" onclick="addDelStop()" style="background:rgba(227,24,55,.06);color:#E31837;border-color:rgba(227,24,55,.3)">+ Delivery</button>
+          <button class="add-btn" onclick="addPUStop()" style="background:rgba(24,95,165,.06);color:#185FA5;border-color:rgba(24,95,165,.3)">+ Pick Up</button>
+        </div>
       </div>
       <div class="sum-bar">
-        <div class="si"><div class="si-val" id="dCnt">0</div><div class="si-lbl">Stops</div></div>
-        <div class="si"><div class="si-val" id="dPcs">0</div><div class="si-lbl">Pieces</div></div>
-        <div class="si" style="grid-column:span 2"><div class="si-val" id="dWt">0</div><div class="si-lbl">Total Weight (lbs)</div></div>
+        <div class="si"><div class="si-val" id="dCnt">0</div><div class="si-lbl">Deliveries</div></div>
+        <div class="si"><div class="si-val" id="pCnt">0</div><div class="si-lbl">Pick Ups</div></div>
+        <div class="si"><div class="si-val" id="dPcs">0</div><div class="si-lbl">Del Pcs</div></div>
+        <div class="si"><div class="si-val" id="pPcs">0</div><div class="si-lbl">PU Pcs</div></div>
+        <div class="si" style="grid-column:span 2"><div class="si-val" id="dWt">0</div><div class="si-lbl">Del Weight (lbs)</div></div>
+        <div class="si" style="grid-column:span 2"><div class="si-val" id="pWt">0</div><div class="si-lbl">PU Weight (lbs)</div></div>
       </div>
     </div>
-    <!-- 3. PICK UPS -->
-    <div class="fsec">
-      <div class="fsec-head"><h2>3 &mdash; Pick Ups</h2><span class="fsec-meta" id="puLbl">0 stops</span></div>
-      <div class="fsec-body">
-        <div id="puRows"></div>
-        <button class="add-btn" onclick="addPU()">+ Add Pick Up Stop</button>
-      </div>
-      <div class="sum-bar">
-        <div class="si"><div class="si-val" id="pCnt">0</div><div class="si-lbl">Stops</div></div>
-        <div class="si"><div class="si-val" id="pPcs">0</div><div class="si-lbl">Pieces</div></div>
-        <div class="si" style="grid-column:span 2"><div class="si-val" id="pWt">0</div><div class="si-lbl">Total Weight (lbs)</div></div>
-      </div>
-    </div>
+
     <!-- 4. TOTALS — mirrors spreadsheet columns C-L -->
     <div class="fsec">
       <div class="fsec-head"><h2>4 &mdash; Trip Totals</h2></div>
