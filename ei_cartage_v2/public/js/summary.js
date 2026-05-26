@@ -66,7 +66,7 @@ function dlRangeReport(){
 }
 
 // ── CUSTOMER VIEW ─────────────────────────────────────────────────────────────
-var CUSTOMER_CODE='EXP2025';
+var CUSTOMER_CODE=localStorage.getItem('ei_customer_code')||'EXP2025';
 function openCustomerLogin(){
   document.getElementById('custCode').value='';document.getElementById('custLoginErr').textContent='';
   document.getElementById('custLoginOv').classList.add('open');

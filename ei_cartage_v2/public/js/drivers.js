@@ -141,3 +141,14 @@ function addManagerRow(){
   var roster=getManagerRoster();roster.push({name:'',badge:''});saveManagerRoster(roster);renderManagerList();editManager(roster.length-1);
 }
 function saveManagers(){showToast('\u2713 Manager roster saved');setTimeout(function(){ss('manager');},600);}
+
+function saveCustomerCode(){
+  var code=document.getElementById('custCodeInput')?.value.trim().toUpperCase();
+  if(!code){showToast('Please enter a code');return;}
+  localStorage.setItem('ei_customer_code',code);
+  // Update the live variable in summary.js
+  if(typeof CUSTOMER_CODE!=='undefined') window.CUSTOMER_CODE=code;
+  var msg=document.getElementById('custCodeMsg');
+  if(msg){msg.textContent='\u2713 Updated to '+code;setTimeout(function(){msg.textContent='';},3000);}
+  showToast('\u2713 Customer code updated');
+}
