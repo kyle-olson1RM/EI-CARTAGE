@@ -16,6 +16,20 @@ document.addEventListener('touchend', function(e){
   }
 },{passive:true});
 
+
+// ── TOAST NOTIFICATION ───────────────────────────────────────────────────────
+var toastTimer;
+function showToast(msg, dur){
+  dur = dur || 2200;
+  var t = document.getElementById('toast');
+  if(!t) return;
+  t.innerHTML = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.classList.remove('show'); }, dur);
+}
+
+
 // ── INIT ──────────────────────────────────────────────────────────────────────
 function bootApp(){
   // Load manifests

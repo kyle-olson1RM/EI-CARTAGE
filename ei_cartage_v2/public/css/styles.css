@@ -68,7 +68,7 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);min-
 .field input,.field select{height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-family:'Barlow',sans-serif;font-size:15px;color:var(--text);background:var(--surface);-webkit-appearance:none;}
 .field input:focus,.field select:focus{outline:none;border-color:var(--accent2);box-shadow:0 0 0 3px rgba(227,24,55,.1);}
 .field input[type=number]{-moz-appearance:textfield;}.field input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
-.auto-calc{height:46px;padding:0 12px;border-radius:6px;background:var(--accent-light);border:1.5px solid #ffc0cb;font-size:15px;font-weight:600;color:var(--accent);display:flex;align-items:center;}
+.auto-calc{height:46px;padding:0 12px;border-radius:6px;background:var(--accent-light);border:1.5px solid var(--accent-light);font-size:15px;font-weight:600;color:var(--accent);display:flex;align-items:center;}
 .time-pair{display:flex;gap:6px;align-items:center;}
 .time-pair input{flex:1;height:46px;padding:0 10px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;font-family:'Barlow',sans-serif;color:var(--text);}
 .time-pair span{color:var(--muted);font-size:12px;flex-shrink:0;}

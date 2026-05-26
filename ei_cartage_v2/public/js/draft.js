@@ -51,8 +51,29 @@ function continueDraft(){
     var set=function(id,val){var e=document.getElementById(id);if(e)e.value=val||'';};
     set('fName',session?session.name:draft.driverName);set('fTruck',draft.truckNum);set('fDate',draft.date||localDateStr());set('fStart',draft.startTime);set('fEnd',draft.endTime);set('fSMi',draft.startMi);set('fEMi',draft.endMi);
     onDateChange();calcHours();calcMiles();
-    (draft.deliveries||[]).forEach(function(d){addDel();var id=delIds[delIds.length-1];var set2=function(fid,val){var e=document.getElementById(fid);if(e)e.value=val||'';};set2('dref_'+id,d.proNum);set2('dp_'+id,d.pieces);set2('dw_'+id,d.weight);set2('dcity_'+id,d.city);set2('dcons_'+id,d.consignee);set2('dtin_'+id,d.timeIn);set2('dtout_'+id,d.timeOut);if(d.note){var nt=document.getElementById('dnote_'+id);if(nt)nt.value=d.note;var nw=document.getElementById('dnote_wrap_'+id);if(nw)nw.style.display='block';}});
-    (draft.pickups||[]).forEach(function(p){addPU();var id=puIds[puIds.length-1];var set2=function(fid,val){var e=document.getElementById(fid);if(e)e.value=val||'';};set2('pref_'+id,p.proNum);set2('pexpref_'+id,p.expRef);set2('pp_'+id,p.pieces);set2('pw_'+id,p.weight);set2('pship_'+id,p.shipper);set2('ptin_'+id,p.pickupIn);set2('ptout_'+id,p.pickupOut);set2('pdrop_'+id,p.dropLocation);set2('parr_'+id,p.arriveExp);set2('pdep2_'+id,p.departExp);if(p.note){var nt=document.getElementById('pnote_'+id);if(nt)nt.value=p.note;var nw=document.getElementById('pnote_wrap_'+id);if(nw)nw.style.display='block';}});
+    (draft.deliveries||[]).forEach(function(d){
+      // Use addDelStop so the card renders visually
+      if(typeof addDelStop==='function') addDelStop();
+      else addDel();
+      var id=delIds[delIds.length-1];
+      var set2=function(fid,val){var e=document.getElementById(fid);if(e)e.value=val||'';};
+      set2('dref_'+id,d.proNum);set2('dp_'+id,d.pieces);set2('dw_'+id,d.weight);
+      set2('dcity_'+id,d.city);set2('dcons_'+id,d.consignee);
+      set2('dtin_'+id,d.timeIn);set2('dtout_'+id,d.timeOut);
+      if(d.note){var nt=document.getElementById('dnote_'+id);if(nt)nt.value=d.note;var nw=document.getElementById('dnote_wrap_'+id);if(nw)nw.style.display='block';}
+    });
+    (draft.pickups||[]).forEach(function(p){
+      // Use addPUStop so the card renders visually
+      if(typeof addPUStop==='function') addPUStop();
+      else addPU();
+      var id=puIds[puIds.length-1];
+      var set2=function(fid,val){var e=document.getElementById(fid);if(e)e.value=val||'';};
+      set2('pref_'+id,p.proNum);set2('pexpref_'+id,p.expRef);set2('pp_'+id,p.pieces);
+      set2('pw_'+id,p.weight);set2('pship_'+id,p.shipper);set2('ptin_'+id,p.pickupIn);
+      set2('ptout_'+id,p.pickupOut);set2('pdrop_'+id,p.dropLocation);
+      set2('parr_'+id,p.arriveExp);set2('pdep2_'+id,p.departExp);
+      if(p.note){var nt=document.getElementById('pnote_'+id);if(nt)nt.value=p.note;var nw=document.getElementById('pnote_wrap_'+id);if(nw)nw.style.display='block';}
+    });
     updateTotals();
     var total=(draft.deliveries||[]).length+(draft.pickups||[]).length;
     showToast('\u270e Draft restored'+(total?' \u2014 '+total+' stop'+(total!==1?'s':''):''));
