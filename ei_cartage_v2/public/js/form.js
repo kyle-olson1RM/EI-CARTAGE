@@ -97,11 +97,11 @@ function updateTotals(){
   document.getElementById('dCnt').textContent=totalDelStops;
   document.getElementById('dPcs').textContent=dP.toLocaleString();
   document.getElementById('dWt').textContent=dW.toLocaleString();
-  document.getElementById('delLbl').textContent=totalDelStops+' stop'+(totalDelStops!==1?'s':'');
+  var dl=document.getElementById('delLbl');if(dl)dl.textContent=totalDelStops+' stop'+(totalDelStops!==1?'s':'');
   document.getElementById('pCnt').textContent=totalPUStops;
   document.getElementById('pPcs').textContent=pP.toLocaleString();
   document.getElementById('pWt').textContent=pW.toLocaleString();
-  document.getElementById('puLbl').textContent=totalPUStops+' stop'+(totalPUStops!==1?'s':'');
+  var pl=document.getElementById('puLbl');if(pl)pl.textContent=totalPUStops+' stop'+(totalPUStops!==1?'s':'');
   document.getElementById('tDel').textContent=delIds.length;document.getElementById('tPU').textContent=puIds.length;// Count unique MAWBs for live display
   var liveRefs=[];
   delIds.forEach(function(id){var v=document.getElementById('dref_'+id)?.value.trim().toUpperCase();if(v)liveRefs.push(v);});
@@ -341,11 +341,7 @@ function submitManifest(){
   },1500);
 }
 
-function capWords(el){
-  var v=el.value,pos=el.selectionStart;
-  var c=v.replace(/(^|\s)([a-z])/g,function(m,p1,p2){return p1+p2.toUpperCase();});
-  if(c!==v){el.value=c;try{el.setSelectionRange(pos,pos);}catch(e){}}
-}
+
 
 
 // ── STOP CARDS (new visual layer over addDel/addPU) ─────────────────────────

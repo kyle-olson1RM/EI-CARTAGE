@@ -444,12 +444,6 @@ function setMgrWeekAll(){
   renderCards();
 }
 
-function showSum(){
-  const wks=allWks();const sel=document.getElementById('weekSel');const cur=sel.value;
-  if(!wks.length){sel.innerHTML='<option value="">No data yet</option>';}
-  else{sel.innerHTML=wks.map(w=>`<option value="${w}" ${w===cur?'selected':''}>${wkLbl(w)}</option>`).join('');if(!cur||!wks.includes(cur))sel.value=wks[0];}
-  renderSum();ss('summary');
-}
 
 // ── FLAG NOTES POPUP ──────────────────────────────────────────────────────────
 var flagNotesMap={};
