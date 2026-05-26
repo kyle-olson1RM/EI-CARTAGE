@@ -220,14 +220,50 @@ function gD(id){return{proNum:document.getElementById('dref_'+id)?.value||'',shi
 function gP(id){return{proNum:document.getElementById('pref_'+id)?.value||'',expRef:document.getElementById('pexpref_'+id)?.value||'',pieces:parseInt(document.getElementById('pp_'+id)?.value)||0,weight:parseFloat(document.getElementById('pw_'+id)?.value)||0,shipper:document.getElementById('pship_'+id)?.value||'',pickupIn:document.getElementById('ptin_'+id)?.value||'',pickupOut:document.getElementById('ptout_'+id)?.value||'',dropLocation:document.getElementById('pdrop_'+id)?.value||'',arriveExp:document.getElementById('parr_'+id)?.value||'',departExp:document.getElementById('pdep2_'+id)?.value||'',consignee:document.getElementById('pcons_'+id)?.value||'',deliverIn:document.getElementById('pdlin_'+id)?.value||'',deliverOut:document.getElementById('pdlout_'+id)?.value||'',note:document.getElementById('pnote_'+id)?.value.trim()||'',subPickups:getSubDrops(id,'p')};}
 
 function submitManifest(){
+  // Basic validation before showing end of shift popup
+  const name=document.getElementById('fName').value,truck=document.getElementById('fTruck').value.trim();
+  const date=document.getElementById('fDate').value,st=document.getElementById('fStart').value;
+  const sm=parseInt(document.getElementById('fSMi').value)||0;
+  if(!truck){showToast('Please enter your truck #',3000);return;}
+  if(!date||!st){showToast('Date and start time required',3000);return;}
+  if(!sm){showToast('Start mileage required',3000);return;}
+  if(!delIds.length&&!puIds.length){showToast('Add at least one delivery or pickup',3000);return;}
+  // Show end of shift popup
+  var dels=delIds.length,pus=puIds.length;
+  var totWt=0,totPcs=0;
+  delIds.forEach(function(id){totPcs+=parseInt(document.getElementById('dp_'+id)?.value)||0;totWt+=parseFloat(document.getElementById('dw_'+id)?.value)||0;});
+  puIds.forEach(function(id){totPcs+=parseInt(document.getElementById('pp_'+id)?.value)||0;totWt+=parseFloat(document.getElementById('pw_'+id)?.value)||0;});
+  var summary=document.getElementById('eosSummary');
+  if(summary){
+    summary.innerHTML=
+      '<div><span style="color:var(--muted)">Stops:</span> '+dels+' deliveries · '+pus+' pick ups</div>'+
+      '<div><span style="color:var(--muted)">Total pieces:</span> '+totPcs+'</div>'+
+      '<div><span style="color:var(--muted)">Total weight:</span> '+totWt.toLocaleString()+' lbs</div>'+
+      '<div><span style="color:var(--muted)">Start mileage:</span> '+sm+'</div>';
+  }
+  // Pre-fill end time if already set
+  var existingEnd=document.getElementById('fEnd')?.value;
+  if(existingEnd)document.getElementById('eosEndTime').value=existingEnd;
+  document.getElementById('eosOv').classList.add('open');
+  setTimeout(function(){document.getElementById('eosEndTime').focus();},200);
+}
+
+function confirmSubmit(){
+  var et=document.getElementById('eosEndTime').value;
+  var em=parseInt(document.getElementById('eosEndMi').value)||0;
+  if(!et){showToast('Please enter end time',3000);return;}
+  if(!em){showToast('Please enter end mileage',3000);return;}
+  // Set values on hidden fields so rest of submit logic works
+  document.getElementById('fEnd').value=et;
+  document.getElementById('fEMi').value=em;
+  document.getElementById('eosOv').classList.remove('open');
+  _doSubmit();
+}
+
+function _doSubmit(){
   const name=document.getElementById('fName').value,truck=document.getElementById('fTruck').value.trim();
   const date=document.getElementById('fDate').value,st=document.getElementById('fStart').value,et=document.getElementById('fEnd').value;
   const sm=parseInt(document.getElementById('fSMi').value)||0,em=parseInt(document.getElementById('fEMi').value)||0;
-  if(!truck){showToast('&#9888; Please enter your truck #',3000);return;}
-  if(!date||!st||!et){showToast('&#9888; Date, start and end time required',3000);return;}
-  if(!sm||!em){showToast('&#9888; Start and end mileage required',3000);return;}
-  if(!delIds.length&&!puIds.length){showToast('&#9888; Add at least one delivery or pickup',3000);return;}
-  for(const id of [...delIds,...puIds]){const wk=id;const wField=delIds.includes(id)?'dw_':'pw_';const pField=delIds.includes(id)?'dp_':'pp_';if(!(parseFloat(document.getElementById(wField+wk)?.value)||0)||!(parseInt(document.getElementById(pField+wk)?.value)||0)){showToast('&#9888; All stops need pieces and weight',3000);return;}}
 
   const dt=new Date(date+'T12:00:00');const dayOfWeek=DAYS[dt.getDay()];
   const totalMiles=em>sm?em-sm:0;
@@ -475,14 +511,40 @@ function _toggleStop(id){
 
 function _doneStop(id){
   // Update summary line with key info
-  var type = stopOrder.find(function(s){return s.id===id;});
-  if(type){
-    var isD = type.type === 'd';
-    var ref  = document.getElementById((isD?'dref_':'pref_')+id)?.value || '';
-    var pcs  = document.getElementById((isD?'dp_':'pp_')+id)?.value || '0';
-    var wt   = document.getElementById((isD?'dw_':'pw_')+id)?.value || '0';
-    var sum  = document.getElementById('stsum_'+id);
-    if(sum) sum.textContent = (ref?'Pro# '+ref+' · ':'')+pcs+' pcs · '+wt+' lbs';
+  var stopEntry = stopOrder.find(function(s){return s.id===id;});
+  if(stopEntry){
+    var isD = stopEntry.type === 'd';
+    var sum = document.getElementById('stsum_'+id);
+    if(sum){
+      if(isD){
+        // Delivery: show consignee + total pcs/weight across all drops
+        var cons = document.getElementById('dcons_'+id)?.value || '';
+        var totalPcs = parseInt(document.getElementById('dp_'+id)?.value)||0;
+        var totalWt  = parseFloat(document.getElementById('dw_'+id)?.value)||0;
+        // Add sub-drop pieces and weight
+        var subIds = delSubDrops[id] || [];
+        subIds.forEach(function(sid){
+          totalPcs += parseInt(document.getElementById('sdpcs_'+sid)?.value)||0;
+          totalWt  += parseFloat(document.getElementById('sdwt_'+sid)?.value)||0;
+        });
+        var dropCount = 1 + subIds.length;
+        var summary = (cons ? cons + ' · ' : '') +
+                      totalPcs + ' pcs · ' + totalWt + ' lbs' +
+                      (dropCount > 1 ? ' · ' + dropCount + ' drops' : '');
+        sum.textContent = summary;
+      } else {
+        // Pickup: show shipper + total pcs/weight + sub-pickup count
+        var shipper = document.getElementById('pship_'+id)?.value || '';
+        var totalPcs = parseInt(document.getElementById('pp_'+id)?.value)||0;
+        var totalWt  = parseFloat(document.getElementById('pw_'+id)?.value)||0;
+        var subPuIds = puSubDrops[id] || [];
+        // sub-pickups inherit pieces/weight from parent so don't double count
+        var pickupCount = 1 + subPuIds.length;
+        sum.textContent = (shipper ? shipper + ' · ' : '') +
+                          totalPcs + ' pcs · ' + totalWt + ' lbs' +
+                          (pickupCount > 1 ? ' · ' + pickupCount + ' pick ups' : '');
+      }
+    }
   }
   // Show done tick, collapse body
   var done = document.getElementById('stdone_'+id);

@@ -93,11 +93,11 @@
         <div class="fg fg3" style="margin-bottom:10px">
           <div class="field"><label>Date *</label><input type="date" id="fDate" onchange="onDateChange();saveDraft()"></div>
           <div class="field"><label>Start Time * (24hr)</label><input type="time" id="fStart" onchange="calcHours();saveDraft()"></div>
-          <div class="field"><label>End Time * (24hr)</label><input type="time" id="fEnd" onchange="calcHours();saveDraft()"></div>
+          <div style="display:none"><input type="time" id="fEnd"></div>
         </div>
         <div class="fg fg3">
           <div class="field"><label>Start Mileage *</label><input type="number" id="fSMi" placeholder="12275" inputmode="tel" pattern="[0-9]*" oninput="calcMiles();saveDraft()"></div>
-          <div class="field"><label>End Mileage *</label><input type="number" id="fEMi" placeholder="12441" inputmode="tel" pattern="[0-9]*" oninput="calcMiles();saveDraft()"></div>
+          <div style="display:none"><input type="number" id="fEMi"></div>
           <div class="field"><label>Total Miles</label><div class="auto-calc" id="fTotMi">&#8212;</div></div>
         </div>
       </div>
@@ -120,8 +120,9 @@
         <div class="si"><div class="si-val" id="pCnt">0</div><div class="si-lbl">Pick Ups</div></div>
         <div class="si"><div class="si-val" id="dPcs">0</div><div class="si-lbl">Del Pcs</div></div>
         <div class="si"><div class="si-val" id="pPcs">0</div><div class="si-lbl">PU Pcs</div></div>
-        <div class="si" style="grid-column:span 2"><div class="si-val" id="dWt">0</div><div class="si-lbl">Del Weight (lbs)</div></div>
-        <div class="si" style="grid-column:span 2"><div class="si-val" id="pWt">0</div><div class="si-lbl">PU Weight (lbs)</div></div>
+        <!-- hidden but keep IDs so JS doesn't crash -->
+        <div style="display:none"><div id="dWt">0</div></div>
+        <div style="display:none"><div id="pWt">0</div></div>
       </div>
     </div>
 
@@ -1471,6 +1472,34 @@ function printSummary(){
     <div style="margin-top:12px;font-size:11px;color:var(--muted);text-align:center">Default employee #: <strong>1234</strong> &nbsp;&middot;&nbsp; Change in Driver Management</div>
   </div>
 </div>
+
+<!-- END OF SHIFT POPUP -->
+<div class="modal-overlay" id="eosOv" style="align-items:center;justify-content:center">
+  <div style="background:var(--surface);border-radius:12px;width:calc(100% - 32px);max-width:380px;overflow:hidden;box-shadow:var(--shadow-lg)">
+    <div style="background:#1a1a1a;padding:14px 18px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:white">End of Shift</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.55);margin-top:2px">Enter your final details to submit</div>
+    </div>
+    <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div>
+          <label style="display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px">End Time (24hr)</label>
+          <input type="time" id="eosEndTime" style="width:100%;height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:16px;box-sizing:border-box">
+        </div>
+        <div>
+          <label style="display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px">End Mileage</label>
+          <input type="number" id="eosEndMi" placeholder="e.g. 12441" inputmode="tel" style="width:100%;height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:16px;box-sizing:border-box">
+        </div>
+      </div>
+      <div id="eosSummary" style="background:var(--surface2);border-radius:6px;padding:10px 14px;font-size:13px;color:var(--text2);display:flex;flex-direction:column;gap:4px"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <button onclick="document.getElementById('eosOv').classList.remove('open')" style="height:46px;border-radius:6px;border:1.5px solid var(--border2);background:var(--surface2);font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;cursor:pointer;color:var(--text2);touch-action:manipulation">Cancel</button>
+        <button onclick="confirmSubmit()" style="height:46px;border-radius:6px;border:none;background:var(--accent);color:white;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;cursor:pointer;touch-action:manipulation">Confirm &amp; Submit</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html><!-- REMOVED --><div id="mgrLegend" style="display:flex;align-items:center;gap:14px;padding:8px 14px;background:var(--surface);border-bottom:1px solid var(--border);font-size:12px;color:var(--text2);flex-wrap:wrap">
       <span style="font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-size:10px">Legend:</span>
