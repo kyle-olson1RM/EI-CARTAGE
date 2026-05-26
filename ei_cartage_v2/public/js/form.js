@@ -392,13 +392,15 @@ function _renderStopCard(type, id){
   var head = document.createElement('div');
   head.className = 'stop-card-head';
   head.setAttribute('onclick', '_toggleStop('+id+')');
+  var stopType = type;
   head.innerHTML =
     '<span class="stop-badge '+badgeClass+'">'+badgeTxt+'</span>'+
     '<span class="stop-card-summary" id="stsum_'+id+'">Stop '+stopNum+'</span>'+
     '<span id="stdone_'+id+'" class="stop-card-done" style="display:none">'+
       '<svg width="12" height="12" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" stroke="#16a34a" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>'+
     '</span>'+
-    '<svg id="stchev_'+id+'" width="14" height="14" viewBox="0 0 14 14" style="flex-shrink:0"><polyline points="3,5 7,9 11,5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    '<button data-sid="'+id+'" data-stype="'+type+'" onclick="event.stopPropagation();_removeStop(this.dataset.sid,this.dataset.stype)" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:2px 6px;touch-action:manipulation;flex-shrink:0;line-height:1">&#215;</button>'+
+    '<svg id="stchev_'+id+'" width="14" height="14" viewBox="0 0 14 14" style="flex-shrink:0;margin-left:2px"><polyline points="3,5 7,9 11,5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
   // Body - clone the src row contents
   var body = document.createElement('div');
@@ -432,6 +434,29 @@ function _renderStopCard(type, id){
 
   // Scroll to new card
   setTimeout(function(){card.scrollIntoView({behavior:'smooth',block:'center'});}, 100);
+}
+
+
+function _removeStop(id, type){
+  id = parseInt(id);
+  if(!confirm('Remove this stop?')) return;
+  // Remove the card
+  var card = document.getElementById('stopcard_'+id);
+  if(card) card.remove();
+  // Remove from tracking arrays
+  if(type === 'd'){
+    delIds = delIds.filter(function(x){return x!==id;});
+  } else {
+    puIds = puIds.filter(function(x){return x!==id;});
+  }
+  // Remove hidden row if it exists
+  var row = document.getElementById('row_'+id);
+  if(row) row.remove();
+  // Remove from stopOrder
+  stopOrder = stopOrder.filter(function(s){return s.id!==id;});
+  _updateStopsLbl();
+  updateTotals();
+  saveDraft();
 }
 
 function _toggleStop(id){
