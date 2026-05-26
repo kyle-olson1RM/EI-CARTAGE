@@ -213,7 +213,7 @@ function startNewManifest(){
   ss('driverForm');
 }
 
-function clearForm(){['fTruck','fStart','fEnd','fSMi','fEMi'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});document.getElementById('fDate').value=localDateStr();document.getElementById('delRows').innerHTML='';document.getElementById('puRows').innerHTML='';delIds=[];puIds=[];['fTotMi','tMi','tHrs','tStart','tEnd'].forEach(id=>document.getElementById(id).textContent='—');updateTotals();onDateChange();}
+function clearForm(){['fTruck','fStart','fEnd','fSMi','fEMi'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});document.getElementById('fDate').value=localDateStr();document.getElementById('delRows').innerHTML='';document.getElementById('puRows').innerHTML='';var asr=document.getElementById('allStopsRows');if(asr)asr.innerHTML='';delIds=[];puIds=[];delSubDrops={};puSubDrops={};subRc=0;if(typeof stopOrder!=='undefined')stopOrder=[];['fTotMi','tMi','tHrs','tStart','tEnd'].forEach(id=>document.getElementById(id).textContent='—');updateTotals();onDateChange();}
 
 function gD(id){return{proNum:document.getElementById('dref_'+id)?.value||'',shipper:document.getElementById('dship_'+id)?.value||'',pieces:parseInt(document.getElementById('dp_'+id)?.value)||0,weight:parseFloat(document.getElementById('dw_'+id)?.value)||0,city:document.getElementById('dcity_'+id)?.value||'',consignee:document.getElementById('dcons_'+id)?.value||'',timeIn:document.getElementById('dtin_'+id)?.value||'',timeOut:document.getElementById('dtout_'+id)?.value||'',note:document.getElementById('dnote_'+id)?.value.trim()||'',subDrops:getSubDrops(id,'d')};}
 
@@ -345,6 +345,7 @@ function capWords(el){
   var v=el.value,pos=el.selectionStart;
   var c=v.replace(/(^|\s)([a-z])/g,function(m,p1,p2){return p1+p2.toUpperCase();});
   if(c!==v){el.value=c;try{el.setSelectionRange(pos,pos);}catch(e){}}
+}
 
 
 // ── STOP CARDS (new visual layer over addDel/addPU) ─────────────────────────
@@ -492,4 +493,3 @@ addSubDrop = function(stopId, type){
   var addBtn = document.getElementById('adddrop_'+stopId);
   if(addBtn) setTimeout(function(){addBtn.scrollIntoView({behavior:'smooth',block:'center'});}, 200);
 };
-}
