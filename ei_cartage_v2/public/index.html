@@ -93,12 +93,18 @@
         <div class="fg fg2" style="margin-bottom:10px">
           <div class="field"><label>Date *</label><input type="date" id="fDate" onchange="onDateChange();saveDraft()"></div>
           <div class="field"><label>Start Time * (24hr)</label><input type="time" id="fStart" onchange="calcHours();saveDraft()"></div>
-          <div style="display:none"><input type="time" id="fEnd"></div>
         </div>
-        <div class="fg fg2">
+        <!-- End time row - hidden for drivers, shown when editing -->
+        <div id="endTimeRow" style="display:none;margin-bottom:10px">
+          <div class="field"><label>End Time (24hr)</label><input type="time" id="fEnd" onchange="calcHours();saveDraft()"></div>
+        </div>
+        <div class="fg fg2" id="mileageRow">
           <div class="field"><label>Start Mileage *</label><input type="number" id="fSMi" placeholder="12275" inputmode="tel" pattern="[0-9]*" oninput="calcMiles();saveDraft()"></div>
           <div class="field"><label>Total Miles</label><div class="auto-calc" id="fTotMi">&#8212;</div></div>
-          <div style="display:none"><input type="number" id="fEMi"></div>
+        </div>
+        <!-- End mileage - hidden for drivers, shown when editing -->
+        <div id="endMiRow" style="display:none;margin-bottom:10px">
+          <div class="field"><label>End Mileage</label><input type="number" id="fEMi" placeholder="12441" inputmode="tel" pattern="[0-9]*" oninput="calcMiles();saveDraft()"></div>
         </div>
       </div>
     </div>

@@ -311,6 +311,12 @@ function editManifest(id){
 
     updateTotals();
 
+    // Show end time and end mileage fields for editing
+    var endTimeRow=document.getElementById('endTimeRow');
+    var endMiRow=document.getElementById('endMiRow');
+    if(endTimeRow)endTimeRow.style.display='block';
+    if(endMiRow)endMiRow.style.display='block';
+
     // Change form header to show EDITING mode
     var header=document.querySelector('#driverForm .app-header h1');
     if(header)header.textContent='Edit Manifest';
