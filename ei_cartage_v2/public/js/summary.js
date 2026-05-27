@@ -110,7 +110,43 @@ function renderCustomerDash(){
   el.innerHTML='<div class="grand-box"><h3>Program Totals &mdash; Week Ending '+fs(friday)+'</h3><div class="grand-grid"><div class="gi"><div class="gi-val">'+gD+'</div><div class="gi-lbl">Deliveries</div></div><div class="gi"><div class="gi-val">'+gP+'</div><div class="gi-lbl">Pick Ups</div></div><div class="gi"><div class="gi-val">'+gS+'</div><div class="gi-lbl">Shipments</div></div><div class="gi"><div class="gi-val">'+gW.toLocaleString()+'</div><div class="gi-lbl">Weight (lbs)</div></div><div class="gi"><div class="gi-val">'+gM.toLocaleString()+'</div><div class="gi-lbl">Miles</div></div><div class="gi"><div class="gi-val">'+gH.toFixed(2)+'</div><div class="gi-lbl">Hours</div></div><div class="gi"><div class="gi-val">$'+gC.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div><div class="gi-lbl">Total Charges</div></div><div class="gi"><div class="gi-val">$'+(gW>0?(gC/gW).toFixed(4):'0.0000')+'</div><div class="gi-lbl">Cost Per Lb</div></div></div></div><div class="sum-report"><div class="sum-report-head"><div class="srh-title">Expeditors Cartage Program</div><div class="srh-week">Week Ending '+fs(friday)+'</div></div><div style="overflow-x:auto"><table class="sum-tbl"><thead><tr><th>Unit</th><th>Driver</th><th>Deliveries</th><th>Pick Ups</th><th>Shipments</th><th>Weight (lbs)</th><th>Miles</th><th>Hours</th><th>Charges</th></tr></thead><tbody>'+tbodyHtml+'</tbody><tfoot><tr class="total-row"><td colspan="2"><strong>TOTAL</strong></td><td>'+gD+'</td><td>'+gP+'</td><td>'+gS+'</td><td>'+gW.toLocaleString()+'</td><td>'+gM+'</td><td>'+gH.toFixed(2)+'</td><td class="chg-cell" style="color:#ffd700;font-size:16px">$'+gC.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td></tr></tfoot></table></div><div class="sum-stats"><div class="ss-row"><div class="ss-lbl">Average Cost Per Shipment</div><div class="ss-val">$'+acps.toFixed(2)+'</div></div><div class="ss-row"><div class="ss-lbl">Average Cost Per Pound</div><div class="ss-val">$'+acpl.toFixed(4)+'</div></div><div class="ss-row"><div class="ss-lbl">Average Shipments Per Hour</div><div class="ss-val">'+asph.toFixed(2)+'</div></div><div class="ss-row"><div class="ss-lbl">Average Miles Per Day</div><div class="ss-val">'+amd.toFixed(1)+'</div></div><div class="ss-row"><div class="ss-lbl">Average Cost Per Mile</div><div class="ss-val">$'+acpm.toFixed(2)+'</div></div></div></div>';
 }
 
-function allWks(){const w=new Set();manifests.forEach(m=>{if(m.date)w.add(getMon(m.date));});return[...w].sort().reverse();}
+function allWks(){
+  // Always generate weeks from program start through current week
+  // regardless of whether there is data for each week
+  var weeks = new Set();
+
+  // Add weeks that have actual data
+  manifests.forEach(function(m){if(m.date)weeks.add(getMon(m.date));});
+
+  // Generate all weeks from the earliest data (or 8 weeks ago) through current week
+  var today = new Date();
+  var currentMon = getMon(today.toISOString().split('T')[0]);
+
+  // Find earliest week - either from data or 8 weeks back as default
+  var eightWeeksAgo = new Date(today);
+  eightWeeksAgo.setDate(eightWeeksAgo.getDate() - 56);
+  var startMon = getMon(eightWeeksAgo.toISOString().split('T')[0]);
+
+  // If we have data going back further, use that
+  var allDataWeeks = [...weeks].sort();
+  if(allDataWeeks.length && allDataWeeks[0] < startMon){
+    startMon = allDataWeeks[0];
+  }
+
+  // Fill in every week from startMon to currentMon
+  var cursor = new Date(startMon + 'T12:00:00');
+  var cursorMon = getMon(currentMon);
+  while(true){
+    var wk = getMon(cursor.toISOString().split('T')[0]);
+    weeks.add(wk);
+    if(wk >= cursorMon) break;
+    cursor.setDate(cursor.getDate() + 7);
+    if(cursor.getDate && cursor > new Date(cursorMon + 'T12:00:00')) break;
+  }
+  weeks.add(currentMon); // always include current week
+
+  return [...weeks].sort().reverse(); // most recent first
+}
 
 function getMon(d){const dt=new Date(d+'T12:00:00');const dy=dt.getDay();dt.setDate(dt.getDate()+(dy===0?-6:1-dy));return dt.toISOString().split('T')[0];}
 
@@ -121,9 +157,23 @@ function ff(d){return new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:
 function wkLbl(mon){const fri=new Date(mon+'T12:00:00');fri.setDate(fri.getDate()+4);return ff(mon)+' &ndash; '+ff(fri.toISOString().split('T')[0]);}
 
 function showSum(){
-  const wks=allWks();const sel=document.getElementById('weekSel');const cur=sel.value;
-  if(!wks.length){sel.innerHTML='<option value="">No data yet</option>';}
-  else{sel.innerHTML=wks.map(w=>`<option value="${w}" ${w===cur?'selected':''}>${wkLbl(w)}</option>`).join('');if(!cur||!wks.includes(cur))sel.value=wks[0];}
+  var wks=allWks();
+  var sel=document.getElementById('weekSel');
+  var currentMon=getMon(new Date().toISOString().split('T')[0]);
+
+  if(!wks.length){
+    sel.innerHTML='<option value="">No data yet</option>';
+  } else {
+    sel.innerHTML=wks.map(function(w){
+      return '<option value="'+w+'" '+(w===currentMon?'selected':'')+'>'+wkLbl(w)+'</option>';
+    }).join('');
+    // Always default to current week
+    if(wks.includes(currentMon)){
+      sel.value=currentMon;
+    } else {
+      sel.value=wks[0]; // fallback to most recent
+    }
+  }
   renderSum();ss('summary');
 }
 
