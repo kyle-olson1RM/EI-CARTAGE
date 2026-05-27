@@ -65,17 +65,36 @@ async function bootApp(){
     if(m)manifests=JSON.parse(m);
   }catch(e){}
 
-  // Initialise roster — only seed if nothing stored anywhere
+  // Roster sync — version-controlled so updates deploy to all devices
+  // Bump ROSTER_VERSION when the default roster changes
+  var ROSTER_VERSION = 'v7-may2026';
   try{
-    var stored=cacheGet('ei_driver_roster');
-    if(!stored){
+    var rosterVer = cacheGet('ei_roster_version');
+    if(rosterVer !== ROSTER_VERSION){
+      // Build fresh default roster from UNIT_MAP with correct driver numbers
+      var driverNums = {
+        'Tom Hunt':'751','Mike Plodzein':'750','Dan Eckler':'752',
+        'Armando Galeano':'776','Juan Custodio':'753','Eric Gomez':'750',
+        'Marin Bezatlliu':'761','Jose Castenada':'757','Joni Grabova':'758',
+        'Edi Rukaj':'785','Jorge Osorio':'760','Remon Khoshaba':'782',
+        'Diego Hernandez':'783','Ermal Diko':'786','Armando Perez':'784',
+        'Jose Nieves':'798','Bill Meager':'779','Miguel Gomez':'777',
+        'Armando G':'','Gerardo Picazo':'781'
+      };
       var def=Object.entries(UNIT_MAP).map(function(e){
         var name=e[0],unit=e[1];
-        return{name:name,unit:unit,rate:unit.toUpperCase().startsWith('ST')?TRUCK_RATES.ST:TRUCK_RATES.TT};
+        return{
+          name:name,
+          unit:unit,
+          driverNum:driverNums[name]||'',
+          rate:unit.toUpperCase().startsWith('ST')?TRUCK_RATES.ST:TRUCK_RATES.TT
+        };
       });
       saveToStore('ei_driver_roster',JSON.stringify(def));
+      saveToStore('ei_roster_version', ROSTER_VERSION);
+      console.log('Roster updated to', ROSTER_VERSION);
     }
-  }catch(e){}
+  }catch(e){console.error('Roster init error:',e);}
 
   // Always rebuild dropdown from stored roster
   rebuildUnitMap(getDriverRoster());
