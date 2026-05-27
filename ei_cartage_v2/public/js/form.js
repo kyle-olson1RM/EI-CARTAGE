@@ -175,7 +175,7 @@ function addPU(){
           <div class="field"><label>Expeditors Location</label>
             <select id="pdrop_${id}"><option value="">Select...</option></select>
           </div>
-          <div class="field"><label>Arrive &rarr; Depart Expeditors — 24hr</label><div class="time-pair" style="margin-top:5px"><input type="time" id="parr_${id}"><span>&rarr;</span><input type="time" id="pdep2_${id}"></div></div>
+          <div class="field"><label>Arrive &rarr; Depart Expeditors — 24hr</label><div class="time-pair" style="margin-top:5px"><input type="time" id="parr_${id}" onchange="_checkReturnPending(${id})"><span>&rarr;</span><input type="time" id="pdep2_${id}"></div></div>
         </div>
       </div>
     </div>
@@ -404,6 +404,55 @@ function _updateStopsLbl(){
   if(el) el.textContent = stopOrder.length + ' stop' + (stopOrder.length!==1?'s':'');
 }
 
+
+// ── RETURN PENDING BADGE ─────────────────────────────────────────────────────
+
+function _collapseAllExceptLast(){
+  // Collapse all stop cards except the very last one added
+  var cards = document.querySelectorAll('.stop-card');
+  if(!cards.length) return;
+  cards.forEach(function(card, i){
+    var cardId = card.id.replace('stopcard_','');
+    var body = document.getElementById('stopbody_'+cardId);
+    var chev = document.getElementById('stchev_'+cardId);
+    if(i < cards.length - 1){
+      // Collapse all but last
+      if(body) body.classList.add('collapsed');
+      if(chev) chev.style.transform = 'rotate(-90deg)';
+    } else {
+      // Ensure last is open
+      if(body) body.classList.remove('collapsed');
+      if(chev) chev.style.transform = '';
+    }
+  });
+}
+
+function _checkReturnPending(id){
+  // For pickup cards only - check if parr_ (arrive at Expeditors) is filled
+  var parrEl = document.getElementById('parr_'+id);
+  if(!parrEl) return; // not a pickup card
+  var badge = document.getElementById('retpend_'+id);
+  if(!badge) return;
+  var filled = parrEl.value && parrEl.value.trim();
+  badge.style.display = filled ? 'none' : 'inline-flex';
+}
+
+function _openReturnField(id){
+  // Expand the card but scroll directly to the return time field
+  var body = document.getElementById('stopbody_'+id);
+  var chev = document.getElementById('stchev_'+id);
+  if(body) body.classList.remove('collapsed');
+  if(chev) chev.style.transform = '';
+  // Scroll to parr field
+  setTimeout(function(){
+    var arrField = document.getElementById('parr_'+id);
+    if(arrField){
+      arrField.scrollIntoView({behavior:'smooth', block:'center'});
+      arrField.focus();
+    }
+  }, 100);
+}
+
 function _renderStopCard(type, id){
   var container = document.getElementById('allStopsRows');
   if(!container) return;
@@ -429,9 +478,14 @@ function _renderStopCard(type, id){
   head.className = 'stop-card-head';
   head.setAttribute('onclick', '_toggleStop('+id+')');
   var stopType = type;
+  // For pickup cards, add a return-pending badge (hidden initially, shown when parr_ is empty after collapse)
+  var retPendBadge = type==='p' ?
+    '<span id="retpend_'+id+'" class="return-pending-badge" style="display:none" onclick="event.stopPropagation();_openReturnField('+id+')">&#128336; Return pending</span>' : '';
+
   head.innerHTML =
     '<span class="stop-badge '+badgeClass+'">'+badgeTxt+'</span>'+
     '<span class="stop-card-summary" id="stsum_'+id+'">Stop '+stopNum+'</span>'+
+    retPendBadge+
     '<span id="stdone_'+id+'" class="stop-card-done" style="display:none">'+
       '<svg width="12" height="12" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" stroke="#16a34a" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>'+
     '</span>'+
@@ -553,6 +607,8 @@ function _doneStop(id){
   if(body) body.classList.add('collapsed');
   var chev = document.getElementById('stchev_'+id);
   if(chev) chev.style.transform = 'rotate(-90deg)';
+  // Check return pending for pickup cards
+  _checkReturnPending(id);
   updateTotals();
   saveDraft();
 }
