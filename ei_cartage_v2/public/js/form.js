@@ -366,16 +366,20 @@ function _doSubmit(){
   if(totalHours<1||totalHours>14)flags.push('Unusual hours: '+totalHours);
   // Flag any stops with wait time over 2 hours
   var longWaits=[];
-  function calcWait(tIn, tOut, label){
+  var flaggedStops=[]; // track which stops have issues for highlighting in modal
+  function calcWait(tIn, tOut, label, stopIdx, stopType){
     if(!tIn||!tOut)return;
     var si=tIn.split(':').map(Number),so=tOut.split(':').map(Number);
     var minIn=si[0]*60+si[1],minOut=so[0]*60+so[1];
     if(minOut<=minIn)minOut+=1440; // past midnight
     var hrs=(minOut-minIn)/60;
-    if(hrs>2) longWaits.push(label+' wait '+hrs.toFixed(1)+'hrs');
+    if(hrs>2){
+      longWaits.push(label+' wait '+hrs.toFixed(1)+'hrs');
+      flaggedStops.push({type:stopType,idx:stopIdx,reason:'Long wait: '+hrs.toFixed(1)+'hrs'});
+    }
   }
-  deliveries.forEach(function(d,i){calcWait(d.timeIn,d.timeOut,'DEL '+(i+1));});
-  pickups.forEach(function(p,i){calcWait(p.pickupIn,p.pickupOut,'P/U '+(i+1));});
+  deliveries.forEach(function(d,i){calcWait(d.timeIn,d.timeOut,'DEL '+(i+1),i,'d');});
+  pickups.forEach(function(p,i){calcWait(p.pickupIn,p.pickupOut,'P/U '+(i+1),i,'p');});
   if(longWaits.length>0)flags.push('Long wait: '+longWaits.join(', ')+' — verify times');
 
   // Flag any notes
@@ -384,7 +388,7 @@ function _doSubmit(){
   pickups.forEach(function(p){if(p.note)noteCount++;});
   if(noteCount>0)flags.push(noteCount+' driver note'+(noteCount>1?'s':''));
 
-  const m={id:Date.now().toString(),submittedAt:new Date().toISOString(),status:'pending',flags,driverName:name,driverNum:session?.driverNum||'',isSubstitute:session?!!session.isSub:false,subFor:session?session.subFor||'':'',truckNum:truck,date,dayOfWeek,startTime:st,endTime:et,totalMiles,startMileage:sm,endMileage:em,totalHours,ttlDeliveries:deliveries.length,ttlPickups:pickups.length,ttlShipments:uniqueMAWBs,ttlWeight:totalWeight,deliveries,pickups};
+  const m={id:Date.now().toString(),submittedAt:new Date().toISOString(),status:'pending',flags,flaggedStops:flaggedStops||[],driverName:name,driverNum:session?.driverNum||'',isSubstitute:session?!!session.isSub:false,subFor:session?session.subFor||'':'',truckNum:truck,date,dayOfWeek,startTime:st,endTime:et,totalMiles,startMileage:sm,endMileage:em,totalHours,ttlDeliveries:deliveries.length,ttlPickups:pickups.length,ttlShipments:uniqueMAWBs,ttlWeight:totalWeight,deliveries,pickups};
   // If editing an existing manifest, replace it; otherwise add new
   if(typeof editingManifestId!=='undefined'&&editingManifestId){
     var editIdx=manifests.findIndex(function(x){return x.id===editingManifestId;});

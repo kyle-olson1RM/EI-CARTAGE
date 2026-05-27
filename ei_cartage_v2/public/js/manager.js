@@ -156,8 +156,10 @@ function openMod(id){
 
   // Build deliveries table rows
   var delRows='';
-  (m.deliveries||[]).forEach(function(d){
-    delRows+='<tr'+(d.isSubDrop?' style="background:var(--accent-light)"':'')+'>'+
+  var flaggedDelIdx=new Set((m.flaggedStops||[]).filter(function(f){return f.type==='d';}).map(function(f){return f.idx;}));
+  (m.deliveries||[]).forEach(function(d,i){
+    var isFlagged=flaggedDelIdx.has(i);
+    delRows+='<tr'+(isFlagged?' style="background:#fffbeb;border-left:3px solid #d97706"':d.isSubDrop?' style="background:var(--accent-light)"':'')+'>'+
       '<td>'+(d.proNum||'&mdash;')+'</td>'+
       '<td>'+(d.shipper||'&mdash;')+'</td>'+
       '<td>'+(d.pieces||0)+'</td>'+
@@ -166,13 +168,16 @@ function openMod(id){
       '<td>'+(d.consignee||'&mdash;')+'</td>'+
       '<td>'+(d.timeIn||'&mdash;')+' &rarr; '+(d.timeOut||'&mdash;')+'</td>'+
       (d.note?'<td><em>'+d.note+'</em></td>':'<td></td>')+
+      (isFlagged?'<td style="color:#d97706;font-weight:700;font-size:11px">&#9888; '+((m.flaggedStops||[]).find(function(f){return f.type==='d'&&f.idx===i;})||{}).reason+'</td>':'<td></td>')+
     '</tr>';
   });
 
   // Build pickups table rows
   var puRows='';
-  (m.pickups||[]).forEach(function(p){
-    puRows+='<tr'+(p.isSubDrop?' style="background:var(--accent-light)"':'')+'>'+
+  var flaggedPuIdx=new Set((m.flaggedStops||[]).filter(function(f){return f.type==='p';}).map(function(f){return f.idx;}));
+  (m.pickups||[]).forEach(function(p,i){
+    var isFlagged=flaggedPuIdx.has(i);
+    puRows+='<tr'+(isFlagged?' style="background:#fffbeb;border-left:3px solid #d97706"':p.isSubDrop?' style="background:var(--accent-light)"':'')+'>'+
       '<td>'+(p.proNum||'&mdash;')+'</td>'+
       '<td>'+(p.expRef||'&mdash;')+'</td>'+
       '<td>'+(p.shipper||'&mdash;')+'</td>'+
@@ -182,6 +187,7 @@ function openMod(id){
       '<td>'+(p.dropLocation||'&mdash;')+'</td>'+
       '<td>'+(p.arriveExp||'&mdash;')+' &rarr; '+(p.departExp||'&mdash;')+'</td>'+
       (p.note?'<td><em>'+p.note+'</em></td>':'<td></td>')+
+      (isFlagged?'<td style="color:#d97706;font-weight:700;font-size:11px">&#9888; '+((m.flaggedStops||[]).find(function(f){return f.type==='p'&&f.idx===i;})||{}).reason+'</td>':'<td></td>')+
     '</tr>';
   });
 
