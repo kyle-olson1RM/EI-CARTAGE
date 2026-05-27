@@ -1,3 +1,21 @@
+// ── EDIT STATE ───────────────────────────────────────────────────────────────
+var editingManifestId = null;
+var wasEditingFromMgr = false;
+
+
+// ── CURRENT TIME HELPER ───────────────────────────────────────────────────────
+function nowTime(){
+  var d=new Date();
+  var h=String(d.getHours()).padStart(2,'0');
+  var m=String(d.getMinutes()).padStart(2,'0');
+  return h+':'+m;
+}
+
+function setTimeNow(elId){
+  var el=document.getElementById(elId);
+  if(el&&!el.value) el.value=nowTime();
+}
+
 /**
  * form.js
  * Manifest entry form — trip info, delivery rows, pickup rows,
@@ -209,7 +227,9 @@ function startNewManifest(){
     }
   }
   document.getElementById('fDate').value=localDateStr();
-  onDateChange();
+  // Pre-fill start time with current time
+  setTimeNow('fStart');
+  onDateChange();calcHours();
   ss('driverForm');
 }
 
@@ -344,6 +364,20 @@ function _doSubmit(){
   if(totalMiles>300)flags.push('High mileage: '+totalMiles);
   if(totalWeight>100000)flags.push('Weight over 100,000 lbs — verify');
   if(totalHours<1||totalHours>14)flags.push('Unusual hours: '+totalHours);
+  // Flag any stops with wait time over 2 hours
+  var longWaits=[];
+  function calcWait(tIn, tOut, label){
+    if(!tIn||!tOut)return;
+    var si=tIn.split(':').map(Number),so=tOut.split(':').map(Number);
+    var minIn=si[0]*60+si[1],minOut=so[0]*60+so[1];
+    if(minOut<=minIn)minOut+=1440; // past midnight
+    var hrs=(minOut-minIn)/60;
+    if(hrs>2) longWaits.push(label+' wait '+hrs.toFixed(1)+'hrs');
+  }
+  deliveries.forEach(function(d,i){calcWait(d.timeIn,d.timeOut,'DEL '+(i+1));});
+  pickups.forEach(function(p,i){calcWait(p.pickupIn,p.pickupOut,'P/U '+(i+1));});
+  if(longWaits.length>0)flags.push('Long wait: '+longWaits.join(', ')+' — verify times');
+
   // Flag any notes
   var noteCount=0;
   deliveries.forEach(function(d){if(d.note)noteCount++;});
@@ -542,8 +576,15 @@ function _renderStopCard(type, id){
       });
     }
   }
-  // Scroll to new card
-  setTimeout(function(){card.scrollIntoView({behavior:'smooth',block:'center'});}, 100);
+  // Pre-fill time in with current time
+  setTimeout(function(){
+    if(type==='d'){
+      setTimeNow('dtin_'+id);
+    } else {
+      setTimeNow('ptin_'+id);
+    }
+    card.scrollIntoView({behavior:'smooth',block:'center'});
+  }, 150);
 }
 
 
