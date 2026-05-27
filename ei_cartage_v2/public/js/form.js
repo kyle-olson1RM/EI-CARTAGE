@@ -228,6 +228,12 @@ function submitManifest(){
   if(!date||!st){showToast('Date and start time required',3000);return;}
   if(!sm){showToast('Start mileage required',3000);return;}
   if(!delIds.length&&!puIds.length){showToast('Add at least one delivery or pickup',3000);return;}
+  // Skip EOS popup when editing from manager dashboard
+  if(wasEditingFromMgr){
+    _doSubmit();
+    return;
+  }
+
   // Show end of shift popup
   var dels=delIds.length,pus=puIds.length;
   var totWt=0,totPcs=0;
@@ -522,6 +528,20 @@ function _renderStopCard(type, id){
   // Insert at bottom of stops list, ABOVE the add buttons
   container.appendChild(card);
 
+  // For pickup cards, update summary with shipper name as driver types
+  if(type === 'p'){
+    var shipEl = document.getElementById('pship_'+id);
+    if(shipEl){
+      shipEl.addEventListener('input', function(){
+        var sumEl = document.getElementById('stsum_'+id);
+        var body = document.getElementById('stopbody_'+id);
+        // Only update summary if card is NOT yet collapsed/done
+        if(sumEl && body && !body.classList.contains('collapsed')){
+          sumEl.textContent = this.value || ('P/U '+puIds.indexOf(id)+1);
+        }
+      });
+    }
+  }
   // Scroll to new card
   setTimeout(function(){card.scrollIntoView({behavior:'smooth',block:'center'});}, 100);
 }

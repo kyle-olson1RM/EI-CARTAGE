@@ -7,12 +7,15 @@
 
 // ── DRIVER ROSTER ─────────────────────────────────────────────────────────────
 function getDriverRoster(){
-  try{var s=localStorage.getItem('ei_driver_roster');if(s)return JSON.parse(s);}catch(e){}
+  try{
+    var s=cacheGet('ei_driver_roster'); // reads from Supabase cache first, falls back to localStorage
+    if(s)return JSON.parse(s);
+  }catch(e){}
   return Object.entries(UNIT_MAP).map(function(e){var n=e[0],u=e[1];return{name:n,unit:u,rate:u.toUpperCase().startsWith('ST')?TRUCK_RATES.ST:TRUCK_RATES.TT};});
 }
 function saveDriverRoster(roster){
   var sorted=sortRoster(roster);
-  localStorage.setItem('ei_driver_roster',JSON.stringify(sorted));
+  saveToStore('ei_driver_roster',JSON.stringify(sorted)); // saves to Supabase + localStorage
   rebuildUnitMap(sorted);
 }
 function sortRoster(roster){
@@ -31,11 +34,11 @@ function rebuildUnitMap(roster){
 function saveManifests(){saveToStore('ei_manifests',JSON.stringify(manifests));}
 
 // ── DROP LOCATIONS ────────────────────────────────────────────────────────────
-function getDropLocations(){try{var s=localStorage.getItem('ei_drop_locations');if(s)return JSON.parse(s);}catch(e){}return{loc1:'849',loc2:'2000'};}
+function getDropLocations(){try{var s=cacheGet('ei_drop_locations');if(s)return JSON.parse(s);}catch(e){}return{loc1:'849',loc2:'2000'};}
 function saveDropLocations(){
   var l1=document.getElementById('dropLoc1')?.value.trim(),l2=document.getElementById('dropLoc2')?.value.trim();
   if(!l1||!l2){showToast('Both locations required');return;}
-  localStorage.setItem('ei_drop_locations',JSON.stringify({loc1:l1,loc2:l2}));
+  saveToStore('ei_drop_locations',JSON.stringify({loc1:l1,loc2:l2}));
   var msg=document.getElementById('dropLocMsg');if(msg){msg.textContent='\u2713 Saved';setTimeout(function(){msg.textContent='';},3000);}
   showToast('\u2713 Drop locations updated');
 }
@@ -48,7 +51,7 @@ function buildDropLocationSelect(selectId){
 
 // ── DRIVER MANAGEMENT ─────────────────────────────────────────────────────────
 function showDriverMgr(){
-  var rates=JSON.parse(localStorage.getItem('ei_truck_rates')||'{"TT":92,"ST":87}');
+  var rates=JSON.parse(cacheGet('ei_truck_rates')||'{"TT":92,"ST":87}');
   var ttEl=document.getElementById('rateTT'),stEl=document.getElementById('rateST');
   if(ttEl)ttEl.value=rates.TT;if(stEl)stEl.value=rates.ST;
   var locs=getDropLocations();
@@ -98,23 +101,23 @@ function confirmAddDriver(){
 function saveDrivers(){rebuildUnitMap(getDriverRoster());showToast('\u2713 Roster saved');setTimeout(function(){ss('manager');},600);}
 function saveTruckRates(){
   var tt=parseFloat(document.getElementById('rateTT')?.value)||92,st=parseFloat(document.getElementById('rateST')?.value)||87;
-  var rates={TT:tt,ST:st};localStorage.setItem('ei_truck_rates',JSON.stringify(rates));
+  var rates={TT:tt,ST:st};saveToStore('ei_truck_rates',JSON.stringify(rates));
   TRUCK_RATES.TT=tt;TRUCK_RATES.ST=st;
   var msg=document.getElementById('rateMsg');if(msg){msg.textContent='\u2713 Updated';setTimeout(function(){msg.textContent='';},3000);}
   showToast('\u2713 Rates updated');
 }
 function changeMgrPin(){
   var cur=document.getElementById('mgrPinCurrent')?.value.trim(),nw=document.getElementById('mgrPinNew')?.value.trim();
-  var stored=localStorage.getItem('ei_manager_emp')||'1234',msg=document.getElementById('mgrPinMsg');
+  var stored=cacheGet('ei_manager_emp')||'1234',msg=document.getElementById('mgrPinMsg');
   if(!cur||!nw){if(msg){msg.style.color='var(--danger)';msg.textContent='Fill in both fields';}return;}
   if(cur!==stored){if(msg){msg.style.color='var(--danger)';msg.textContent='Current # incorrect';}return;}
-  localStorage.setItem('ei_manager_emp',nw);
+  saveToStore('ei_manager_emp',nw);
   if(msg){msg.style.color='var(--success)';msg.textContent='\u2713 Updated';document.getElementById('mgrPinCurrent').value='';document.getElementById('mgrPinNew').value='';}
 }
 
 // ── MANAGER ACCESS ROSTER ─────────────────────────────────────────────────────
-function getManagerRoster(){try{var s=localStorage.getItem('ei_manager_roster');if(s)return JSON.parse(s);}catch(e){}return[];}
-function saveManagerRoster(r){localStorage.setItem('ei_manager_roster',JSON.stringify(r));}
+function getManagerRoster(){try{var s=cacheGet('ei_manager_roster');if(s)return JSON.parse(s);}catch(e){}return[];}
+function saveManagerRoster(r){saveToStore('ei_manager_roster',JSON.stringify(r));}
 function showManagerAccess(){renderManagerList();ss('managerAccess');}
 function renderManagerList(){
   var roster=getManagerRoster(),el=document.getElementById('managerList');if(!el)return;
@@ -145,7 +148,7 @@ function saveManagers(){showToast('\u2713 Manager roster saved');setTimeout(func
 function saveCustomerCode(){
   var code=document.getElementById('custCodeInput')?.value.trim().toUpperCase();
   if(!code){showToast('Please enter a code');return;}
-  localStorage.setItem('ei_customer_code',code);
+  saveToStore('ei_customer_code',code);
   // Update the live variable in summary.js
   if(typeof CUSTOMER_CODE!=='undefined') window.CUSTOMER_CODE=code;
   var msg=document.getElementById('custCodeMsg');

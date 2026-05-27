@@ -267,8 +267,11 @@ function editManifest(id){
     onDateChange();calcHours();calcMiles();
 
     // Restore deliveries
+    if(!(m.deliveries||[]).length && !(m.pickups||[]).length){
+      showToast('No stop detail available — this manifest was submitted before stop cards were added');
+    }
     (m.deliveries||[]).forEach(function(d){
-      addDel();
+      if(typeof addDelStop==='function') addDelStop(); else addDel();
       var id2=delIds[delIds.length-1];
       var set2=function(fid,val){var e=document.getElementById(fid);if(e)e.value=val||'';};
       set2('dref_'+id2, d.proNum);
@@ -288,7 +291,7 @@ function editManifest(id){
 
     // Restore pickups
     (m.pickups||[]).forEach(function(p){
-      addPU();
+      if(typeof addPUStop==='function') addPUStop(); else addPU();
       var id2=puIds[puIds.length-1];
       var set2=function(fid,val){var e=document.getElementById(fid);if(e)e.value=val||'';};
       set2('pref_'+id2, p.proNum);
@@ -323,6 +326,8 @@ function editManifest(id){
     var indicator=document.getElementById('draftIndicator');
     if(indicator){indicator.textContent='Editing saved manifest';indicator.style.color='var(--warn)';}
 
+    updateTotals();
+    if(typeof _collapseAllExceptLast==='function') _collapseAllExceptLast();
     showToast('\u270e Editing manifest — submit to save changes');
   }, 250);
 }
