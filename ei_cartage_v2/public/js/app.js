@@ -31,27 +31,53 @@ function showToast(msg, dur){
 
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
-function bootApp(){
-  // Load manifests
-  try{var m=localStorage.getItem('ei_manifests');if(m)manifests=JSON.parse(m);}catch(e){}
+async function bootApp(){
+  // Detect if running through Railway server or local file
+  var isServer = window.location.protocol !== 'file:' &&
+                 window.location.hostname !== '' &&
+                 window.location.hostname !== 'localhost' &&
+                 window.location.hostname !== '127.0.0.1';
 
-  // Initialise roster
-  // IMPORTANT: If a roster is already saved, ALWAYS use it — never overwrite it.
-  // Only seed from UNIT_MAP if there is no roster stored at all (first time setup).
+  if(isServer){
+    // Load ALL shared data from Supabase via Railway API
+    try{
+      var controller=new AbortController();
+      var timeout=setTimeout(function(){controller.abort();},8000);
+      var res=await fetch('/api/store',{signal:controller.signal});
+      clearTimeout(timeout);
+      if(res.ok){
+        var all=await res.json();
+        Object.assign(_cache,all);
+        // Also mirror to localStorage for offline fallback
+        Object.keys(all).forEach(function(k){
+          try{localStorage.setItem(k,all[k]);}catch(e){}
+        });
+      }
+    }catch(e){
+      // Server unreachable — fall back to localStorage
+      console.log('API unavailable, using localStorage fallback');
+    }
+  }
+
+  // Load manifests from cache (populated from API or localStorage)
   try{
-    var stored=localStorage.getItem('ei_driver_roster');
+    var m=cacheGet('ei_manifests');
+    if(m)manifests=JSON.parse(m);
+  }catch(e){}
+
+  // Initialise roster — only seed if nothing stored anywhere
+  try{
+    var stored=cacheGet('ei_driver_roster');
     if(!stored){
-      // First time — seed from UNIT_MAP defaults
       var def=Object.entries(UNIT_MAP).map(function(e){
         var name=e[0],unit=e[1];
         return{name:name,unit:unit,rate:unit.toUpperCase().startsWith('ST')?TRUCK_RATES.ST:TRUCK_RATES.TT};
       });
-      localStorage.setItem('ei_driver_roster',JSON.stringify(def));
+      saveToStore('ei_driver_roster',JSON.stringify(def));
     }
-    // If roster exists — leave it completely alone regardless of code updates
   }catch(e){}
 
-  // Always rebuild dropdown from whatever roster is stored
+  // Always rebuild dropdown from stored roster
   rebuildUnitMap(getDriverRoster());
 
   // Restore session

@@ -19,24 +19,37 @@ async function apiGet(key) {
       const all = await res.json();
       Object.assign(_cache, all);
       return _cache[key] || null;
+    } else {
+      console.error('apiGet failed:', res.status, await res.text());
     }
-  } catch(e) { console.log('apiGet error', e); }
+  } catch(e) { console.error('apiGet network error:', e.message); }
   return null;
 }
 
 async function apiSet(key, value) {
   const str = typeof value === 'string' ? value : JSON.stringify(value);
   _cache[key] = str;
-  // Always write to localStorage as backup for offline/local mode
+  // Always write to localStorage as backup
   try { localStorage.setItem(key, str); } catch(e) {}
-  // Also push to server if available
+  // Push to server
+  var isServer = window.location.protocol !== 'file:' &&
+                 window.location.hostname !== '' &&
+                 window.location.hostname !== 'localhost' &&
+                 window.location.hostname !== '127.0.0.1';
+  if(!isServer) return; // local file mode - localStorage only
   try {
-    await fetch('/api/store/' + encodeURIComponent(key), {
+    var res = await fetch('/api/store/' + encodeURIComponent(key), {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ value: str })
     });
-  } catch(e) { /* server not available - localStorage backup is enough */ }
+    if(!res.ok) {
+      var err = await res.text();
+      console.error('apiSet failed for key:', key, 'status:', res.status, err);
+    }
+  } catch(e) {
+    console.error('apiSet network error for key:', key, e.message);
+  }
 }
 
 async function apiDel(key) {

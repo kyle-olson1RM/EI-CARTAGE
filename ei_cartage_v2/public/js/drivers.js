@@ -28,7 +28,7 @@ function rebuildUnitMap(roster){
   sel.innerHTML='<option value="">Select your name...</option>';
   roster.forEach(function(d){if(!d.name)return;var o=document.createElement('option');o.value=o.textContent=d.name;if(d.name===cur)o.selected=true;sel.appendChild(o);});
 }
-function saveManifests(){localStorage.setItem('ei_manifests',JSON.stringify(manifests));}
+function saveManifests(){saveToStore('ei_manifests',JSON.stringify(manifests));}
 
 // ── DROP LOCATIONS ────────────────────────────────────────────────────────────
 function getDropLocations(){try{var s=localStorage.getItem('ei_drop_locations');if(s)return JSON.parse(s);}catch(e){}return{loc1:'849',loc2:'2000'};}
