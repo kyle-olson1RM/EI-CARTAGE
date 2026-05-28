@@ -220,14 +220,14 @@ function openMod(id){
   if(delRows){
     html+='<div class="mod-section-head">Deliveries ('+(m.deliveries||[]).length+')</div>';
     html+='<div style="overflow-x:auto"><table class="mod-tbl">'+
-      '<thead><tr><th>Pro #</th><th>Shipper</th><th>Pcs</th><th>Weight</th><th>City</th><th>Consignee</th><th>Time In/Out</th><th>Note</th></tr></thead>'+
+      '<thead><tr><th>Pro #</th><th>Shipper</th><th>Pcs</th><th>Weight</th><th>City</th><th>Consignee</th><th>Time In/Out</th><th>Note</th><th>Flag</th></tr></thead>'+
       '<tbody>'+delRows+'</tbody></table></div>';
   }
 
   if(puRows){
     html+='<div class="mod-section-head">Pick Ups ('+(m.pickups||[]).length+')</div>';
     html+='<div style="overflow-x:auto"><table class="mod-tbl">'+
-      '<thead><tr><th>Pro #</th><th>Exp Ref</th><th>Shipper</th><th>Pcs</th><th>Weight</th><th>Time</th><th>Drop</th><th>At Exp</th><th>Note</th></tr></thead>'+
+      '<thead><tr><th>Pro #</th><th>Exp Ref</th><th>Shipper</th><th>Pcs</th><th>Weight</th><th>Time</th><th>Drop</th><th>At Exp</th><th>Note</th><th>Flag</th></tr></thead>'+
       '<tbody>'+puRows+'</tbody></table></div>';
   }
 
@@ -250,6 +250,7 @@ function editManifest(id){
 
   // Store the manifest ID being edited
   editingManifestId=id;
+  wasEditingFromMgr=true; // skip EOS popup on submit
 
   // Close modal
   document.getElementById('modOv').classList.remove('open');
@@ -333,6 +334,33 @@ function editManifest(id){
     if(indicator){indicator.textContent='Editing saved manifest';indicator.style.color='var(--warn)';}
 
     updateTotals();
+    // Set summary text on all stop cards so they show info when collapsed
+    delIds.forEach(function(id, i){
+      var cons=document.getElementById('dcons_'+id)?.value||'';
+      var pcs=document.getElementById('dp_'+id)?.value||'0';
+      var wt=document.getElementById('dw_'+id)?.value||'0';
+      var subIds=delSubDrops[id]||[];
+      var totalPcs=parseInt(pcs)||0, totalWt=parseFloat(wt)||0;
+      subIds.forEach(function(sid){
+        totalPcs+=parseInt(document.getElementById('sdpcs_'+sid)?.value)||0;
+        totalWt+=parseFloat(document.getElementById('sdwt_'+sid)?.value)||0;
+      });
+      var dropCount=1+subIds.length;
+      var sum=document.getElementById('stsum_'+id);
+      if(sum)sum.textContent=(cons?cons+' · ':'')+totalPcs+' pcs · '+totalWt+' lbs'+(dropCount>1?' · '+dropCount+' drops':'');
+      // Show done tick
+      var done=document.getElementById('stdone_'+id);
+      if(done)done.style.display='flex';
+    });
+    puIds.forEach(function(id, i){
+      var shipper=document.getElementById('pship_'+id)?.value||'';
+      var pcs=document.getElementById('pp_'+id)?.value||'0';
+      var wt=document.getElementById('pw_'+id)?.value||'0';
+      var sum=document.getElementById('stsum_'+id);
+      if(sum)sum.textContent=(shipper?shipper+' · ':'')+pcs+' pcs · '+wt+' lbs';
+      var done=document.getElementById('stdone_'+id);
+      if(done)done.style.display='flex';
+    });
     if(typeof _collapseAllExceptLast==='function') _collapseAllExceptLast();
     showToast('\u270e Editing manifest — submit to save changes');
   }, 250);
