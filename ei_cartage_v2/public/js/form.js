@@ -249,7 +249,7 @@ function submitManifest(){
   if(!sm){showToast('Start mileage required',3000);return;}
   if(!delIds.length&&!puIds.length){showToast('Add at least one delivery or pickup',3000);return;}
   // Skip EOS popup when editing from manager dashboard
-  if(wasEditingFromMgr){
+  if(editingManifestId || wasEditingFromMgr){
     _doSubmit();
     return;
   }

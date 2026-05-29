@@ -335,35 +335,36 @@ function editManifest(id){
 
     updateTotals();
     // Set summary text on all stop cards so they show info when collapsed
-    delIds.forEach(function(id, i){
+    // Use _doneStop logic directly for consistency
+    delIds.forEach(function(id){
       var cons=document.getElementById('dcons_'+id)?.value||'';
-      var pcs=document.getElementById('dp_'+id)?.value||'0';
-      var wt=document.getElementById('dw_'+id)?.value||'0';
+      var pcs=parseInt(document.getElementById('dp_'+id)?.value)||0;
+      var wt=parseFloat(document.getElementById('dw_'+id)?.value)||0;
       var subIds=delSubDrops[id]||[];
-      var totalPcs=parseInt(pcs)||0, totalWt=parseFloat(wt)||0;
+      var totalPcs=pcs, totalWt=wt;
       subIds.forEach(function(sid){
         totalPcs+=parseInt(document.getElementById('sdpcs_'+sid)?.value)||0;
         totalWt+=parseFloat(document.getElementById('sdwt_'+sid)?.value)||0;
       });
       var dropCount=1+subIds.length;
       var sum=document.getElementById('stsum_'+id);
-      if(sum)sum.textContent=(cons?cons+' · ':'')+totalPcs+' pcs · '+totalWt+' lbs'+(dropCount>1?' · '+dropCount+' drops':'');
-      // Show done tick
+      if(sum) sum.textContent=(cons?cons+' · ':'')+totalPcs+' pcs · '+totalWt+' lbs'+(dropCount>1?' · '+dropCount+' drops':'');
       var done=document.getElementById('stdone_'+id);
-      if(done)done.style.display='flex';
+      if(done) done.style.display='flex';
     });
-    puIds.forEach(function(id, i){
+    puIds.forEach(function(id){
       var shipper=document.getElementById('pship_'+id)?.value||'';
-      var pcs=document.getElementById('pp_'+id)?.value||'0';
-      var wt=document.getElementById('pw_'+id)?.value||'0';
+      var pcs=parseInt(document.getElementById('pp_'+id)?.value)||0;
+      var wt=parseFloat(document.getElementById('pw_'+id)?.value)||0;
       var sum=document.getElementById('stsum_'+id);
-      if(sum)sum.textContent=(shipper?shipper+' · ':'')+pcs+' pcs · '+wt+' lbs';
+      if(sum) sum.textContent=(shipper?shipper+' · ':'')+pcs+' pcs · '+wt+' lbs';
       var done=document.getElementById('stdone_'+id);
-      if(done)done.style.display='flex';
+      if(done) done.style.display='flex';
     });
+    updateTotals();
     if(typeof _collapseAllExceptLast==='function') _collapseAllExceptLast();
     showToast('\u270e Editing manifest — submit to save changes');
-  }, 250);
+  }, 300);
 }
 
 var editingManifestId=null;
