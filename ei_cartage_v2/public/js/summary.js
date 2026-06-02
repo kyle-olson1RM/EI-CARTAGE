@@ -74,7 +74,9 @@ function openCustomerLogin(){
 }
 function doCustomerLogin(){
   var code=document.getElementById('custCode').value.trim().toUpperCase();
-  if(code===CUSTOMER_CODE){
+  // Read fresh from cache/Supabase each time - never use stale static variable
+  var currentCode=(cacheGet('ei_customer_code')||'EXP2025').trim().toUpperCase();
+  if(code===currentCode){
     document.getElementById('custLoginOv').classList.remove('open');
     populateCustWeekSel();renderCustomerDash();ss('customerDash');
   }else{document.getElementById('custLoginErr').textContent='Incorrect access code';document.getElementById('custCode').value='';}

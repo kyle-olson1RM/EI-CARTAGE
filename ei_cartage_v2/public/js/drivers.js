@@ -148,9 +148,7 @@ function saveManagers(){showToast('\u2713 Manager roster saved');setTimeout(func
 function saveCustomerCode(){
   var code=document.getElementById('custCodeInput')?.value.trim().toUpperCase();
   if(!code){showToast('Please enter a code');return;}
-  saveToStore('ei_customer_code',code);
-  // Update the live variable in summary.js
-  if(typeof CUSTOMER_CODE!=='undefined') window.CUSTOMER_CODE=code;
+  saveToStore('ei_customer_code',code); // saves to Supabase + all devices
   var msg=document.getElementById('custCodeMsg');
   if(msg){msg.textContent='\u2713 Updated to '+code;setTimeout(function(){msg.textContent='';},3000);}
   showToast('\u2713 Customer code updated');

@@ -87,11 +87,19 @@ function renderCards(){
       var ds=new Date(m.date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
       var chg=(m.totalHours||0)*r;
       var acps=m.ttlShipments>0?chg/m.ttlShipments:0;
+      var flaggedDelSet=new Set((m.flaggedStops||[]).filter(function(f){return f.type==='d';}).map(function(f){return f.idx;}));
       var delRows=(m.deliveries||[]).map(function(d,i){
-        return '<tr style="background:var(--surface2)"><td style="padding-left:24px">'+(i+1)+'</td><td style="font-family:monospace;font-size:11px">'+(d.proNum||'&mdash;')+'</td><td>'+(d.consignee||'&mdash;')+'</td><td>'+(d.city||'&mdash;')+'</td><td style="text-align:center">'+d.pieces+'</td><td style="text-align:center;font-weight:600">'+((d.weight||0).toLocaleString())+'</td><td style="font-size:11px">'+(d.timeIn||'&mdash;')+'&rarr;'+(d.timeOut||'&mdash;')+'</td>'+(d.note?'<td style="background:var(--warn-light);color:var(--warn);font-size:11px;font-weight:600">&#128221; '+d.note+'</td>':'<td></td>')+'</tr>';
+        var isFlagged=flaggedDelSet.has(i);
+        var rowStyle=isFlagged?'background:#fffbeb;border-left:3px solid #d97706':d.isSubDrop?'background:var(--accent-light)':'background:var(--surface2)';
+        var flagReason=isFlagged?((m.flaggedStops||[]).find(function(f){return f.type==='d'&&f.idx===i;})||{}).reason||'':'';
+        return '<tr style="'+rowStyle+'"><td style="padding-left:24px">'+(i+1)+'</td><td style="font-family:monospace;font-size:11px">'+(d.proNum||'&mdash;')+'</td><td>'+(d.consignee||'&mdash;')+'</td><td>'+(d.city||'&mdash;')+'</td><td style="text-align:center">'+d.pieces+'</td><td style="text-align:center;font-weight:600">'+((d.weight||0).toLocaleString())+'</td><td style="font-size:11px">'+(d.timeIn||'&mdash;')+'&rarr;'+(d.timeOut||'&mdash;')+'</td>'+(d.note?'<td style="background:var(--warn-light);color:var(--warn);font-size:11px;font-weight:600">&#128221; '+d.note+'</td>':'<td></td>')+(isFlagged?'<td style="color:#d97706;font-weight:700;font-size:11px;white-space:nowrap">&#9888; '+flagReason+'</td>':'<td></td>')+'</tr>';
       }).join('');
+      var flaggedPuSet=new Set((m.flaggedStops||[]).filter(function(f){return f.type==='p';}).map(function(f){return f.idx;}));
       var puRows=(m.pickups||[]).map(function(p,i){
-        return '<tr style="background:var(--accent-light)"><td style="padding-left:24px">'+(i+1)+'</td><td style="font-family:monospace;font-size:11px">'+(p.proNum||'&mdash;')+'</td><td>'+(p.shipper||'&mdash;')+'</td><td style="text-align:center">'+p.pieces+'</td><td style="text-align:center;font-weight:600">'+((p.weight||0).toLocaleString())+'</td><td style="font-size:11px">PU: '+(p.pickupIn||'&mdash;')+'&rarr;'+(p.pickupOut||'&mdash;')+'</td><td style="font-size:11px">'+(p.dropLocation||'&mdash;')+': '+(p.arriveExp||'&mdash;')+'&rarr;'+(p.departExp||'&mdash;')+'</td>'+(p.note?'<td style="background:var(--warn-light);color:var(--warn);font-size:11px;font-weight:600">&#128221; '+p.note+'</td>':'<td></td>')+'</tr>';
+        var isFlagged=flaggedPuSet.has(i);
+        var rowStyle=isFlagged?'background:#fffbeb;border-left:3px solid #d97706':'background:var(--accent-light)';
+        var flagReason=isFlagged?((m.flaggedStops||[]).find(function(f){return f.type==='p'&&f.idx===i;})||{}).reason||'':'';
+        return '<tr style="'+rowStyle+'"><td style="padding-left:24px">'+(i+1)+'</td><td style="font-family:monospace;font-size:11px">'+(p.proNum||'&mdash;')+'</td><td>'+(p.shipper||'&mdash;')+'</td><td style="text-align:center">'+p.pieces+'</td><td style="text-align:center;font-weight:600">'+((p.weight||0).toLocaleString())+'</td><td style="font-size:11px">PU: '+(p.pickupIn||'&mdash;')+'&rarr;'+(p.pickupOut||'&mdash;')+'</td><td style="font-size:11px">'+(p.dropLocation||'&mdash;')+': '+(p.arriveExp||'&mdash;')+'&rarr;'+(p.departExp||'&mdash;')+'</td>'+(p.note?'<td style="background:var(--warn-light);color:var(--warn);font-size:11px;font-weight:600">&#128221; '+p.note+'</td>':'<td></td>')+(isFlagged?'<td style="color:#d97706;font-weight:700;font-size:11px;white-space:nowrap">&#9888; '+flagReason+'</td>':'<td></td>')+'</tr>';
       }).join('');
       var detailTbls='';
       if(m.deliveries&&m.deliveries.length){
