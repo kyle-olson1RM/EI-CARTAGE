@@ -16,7 +16,7 @@ select, input, textarea, a {
 }
 
 body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;cursor:pointer;}
-.screen{display:none;min-height:100vh;flex-direction:column;}.screen.active{display:flex;}
+.screen{display:none;height:0;overflow:hidden;flex-direction:column;}.screen.active{display:flex;height:auto;min-height:100vh;overflow:visible;}
 
 /* LOGIN */
 #login{background:linear-gradient(145deg,#b91c1c 0%,#E31837 60%,#ef4444 100%);align-items:center;justify-content:center;padding:12px;height:100vh;max-height:100vh;overflow:hidden;box-sizing:border-box;}
