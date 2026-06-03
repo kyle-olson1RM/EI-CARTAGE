@@ -16,10 +16,10 @@ select, input, textarea, a {
 }
 
 body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;cursor:pointer;}
-.screen{display:none;height:0;overflow:hidden;flex-direction:column;}.screen.active{display:flex;height:auto;min-height:100vh;overflow:visible;}
+.screen{display:none;height:0;overflow:hidden;flex-direction:column;}.screen.active{display:flex;height:auto;min-height:100vh;overflow:visible;position:relative;}
 
 /* LOGIN */
-#login{background:linear-gradient(145deg,#b91c1c 0%,#E31837 60%,#ef4444 100%);align-items:center;justify-content:center;padding:12px;height:100vh;max-height:100vh;overflow:hidden;box-sizing:border-box;}
+#login{background:linear-gradient(145deg,#b91c1c 0%,#E31837 60%,#ef4444 100%);align-items:center;justify-content:center;padding:12px;height:100vh;max-height:100vh;overflow:hidden;box-sizing:border-box;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;z-index:100;}
 .login-logo{font-family:Barlow Condensed,sans-serif;font-size:48px;font-weight:800;color:white;letter-spacing:-2px;line-height:1;text-align:center;margin-bottom:4px;}
 .login-sub{font-family:Barlow Condensed,sans-serif;font-size:15px;color:rgba(255,255,255,.6);letter-spacing:4px;text-transform:uppercase;text-align:center;margin-bottom:14px;}
 .login-card{background:white;border-radius:12px;padding:16px 18px;width:100%;max-width:380px;box-shadow:0 8px 32px rgba(0,0,0,.25);}
