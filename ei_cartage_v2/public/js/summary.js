@@ -88,7 +88,7 @@ function doCustomerLogin(){
     renderCustomerDash();
     ss('customerDash');
   }else{
-    if(errEl)errEl.textContent='Incorrect code. Try: '+currentCode;
+    if(errEl)errEl.textContent='Incorrect access code';
     if(codeEl)codeEl.value='';
   }
 }
