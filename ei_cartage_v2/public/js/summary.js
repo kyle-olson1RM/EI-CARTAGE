@@ -305,4 +305,85 @@ function custExportAll(){var mon=_custMon,friday=_custFriday;
   showToast('All ref #s exported!');
 }
 
+// ── WEEKLY SUMMARY NAVIGATION ────────────────────────────────────────────────
+function showSum(){
+  var wks=allWks();
+  var sel=document.getElementById('weekSel');
+  var currentMon=getMon(new Date().toISOString().split('T')[0]);
+  if(!wks.length){
+    sel.innerHTML='<option value="">No data yet</option>';
+  } else {
+    sel.innerHTML=wks.map(function(w){
+      return '<option value="'+w+'" '+(w===currentMon?'selected':'')+'>'+wkLbl(w)+'</option>';
+    }).join('');
+    if(wks.includes(currentMon)) sel.value=currentMon;
+    else sel.value=wks[0];
+  }
+  renderSum();ss('summary');
+}
 
+function shiftW(dir){
+  var sel=document.getElementById('weekSel');
+  var opts=Array.from(sel.options);
+  var idx=opts.findIndex(function(o){return o.value===sel.value;});
+  var next=idx-dir;
+  if(next>=0&&next<opts.length){sel.selectedIndex=next;renderSum();}
+}
+
+function renderSum(){
+  var mon=document.getElementById('weekSel').value;
+  var el=document.getElementById('sumContent');
+  if(!mon){el.innerHTML='<div class="no-data"><div style="font-size:36px">&#128203;</div><div>No week selected</div></div>';return;}
+  var fri=new Date(mon+'T12:00:00');fri.setDate(fri.getDate()+4);
+  var friday=fri.toISOString().split('T')[0];
+  var roster=getDriverRoster();
+  var wm=manifests.filter(function(m){return m.date>=mon&&m.date<=friday;});
+  var dm={};
+  wm.forEach(function(m){if(!dm[m.driverName])dm[m.driverName]=[];dm[m.driverName].push(m);});
+  var gD=0,gP=0,gS=0,gW=0,gM=0,gH=0,gC=0;
+  var rows=roster.map(function(drv){
+    var name=drv.name,unit=drv.unit,r=rate(name);
+    var d=dm[name];
+    if(!d)return '<tr class="zero-row"><td><strong>'+unit+'</strong></td><td>'+name+'</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0.00</td><td>$0.00</td></tr>';
+    var wD=0,wP=0,wS=0,wW=0,wM=0,wH=0;
+    d.forEach(function(m){wD+=m.ttlDeliveries||0;wP+=m.ttlPickups||0;wS+=m.ttlShipments||0;wW+=m.ttlWeight||0;wM+=m.totalMiles||0;wH+=m.totalHours||0;});
+    var wC=wH*r;
+    gD+=wD;gP+=wP;gS+=wS;gW+=wW;gM+=wM;gH+=wH;gC+=wC;
+    return '<tr class="data-row"><td><strong>'+unit+'</strong></td><td>'+name+'</td><td>'+wD+'</td><td>'+wP+'</td><td>'+wS+'</td><td>'+wW.toLocaleString()+'</td><td>'+wM+'</td><td>'+wH.toFixed(2)+'</td><td class="chg-cell">$'+wC.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td></tr>';
+  }).join('');
+  el.innerHTML='<div class="sum-report">'
+    +'<div class="sum-report-head"><div class="srh-title">Expeditors Cartage Program</div><div class="srh-week">Week Ending '+fs(friday)+'</div></div>'
+    +'<div style="overflow-x:auto"><table class="sum-tbl">'
+    +'<thead><tr><th>Unit</th><th>Driver</th><th>Deliveries</th><th>Pick Ups</th><th>Shipments</th><th>Weight (lbs)</th><th>Miles</th><th>Hours</th><th>Charges</th></tr></thead>'
+    +'<tbody>'+rows+'</tbody>'
+    +'<tfoot><tr class="total-row"><td colspan="2"><strong>TOTAL</strong></td><td>'+gD+'</td><td>'+gP+'</td><td>'+gS+'</td><td>'+gW.toLocaleString()+'</td><td>'+gM+'</td><td>'+gH.toFixed(2)+'</td><td class="chg-cell">$'+gC.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td></tr></tfoot>'
+    +'</table></div>'
+    +'</div>';
+}
+
+function dlWeekly(){
+  var mon=document.getElementById('weekSel').value;
+  if(!mon){showToast('No week selected');return;}
+  var fri=new Date(mon+'T12:00:00');fri.setDate(fri.getDate()+4);
+  var friday=fri.toISOString().split('T')[0];
+  var roster=getDriverRoster();
+  var wm=manifests.filter(function(m){return m.date>=mon&&m.date<=friday;});
+  var dm={};
+  wm.forEach(function(m){if(!dm[m.driverName])dm[m.driverName]=[];dm[m.driverName].push(m);});
+  var rows=['Unit,Driver,Deliveries,Pick Ups,Shipments,Weight (lbs),Miles,Hours,Charges'];
+  roster.forEach(function(drv){
+    var name=drv.name,unit=drv.unit,r=rate(name),d=dm[name];
+    if(!d){rows.push([unit,name,0,0,0,0,0,'0.00','$0.00'].join(','));return;}
+    var wD=0,wP=0,wS=0,wW=0,wM=0,wH=0;
+    d.forEach(function(m){wD+=m.ttlDeliveries||0;wP+=m.ttlPickups||0;wS+=m.ttlShipments||0;wW+=m.ttlWeight||0;wM+=m.totalMiles||0;wH+=m.totalHours||0;});
+    var wC=wH*r;
+    rows.push([unit,name,wD,wP,wS,wW,wM,wH.toFixed(2),'$'+wC.toFixed(2)].join(','));
+  });
+  var csv=rows.join('\n');
+  var blob=new Blob([csv],{type:'text/csv'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;a.download='EI_Cartage_'+mon+'_to_'+friday+'.csv';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+  showToast('Downloaded!');
+}
