@@ -16,7 +16,8 @@ function getMon(d){
 function wkLbl(mon){
   var fri=new Date(mon+'T12:00:00');
   fri.setDate(fri.getDate()+4);
-  return 'W/E '+fs(fri.toISOString().split('T')[0]);
+  var monDt=new Date(mon+'T12:00:00');
+  return fs(monDt.toISOString().split('T')[0])+' — '+fs(fri.toISOString().split('T')[0]);
 }
 
 function allWks(){
@@ -159,7 +160,7 @@ function renderCustomerDash(){
   var el=document.getElementById('custContent'),ml=document.getElementById('custWeekLabel');
   if(!mon){el.innerHTML='<div class="no-data"><div style="font-size:36px;margin-bottom:10px">&#128203;</div><div style="font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:700">No data yet</div></div>';return;}
   var fri=new Date(mon+'T12:00:00');fri.setDate(fri.getDate()+4);var friday=fri.toISOString().split('T')[0];_custMon=mon;_custFriday=friday;
-  if(ml)ml.textContent='W/E '+fs(friday);
+  if(ml)ml.textContent=fs(mon)+' — '+fs(friday);
 
   var roster=getDriverRoster();
   var wm=manifests.filter(function(m){return m.date>=mon&&m.date<=friday;});
