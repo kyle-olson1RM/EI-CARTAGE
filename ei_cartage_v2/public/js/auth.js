@@ -93,6 +93,9 @@ function ss(id){
   if(id==='driverForm'){startAutoSave();}
   else{stopAutoSave();}
   if(id==='home'){setTimeout(checkForDraft,150);}
+  // Hide manager legend when not on manager screen
+  var legend=document.getElementById('mgrLegend');
+  if(legend)legend.style.display=(id==='manager')?'flex':'none';
 }
 // Direct manager dashboard access (bypasses login - for internal use)
 function goMgr(){
