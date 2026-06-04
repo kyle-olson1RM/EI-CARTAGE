@@ -1,3 +1,47 @@
+
+// ── SUMMARY HELPER FUNCTIONS ─────────────────────────────────────────────────
+function fs(d){
+  if(!d)return'';
+  var dt=new Date(d+'T12:00:00');
+  return dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
+
+function getMon(d){
+  var dt=new Date(d+'T12:00:00');
+  var dy=dt.getDay();
+  dt.setDate(dt.getDate()+(dy===0?-6:1-dy));
+  return dt.toISOString().split('T')[0];
+}
+
+function wkLbl(mon){
+  var fri=new Date(mon+'T12:00:00');
+  fri.setDate(fri.getDate()+4);
+  return 'W/E '+fs(fri.toISOString().split('T')[0]);
+}
+
+function allWks(){
+  var weeks=new Set();
+  manifests.forEach(function(m){if(m.date)weeks.add(getMon(m.date));});
+  var today=new Date();
+  var currentMon=getMon(today.toISOString().split('T')[0]);
+  var eightWeeksAgo=new Date(today);
+  eightWeeksAgo.setDate(eightWeeksAgo.getDate()-56);
+  var startMon=getMon(eightWeeksAgo.toISOString().split('T')[0]);
+  var allDataWeeks=[...weeks].sort();
+  if(allDataWeeks.length&&allDataWeeks[0]<startMon)startMon=allDataWeeks[0];
+  var cursor=new Date(startMon+'T12:00:00');
+  var cursorMon=getMon(currentMon);
+  while(true){
+    var wk=getMon(cursor.toISOString().split('T')[0]);
+    weeks.add(wk);
+    if(wk>=cursorMon)break;
+    cursor.setDate(cursor.getDate()+7);
+    if(cursor>new Date(cursorMon+'T12:00:00'))break;
+  }
+  weeks.add(currentMon);
+  return[...weeks].sort().reverse();
+}
+
 /**
  * summary.js
  * Weekly summary, custom date range stats, print to PDF,

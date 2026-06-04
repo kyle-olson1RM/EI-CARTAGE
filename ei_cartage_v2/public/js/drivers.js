@@ -57,6 +57,14 @@ function showDriverMgr(){
   var locs=getDropLocations();
   var l1=document.getElementById('dropLoc1'),l2=document.getElementById('dropLoc2');
   if(l1)l1.value=locs.loc1;if(l2)l2.value=locs.loc2;
+  // Load customer code
+  var custCode=(cacheGet('ei_customer_code')||'EXP2025');
+  var custEl=document.getElementById('custCodeInput');
+  if(custEl)custEl.value=custCode;
+  // Load manager PIN
+  var pin=cacheGet('ei_manager_emp')||'1234';
+  var pinEl=document.getElementById('mgrPinInput');
+  if(pinEl)pinEl.value=pin;
   renderDriverList();ss('driverMgr');
 }
 function renderDriverList(){
