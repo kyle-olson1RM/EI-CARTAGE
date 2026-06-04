@@ -73,13 +73,20 @@ function openCustomerLogin(){
   setTimeout(function(){document.getElementById('custCode').focus();},100);
 }
 function doCustomerLogin(){
-  var code=document.getElementById('custCode').value.trim().toUpperCase();
-  // Read fresh from cache/Supabase each time - never use stale static variable
-  var currentCode=(cacheGet('ei_customer_code')||'EXP2025').trim().toUpperCase();
+  var code=(document.getElementById('custCode').value||'').trim().toUpperCase();
+  if(!code){document.getElementById('custLoginErr').textContent='Please enter the access code';return;}
+  // Read fresh from cache/Supabase each time
+  var stored=cacheGet('ei_customer_code');
+  var currentCode=stored?stored.trim().toUpperCase():'EXP2025';
   if(code===currentCode){
     document.getElementById('custLoginOv').classList.remove('open');
-    populateCustWeekSel();renderCustomerDash();ss('customerDash');
-  }else{document.getElementById('custLoginErr').textContent='Incorrect access code';document.getElementById('custCode').value='';}
+    populateCustWeekSel();
+    renderCustomerDash();
+    ss('customerDash');
+  }else{
+    document.getElementById('custLoginErr').textContent='Incorrect access code';
+    document.getElementById('custCode').value='';
+  }
 }
 function populateCustWeekSel(){
   var weeks=allWks(),sel=document.getElementById('custWeekSel'),cur=sel.value;
