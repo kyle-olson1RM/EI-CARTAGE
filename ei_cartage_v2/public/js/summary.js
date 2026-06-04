@@ -85,9 +85,14 @@ function doCustomerLogin(){
     var ov=document.getElementById('custLoginOv');
     if(ov)ov.classList.remove('open');
     if(errEl)errEl.textContent='';
-    populateCustWeekSel();
-    renderCustomerDash();
     ss('customerDash');
+    try{
+      populateCustWeekSel();
+      renderCustomerDash();
+    }catch(e){
+      console.error('Customer dash error:',e);
+      document.getElementById('custContent').innerHTML='<div style="padding:20px;color:red">Error loading dashboard. Please refresh.</div>';
+    }
   }else{
     if(errEl)errEl.textContent='Incorrect access code';
     if(codeEl)codeEl.value='';
