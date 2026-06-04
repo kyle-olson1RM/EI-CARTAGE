@@ -73,19 +73,23 @@ function openCustomerLogin(){
   setTimeout(function(){document.getElementById('custCode').focus();},100);
 }
 function doCustomerLogin(){
-  var code=(document.getElementById('custCode').value||'').trim().toUpperCase();
-  if(!code){document.getElementById('custLoginErr').textContent='Please enter the access code';return;}
-  // Read fresh from cache/Supabase each time
-  var stored=cacheGet('ei_customer_code');
-  var currentCode=stored?stored.trim().toUpperCase():'EXP2025';
+  var errEl=document.getElementById('custLoginErr');
+  var codeEl=document.getElementById('custCode');
+  var code=(codeEl?codeEl.value||'':'').trim().toUpperCase();
+  if(!code){if(errEl)errEl.textContent='Please enter the access code';return;}
+  // Try all possible stored locations for the code
+  var stored=cacheGet('ei_customer_code')||localStorage.getItem('ei_customer_code')||'EXP2025';
+  var currentCode=stored.trim().toUpperCase();
   if(code===currentCode){
-    document.getElementById('custLoginOv').classList.remove('open');
+    var ov=document.getElementById('custLoginOv');
+    if(ov)ov.classList.remove('open');
+    if(errEl)errEl.textContent='';
     populateCustWeekSel();
     renderCustomerDash();
     ss('customerDash');
   }else{
-    document.getElementById('custLoginErr').textContent='Incorrect access code';
-    document.getElementById('custCode').value='';
+    if(errEl)errEl.textContent='Incorrect code. Try: '+currentCode;
+    if(codeEl)codeEl.value='';
   }
 }
 function populateCustWeekSel(){
