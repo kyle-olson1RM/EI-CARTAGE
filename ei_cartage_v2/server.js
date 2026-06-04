@@ -22,6 +22,7 @@ async function sb(method, path, body) {
       'apikey': SUPABASE_KEY,
       'Authorization': `Bearer ${SUPABASE_KEY}`,
       'Content-Type': 'application/json',
+      'Prefer': method === 'POST' ? 'resolution=merge-duplicates' : 'return=minimal',
       'Prefer': method === 'POST' ? 'resolution=merge-duplicates' : '',
     },
     body: body ? JSON.stringify(body) : undefined,

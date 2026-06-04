@@ -77,10 +77,11 @@ function doCustomerLogin(){
   var codeEl=document.getElementById('custCode');
   var code=(codeEl?codeEl.value||'':'').trim().toUpperCase();
   if(!code){if(errEl)errEl.textContent='Please enter the access code';return;}
-  // Try all possible stored locations for the code
-  var stored=cacheGet('ei_customer_code')||localStorage.getItem('ei_customer_code')||'EXP2025';
-  var currentCode=stored.trim().toUpperCase();
-  if(code===currentCode){
+  // Try cache first, then localStorage, then default
+  var stored=(_cache&&_cache['ei_customer_code'])||localStorage.getItem('ei_customer_code');
+  // If nothing stored anywhere, accept EXP2025 as default
+  var currentCode=stored?stored.trim().toUpperCase():'EXP2025';
+  if(code===currentCode||code==='EXP2025'&&!stored){
     var ov=document.getElementById('custLoginOv');
     if(ov)ov.classList.remove('open');
     if(errEl)errEl.textContent='';
@@ -90,6 +91,7 @@ function doCustomerLogin(){
   }else{
     if(errEl)errEl.textContent='Incorrect access code';
     if(codeEl)codeEl.value='';
+    if(codeEl)codeEl.focus();
   }
 }
 function populateCustWeekSel(){
