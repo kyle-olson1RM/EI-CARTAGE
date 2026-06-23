@@ -248,6 +248,34 @@ function submitManifest(){
   if(!date||!st){showToast('Date and start time required',3000);return;}
   if(!sm){showToast('Start mileage required',3000);return;}
   if(!delIds.length&&!puIds.length){showToast('Add at least one delivery or pickup',3000);return;}
+  // Check all stops are marked done with required times
+  var incompleteStops=[];
+  delIds.forEach(function(id,i){
+    var body=document.getElementById('stopbody_'+id);
+    var isDone=body&&body.classList.contains('collapsed');
+    var tIn=document.getElementById('dtin_'+id)?.value;
+    var tOut=document.getElementById('dtout_'+id)?.value;
+    if(!isDone||!tIn||!tOut) incompleteStops.push('DEL '+(i+1));
+  });
+  puIds.forEach(function(id,i){
+    var body=document.getElementById('stopbody_'+id);
+    var isDone=body&&body.classList.contains('collapsed');
+    var tIn=document.getElementById('ptin_'+id)?.value;
+    var tOut=document.getElementById('ptout_'+id)?.value;
+    if(!isDone||!tIn||!tOut) incompleteStops.push('P/U '+(i+1));
+  });
+  if(incompleteStops.length){
+    showToast('Complete all stops first: '+incompleteStops.join(', '),4000);
+    // Scroll to first incomplete stop
+    var firstId=incompleteStops[0].startsWith('DEL')?delIds[parseInt(incompleteStops[0].split(' ')[1])-1]:puIds[parseInt(incompleteStops[0].split(' ')[1])-1];
+    var card=document.getElementById('stopcard_'+firstId);
+    if(card){
+      var body=document.getElementById('stopbody_'+firstId);
+      if(body)body.classList.remove('collapsed');
+      setTimeout(function(){card.scrollIntoView({behavior:'smooth',block:'center'});},100);
+    }
+    return;
+  }
   // Skip EOS popup when editing from manager dashboard
   if(editingManifestId || wasEditingFromMgr){
     _doSubmit();
