@@ -249,13 +249,13 @@ function custBuildDetail(manifests_arr, driverName, mon, friday){
     html+='<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#E31837;margin-bottom:6px">Deliveries ('+allDels.length+')</div>';
     html+='<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px;table-layout:fixed">'
       +'<thead><tr style="background:#1a1a1a;color:white">'
-      +'<th style="padding:6px 8px;text-align:left;width:10%">Date</th>'
+      +'<th style="padding:6px 8px;text-align:left;width:15%">Date</th>'
       +'<th style="padding:6px 8px;text-align:left;width:15%">Pro #</th>'
-      +'<th style="padding:6px 8px;text-align:left">Consignee</th>'
-      +'<th style="padding:6px 8px;text-align:left;width:12%">City</th>'
-      +'<th style="padding:6px 8px;text-align:left;width:6%">Pcs</th>'
+      +'<th style="padding:6px 8px;text-align:left;width:35%">Consignee</th>'
+      +'<th style="padding:6px 8px;text-align:left;width:15%">City</th>'
+      +'<th style="padding:6px 8px;text-align:left;width:8%">Pcs</th>'
       +'<th style="padding:6px 8px;text-align:left;width:8%">Lbs</th>'
-      +'<th style="padding:6px 8px;width:5%"></th>'
+      +'<th style="padding:6px 8px;width:4%"></th>'
       +'</tr></thead><tbody>';
     allDels.forEach(function(d,i){
       html+='<tr style="background:'+(i%2===0?'white':'var(--surface2)')+';">'
@@ -275,13 +275,13 @@ function custBuildDetail(manifests_arr, driverName, mon, friday){
     html+='<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#185FA5;margin-bottom:6px">Pick Ups ('+allPUs.length+')</div>';
     html+='<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:8px;table-layout:fixed">'
       +'<thead><tr style="background:#1a1a1a;color:white">'
-      +'<th style="padding:6px 8px;text-align:left;width:10%">Date</th>'
+      +'<th style="padding:6px 8px;text-align:left;width:15%">Date</th>'
       +'<th style="padding:6px 8px;text-align:left;width:15%">Exp Ref #</th>'
-      +'<th style="padding:6px 8px;text-align:left">Shipper</th>'
-      +'<th style="padding:6px 8px;text-align:left;width:6%">Pcs</th>'
+      +'<th style="padding:6px 8px;text-align:left;width:35%">Shipper</th>'
+      +'<th style="padding:6px 8px;text-align:left;width:8%">Pcs</th>'
       +'<th style="padding:6px 8px;text-align:left;width:8%">Lbs</th>'
-      +'<th style="padding:6px 8px;text-align:left;width:12%">Drop</th>'
-      +'<th style="padding:6px 8px;width:5%"></th>'
+      +'<th style="padding:6px 8px;text-align:left;width:15%">Drop</th>'
+      +'<th style="padding:6px 8px;width:4%"></th>'
       +'</tr></thead><tbody>';
     allPUs.forEach(function(p,i){
       html+='<tr style="background:'+(i%2===0?'#f0f5ff':'#e8f0fe')+';">'
