@@ -259,12 +259,12 @@ function custBuildDetail(manifests_arr, driverName, mon, friday){
       +'</tr></thead><tbody>';
     allDels.forEach(function(d,i){
       html+='<tr style="background:'+(i%2===0?'white':'var(--surface2)')+';">'
-        +'<td style="padding:6px 8px;white-space:nowrap">'+fs(d.date)+'</td>'
-        +'<td style="padding:6px 8px;font-family:monospace;font-weight:700;color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(d.proNum||'—')+'</td>'
-        +'<td style="padding:6px 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(d.consignee||'—')+'</td>'
-        +'<td style="padding:6px 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(d.city||'—')+'</td>'
-        +'<td style="padding:6px 8px">'+(d.pieces||0)+'</td>'
-        +'<td style="padding:6px 8px">'+(d.weight||0)+'</td>'
+        +'<td style="padding:6px 8px;text-align:left;white-space:nowrap">'+fs(d.date)+'</td>'
+        +'<td style="padding:6px 8px;text-align:left;font-family:monospace;font-weight:700;color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(d.proNum||'—')+'</td>'
+        +'<td style="padding:6px 8px;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(d.consignee||'—')+'</td>'
+        +'<td style="padding:6px 8px;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(d.city||'—')+'</td>'
+        +'<td style="padding:6px 8px;text-align:left">'+(d.pieces||0)+'</td>'
+        +'<td style="padding:6px 8px;text-align:left">'+(d.weight||0)+'</td>'
         +'<td></td>'
         +'</tr>';
     });
@@ -285,12 +285,12 @@ function custBuildDetail(manifests_arr, driverName, mon, friday){
       +'</tr></thead><tbody>';
     allPUs.forEach(function(p,i){
       html+='<tr style="background:'+(i%2===0?'#f0f5ff':'#e8f0fe')+';">'
-        +'<td style="padding:6px 8px;white-space:nowrap">'+fs(p.date)+'</td>'
-        +'<td style="padding:6px 8px;font-family:monospace;font-weight:700;color:#185FA5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(p.expRef||p.proNum||'—')+'</td>'
-        +'<td style="padding:6px 8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(p.shipper||'—')+'</td>'
-        +'<td style="padding:6px 8px">'+(p.pieces||0)+'</td>'
-        +'<td style="padding:6px 8px">'+(p.weight||0)+'</td>'
-        +'<td style="padding:6px 8px;overflow:hidden;text-overflow:ellipsis">'+(p.drop||'—')+'</td>'
+        +'<td style="padding:6px 8px;text-align:left;white-space:nowrap">'+fs(p.date)+'</td>'
+        +'<td style="padding:6px 8px;text-align:left;font-family:monospace;font-weight:700;color:#185FA5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(p.expRef||p.proNum||'—')+'</td>'
+        +'<td style="padding:6px 8px;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(p.shipper||'—')+'</td>'
+        +'<td style="padding:6px 8px;text-align:left">'+(p.pieces||0)+'</td>'
+        +'<td style="padding:6px 8px;text-align:left">'+(p.weight||0)+'</td>'
+        +'<td style="padding:6px 8px;text-align:left;overflow:hidden;text-overflow:ellipsis">'+(p.drop||'—')+'</td>'
         +'<td></td>'
         +'</tr>';
     });
