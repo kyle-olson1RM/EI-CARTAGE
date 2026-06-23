@@ -248,33 +248,34 @@ function submitManifest(){
   if(!date||!st){showToast('Date and start time required',3000);return;}
   if(!sm){showToast('Start mileage required',3000);return;}
   if(!delIds.length&&!puIds.length){showToast('Add at least one delivery or pickup',3000);return;}
-  // Check all stops are marked done with required times
-  var incompleteStops=[];
-  delIds.forEach(function(id,i){
-    var body=document.getElementById('stopbody_'+id);
-    var isDone=body&&body.classList.contains('collapsed');
-    var tIn=document.getElementById('dtin_'+id)?.value;
-    var tOut=document.getElementById('dtout_'+id)?.value;
-    if(!isDone||!tIn||!tOut) incompleteStops.push('DEL '+(i+1));
-  });
-  puIds.forEach(function(id,i){
-    var body=document.getElementById('stopbody_'+id);
-    var isDone=body&&body.classList.contains('collapsed');
-    var tIn=document.getElementById('ptin_'+id)?.value;
-    var tOut=document.getElementById('ptout_'+id)?.value;
-    if(!isDone||!tIn||!tOut) incompleteStops.push('P/U '+(i+1));
-  });
-  if(incompleteStops.length){
-    showToast('Complete all stops first: '+incompleteStops.join(', '),4000);
-    // Scroll to first incomplete stop
-    var firstId=incompleteStops[0].startsWith('DEL')?delIds[parseInt(incompleteStops[0].split(' ')[1])-1]:puIds[parseInt(incompleteStops[0].split(' ')[1])-1];
-    var card=document.getElementById('stopcard_'+firstId);
-    if(card){
-      var body=document.getElementById('stopbody_'+firstId);
-      if(body)body.classList.remove('collapsed');
-      setTimeout(function(){card.scrollIntoView({behavior:'smooth',block:'center'});},100);
+  // Check all stops are marked done with required times (skip when editing)
+  if(!editingManifestId){
+    var incompleteStops=[];
+    delIds.forEach(function(id,i){
+      var body=document.getElementById('stopbody_'+id);
+      var isDone=body&&body.classList.contains('collapsed');
+      var tIn=document.getElementById('dtin_'+id)?.value;
+      var tOut=document.getElementById('dtout_'+id)?.value;
+      if(!isDone||!tIn||!tOut) incompleteStops.push('DEL '+(i+1));
+    });
+    puIds.forEach(function(id,i){
+      var body=document.getElementById('stopbody_'+id);
+      var isDone=body&&body.classList.contains('collapsed');
+      var tIn=document.getElementById('ptin_'+id)?.value;
+      var tOut=document.getElementById('ptout_'+id)?.value;
+      if(!isDone||!tIn||!tOut) incompleteStops.push('P/U '+(i+1));
+    });
+    if(incompleteStops.length){
+      showToast('Complete all stops first: '+incompleteStops.join(', '),4000);
+      var firstId=incompleteStops[0].startsWith('DEL')?delIds[parseInt(incompleteStops[0].split(' ')[1])-1]:puIds[parseInt(incompleteStops[0].split(' ')[1])-1];
+      var card=document.getElementById('stopcard_'+firstId);
+      if(card){
+        var body=document.getElementById('stopbody_'+firstId);
+        if(body)body.classList.remove('collapsed');
+        setTimeout(function(){card.scrollIntoView({behavior:'smooth',block:'center'});},100);
+      }
+      return;
     }
-    return;
   }
   // Skip EOS popup when editing from manager dashboard
   if(editingManifestId || wasEditingFromMgr){
@@ -657,21 +658,23 @@ function _toggleStop(id){
 }
 
 function _doneStop(id){
-  // Validate required times before marking done
-  var stopEntry = stopOrder.find(function(s){return s.id===id;});
-  if(stopEntry){
-    var isD = stopEntry.type === 'd';
-    var tIn  = document.getElementById((isD?'dtin_':'ptin_')+id)?.value;
-    var tOut = document.getElementById((isD?'dtout_':'ptout_')+id)?.value;
-    if(!tIn){
-      showToast('Please enter a time in before completing this stop',3000);
-      document.getElementById((isD?'dtin_':'ptin_')+id)?.focus();
-      return;
-    }
-    if(!tOut){
-      showToast('Please enter a time out before completing this stop',3000);
-      document.getElementById((isD?'dtout_':'ptout_')+id)?.focus();
-      return;
+  // Validate required times before marking done (skip when editing)
+  if(!editingManifestId){
+    var stopEntry0 = stopOrder.find(function(s){return s.id===id;});
+    if(stopEntry0){
+      var isD0 = stopEntry0.type === 'd';
+      var tIn  = document.getElementById((isD0?'dtin_':'ptin_')+id)?.value;
+      var tOut = document.getElementById((isD0?'dtout_':'ptout_')+id)?.value;
+      if(!tIn){
+        showToast('Please enter a time in before completing this stop',3000);
+        document.getElementById((isD0?'dtin_':'ptin_')+id)?.focus();
+        return;
+      }
+      if(!tOut){
+        showToast('Please enter a time out before completing this stop',3000);
+        document.getElementById((isD0?'dtout_':'ptout_')+id)?.focus();
+        return;
+      }
     }
   }
   // Update summary line with key info

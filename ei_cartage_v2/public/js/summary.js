@@ -237,7 +237,7 @@ function custBuildDetail(manifests_arr, driverName, mon, friday){
     (m.pickups||[]).forEach(function(p){allPUs.push({date:m.date,proNum:p.proNum,shipper:p.shipper,pieces:p.pieces,weight:p.weight||p.wt||0,drop:p.dropLocation});});
   });
 
-  var html='<div style="padding:12px 16px">';
+  var html='<div style="padding:12px 16px;overflow-x:auto">'; 
 
   // Export button for this driver
   html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
@@ -261,8 +261,8 @@ function custBuildDetail(manifests_arr, driverName, mon, friday){
       html+='<tr style="background:'+(i%2===0?'white':'var(--surface2)')+';">'
         +'<td style="padding:6px 8px;text-align:left;white-space:nowrap">'+fs(d.date)+'</td>'
         +'<td style="padding:6px 8px;text-align:left;font-family:monospace;font-weight:700;color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(d.proNum||'—')+'</td>'
-        +'<td style="padding:6px 8px;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(d.consignee||'—')+'</td>'
-        +'<td style="padding:6px 8px;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(d.city||'—')+'</td>'
+        +'<td style="padding:6px 8px;text-align:left;overflow:hidden;text-overflow:ellipsis;max-width:0">'+(d.consignee||'—')+'</td>'
+        +'<td style="padding:6px 8px;text-align:left;overflow:hidden;text-overflow:ellipsis;max-width:0">'+(d.city||'—')+'</td>'
         +'<td style="padding:6px 8px;text-align:left">'+(d.pieces||0)+'</td>'
         +'<td style="padding:6px 8px;text-align:left">'+(d.weight||0)+'</td>'
         +'<td></td>'
@@ -287,10 +287,10 @@ function custBuildDetail(manifests_arr, driverName, mon, friday){
       html+='<tr style="background:'+(i%2===0?'#f0f5ff':'#e8f0fe')+';">'
         +'<td style="padding:6px 8px;text-align:left;white-space:nowrap">'+fs(p.date)+'</td>'
         +'<td style="padding:6px 8px;text-align:left;font-family:monospace;font-weight:700;color:#185FA5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(p.expRef||p.proNum||'—')+'</td>'
-        +'<td style="padding:6px 8px;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(p.shipper||'—')+'</td>'
+        +'<td style="padding:6px 8px;text-align:left;overflow:hidden;text-overflow:ellipsis;max-width:0">'+(p.shipper||'—')+'</td>'
         +'<td style="padding:6px 8px;text-align:left">'+(p.pieces||0)+'</td>'
         +'<td style="padding:6px 8px;text-align:left">'+(p.weight||0)+'</td>'
-        +'<td style="padding:6px 8px;text-align:left;overflow:hidden;text-overflow:ellipsis">'+(p.drop||'—')+'</td>'
+        +'<td style="padding:6px 8px;text-align:left;overflow:hidden;text-overflow:ellipsis;max-width:0">'+(p.drop||'—')+'</td>'
         +'<td></td>'
         +'</tr>';
     });

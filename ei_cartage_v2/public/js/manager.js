@@ -275,10 +275,9 @@ function editManifest(id){
     set('fStart', m.startTime);
     set('fEnd', m.endTime);
     // Restore mileage from totalMiles if we have it
-    if(m.totalMiles){
-      set('fSMi', m.startMileage||0);
-      set('fEMi', m.endMileage||0);
-    }
+    // Always restore mileage fields
+    set('fSMi', m.startMileage||'');
+    set('fEMi', m.endMileage||'');
     onDateChange();calcHours();calcMiles();
 
     // Restore deliveries
