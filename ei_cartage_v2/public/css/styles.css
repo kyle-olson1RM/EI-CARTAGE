@@ -15,8 +15,8 @@ select, input, textarea, a {
   touch-action: manipulation;
 }
 
-body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;cursor:pointer;}
-.screen{display:none;flex-direction:column;}.screen.active{display:flex;min-height:100vh;position:relative;z-index:1;}
+html{overflow-x:hidden;max-width:100vw;}body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;cursor:pointer;overflow-x:hidden;max-width:100vw;}
+.screen{display:none;flex-direction:column;max-width:100vw;}.screen.active{display:flex;min-height:100vh;position:relative;z-index:1;max-width:100vw;overflow-x:hidden;}
 
 /* LOGIN */
 #login{background:linear-gradient(145deg,#b91c1c 0%,#E31837 60%,#ef4444 100%);align-items:center;justify-content:center;padding:12px;height:100vh;max-height:100vh;overflow:hidden;box-sizing:border-box;}

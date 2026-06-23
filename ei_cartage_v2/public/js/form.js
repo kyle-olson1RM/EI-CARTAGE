@@ -657,6 +657,23 @@ function _toggleStop(id){
 }
 
 function _doneStop(id){
+  // Validate required times before marking done
+  var stopEntry = stopOrder.find(function(s){return s.id===id;});
+  if(stopEntry){
+    var isD = stopEntry.type === 'd';
+    var tIn  = document.getElementById((isD?'dtin_':'ptin_')+id)?.value;
+    var tOut = document.getElementById((isD?'dtout_':'ptout_')+id)?.value;
+    if(!tIn){
+      showToast('Please enter a time in before completing this stop',3000);
+      document.getElementById((isD?'dtin_':'ptin_')+id)?.focus();
+      return;
+    }
+    if(!tOut){
+      showToast('Please enter a time out before completing this stop',3000);
+      document.getElementById((isD?'dtout_':'ptout_')+id)?.focus();
+      return;
+    }
+  }
   // Update summary line with key info
   var stopEntry = stopOrder.find(function(s){return s.id===id;});
   if(stopEntry){
