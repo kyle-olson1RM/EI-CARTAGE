@@ -119,11 +119,3 @@ function rate(driverName){
   var unit=UNIT_MAP[driverName]||'';
   return unit.toUpperCase().startsWith('ST')?TRUCK_RATES.ST:TRUCK_RATES.TT;
 }
-
-// LOGIN
-
-
-
-
-
-// FORM

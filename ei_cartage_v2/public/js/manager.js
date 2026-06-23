@@ -61,7 +61,28 @@ function renderCards(){
 
   var driverNames=Object.keys(groups).sort();
 
-  c.innerHTML=driverNames.map(function(name){
+  // Calculate program totals for the filtered period
+  var pgD=0,pgP=0,pgS=0,pgW=0,pgM=0,pgH=0,pgC=0;
+  list.forEach(function(m){
+    var r=rate(m.driverName);
+    pgD+=m.ttlDeliveries||0;pgP+=m.ttlPickups||0;pgS+=m.ttlShipments||0;
+    pgW+=m.ttlWeight||0;pgM+=m.totalMiles||0;pgH+=m.totalHours||0;
+    pgC+=(m.totalHours||0)*r;
+  });
+  var pgLabel=ffrom?('Week of '+(function(){var d=new Date(ffrom+'T12:00:00');return(d.getMonth()+1)+'/'+d.getDate()+'–'+(function(){var f=new Date(ffrom+'T12:00:00');f.setDate(f.getDate()+4);return(f.getMonth()+1)+'/'+f.getDate();})()+'/'+d.getFullYear();})()):'All Weeks';
+  var totalsBox='<div class="grand-box" style="margin-bottom:14px"><h3>Program Totals &mdash; '+pgLabel+'</h3>'
+    +'<div class="grand-grid">'
+    +'<div class="gi"><div class="gi-val">'+pgD+'</div><div class="gi-lbl">Deliveries</div></div>'
+    +'<div class="gi"><div class="gi-val">'+pgP+'</div><div class="gi-lbl">Pick Ups</div></div>'
+    +'<div class="gi"><div class="gi-val">'+pgS+'</div><div class="gi-lbl">Shipments</div></div>'
+    +'<div class="gi"><div class="gi-val">'+pgW.toLocaleString()+'</div><div class="gi-lbl">Weight (lbs)</div></div>'
+    +'<div class="gi"><div class="gi-val">'+pgM+'</div><div class="gi-lbl">Miles</div></div>'
+    +'<div class="gi"><div class="gi-val">'+pgH.toFixed(2)+'</div><div class="gi-lbl">Hours</div></div>'
+    +'<div class="gi"><div class="gi-val">$'+pgC.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div><div class="gi-lbl">Total Charges</div></div>'
+    +'<div class="gi"><div class="gi-val">$'+(pgW>0?(pgC/pgW).toFixed(4):'0.0000')+'</div><div class="gi-lbl">Cost Per Lb</div></div>'
+    +'</div></div>';
+
+  c.innerHTML=totalsBox+driverNames.map(function(name){
     var entries=groups[name];
     var init=name.split(' ').map(function(w){return w[0];}).join('').slice(0,2);
     var unit=UNIT_MAP[name]||'';
