@@ -373,6 +373,18 @@ function custExportAll(){var mon=_custMon,friday=_custFriday;
 }
 
 // ── WEEKLY SUMMARY NAVIGATION ────────────────────────────────────────────────
+
+function showSumForWeek(mon){
+  var wks=allWks();
+  var sel=document.getElementById('weekSel');
+  sel.innerHTML=wks.map(function(w){
+    return '<option value="'+w+'" '+(w===mon?'selected':'')+'>'+wkLbl(w)+'</option>';
+  }).join('');
+  if(mon && wks.includes(mon)) sel.value=mon;
+  else if(wks.length) sel.value=wks[0];
+  renderSum();ss('summary');
+}
+
 function showSum(){
   var wks=allWks();
   var sel=document.getElementById('weekSel');

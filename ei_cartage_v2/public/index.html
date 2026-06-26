@@ -180,7 +180,7 @@
     <button class="hdr-back" onclick="goHome()">&#8592; Back</button>
     <h1>Manager Dashboard</h1>
     <div style="display:flex;gap:8px;align-items:center">
-      <button onclick="showSum()" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);color:white;padding:7px 13px;border-radius:4px;cursor:pointer;font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;letter-spacing:.5px;white-space:nowrap">&#128202; Summary</button>
+      <button onclick="showSumForWeek(mgrWeeks[mgrWeekIdx])" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);color:white;padding:7px 13px;border-radius:4px;cursor:pointer;font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;letter-spacing:.5px;white-space:nowrap">&#128202; Summary</button>
       <button style="background:rgba(255,255,255,.15);border:none;color:white;padding:7px 12px;border-radius:4px;cursor:pointer;font-size:16px;" onclick="refreshMgr()">&#8635;</button>
     </div>
   </div>
@@ -253,19 +253,19 @@
 
 
   <!-- API / Storage Layer -->
-  <script src="/js/config.js?v37"></script>
-  <script src="/js/api.js?v37"></script>
+  <script src="/js/config.js?v39"></script>
+  <script src="/js/api.js?v39"></script>
 
   <!-- Feature Modules -->
-  <script src="/js/auth.js?v37"></script>
-  <script src="/js/draft.js?v37"></script>
-  <script src="/js/form.js?v37"></script>
-  <script src="/js/manager.js?v37"></script>
-  <script src="/js/summary.js?v37"></script>
-  <script src="/js/drivers.js?v37"></script>
+  <script src="/js/auth.js?v39"></script>
+  <script src="/js/draft.js?v39"></script>
+  <script src="/js/form.js?v39"></script>
+  <script src="/js/manager.js?v39"></script>
+  <script src="/js/summary.js?v39"></script>
+  <script src="/js/drivers.js?v39"></script>
 
   <!-- App Init (load last) -->
-  <script src="/js/app.js?v37"></script>
+  <script src="/js/app.js?v39"></script>
 
 
 
