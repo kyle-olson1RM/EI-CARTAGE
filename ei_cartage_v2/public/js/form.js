@@ -202,7 +202,6 @@ function addPU(){
           <div class="field"><label>Drop Location</label>
             <select id="pdrop_${id}" onchange="saveDraft()">
               <option value="">Select...</option>
-              ${dropOpts}
             </select>
           </div>
           <div class="field"><label>Arrive at Exp (24hr)</label><input type="time" id="parr_${id}" onchange="_checkReturnPending(${id})"></div>
@@ -220,7 +219,7 @@ function addPU(){
     <!-- DONE BUTTON -->
     <button class="done-stop-btn pu-done-btn" onclick="_doneStop(${id})">&#10003; Done with this Stop</button>
 
-  </div>`;;
+  </div>`;
   document.getElementById('puRows').appendChild(div);
   buildDropLocationSelect('pdrop_'+id);
   setTimeout(()=>div.scrollIntoView({behavior:'smooth',block:'center'}),100);updateTotals();
