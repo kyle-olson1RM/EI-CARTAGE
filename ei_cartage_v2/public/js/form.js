@@ -164,45 +164,63 @@ function addPU(){
   const div=document.createElement('div');div.className='row-entry';div.id='row_'+id;
   div.innerHTML=`<div class="row-entry-head"><span class="row-num">Pick Up ${n}</span><span class="row-wt"><span id="rwt_${id}">0</span> <span>lbs</span></span><button class="rm-btn" onclick="rmRow(${id},'p')">&#215;</button></div>
   <div class="row-body">
+
+    <!-- ① SHIPMENT INFO -->
     <div class="fsub" style="margin-bottom:10px">
       <div class="fsub-head pu-fsub-head">&#9312; Shipment Info</div>
       <div class="fsub-body">
         <div class="fg fg2" style="margin-bottom:8px">
-          <div class="field"><label>Pro # / AWB # / Ref #</label><input type="text" id="pref_${id}" placeholder="Reference number" inputmode="tel" pattern="[0-9]*"></div>
+          <div class="field"><label>Pro # / AWB # / Ref #</label><input type="text" id="pref_${id}" placeholder="Reference number" inputmode="tel"></div>
           <div class="field"><label>Exp Ref #</label><input type="text" id="pexpref_${id}" placeholder="Expeditors ref #" autocapitalize="characters"></div>
         </div>
         <div class="fg fg3">
-          <div class="field"><label>Pieces *</label><input type="number" id="pp_${id}" placeholder="0" inputmode="tel" pattern="[0-9]*" oninput="updateTotals()"></div>
+          <div class="field"><label>Pieces *</label><input type="number" id="pp_${id}" placeholder="0" inputmode="tel" oninput="updateTotals()"></div>
           <div class="field"><label>Weight (lbs) *</label><input type="number" id="pw_${id}" placeholder="0" inputmode="decimal" oninput="updWt(${id},'p')"></div>
           <div class="field"><label>Shipper</label><input type="text" id="pship_${id}" placeholder="Shipper" autocapitalize="characters" oninput="this.value=this.value.toUpperCase()"></div>
         </div>
       </div>
     </div>
+
+    <!-- ② PICK UP AT SHIPPER -->
     <div class="fsub" style="margin-bottom:10px">
-      <div class="fsub-head pu-fsub-head">&#9313; Pick Up &mdash; At Shipper Location</div>
+      <div class="fsub-head pu-fsub-head">&#9313; Pick Up &mdash; At Shipper</div>
       <div class="fsub-body">
-        <div class="field"><label>Time In &rarr; Time Out — 24hr (at shipper)</label><div class="time-pair"><input type="time" id="ptin_${id}"><span>&rarr;</span><input type="time" id="ptout_${id}"></div></div>
+        <div class="field"><label>Time In &rarr; Time Out (24hr)</label>
+          <div class="time-pair"><input type="time" id="ptin_${id}"><span>&rarr;</span><input type="time" id="ptout_${id}"></div>
+        </div>
         <div id="pusubs_${id}" style="margin-top:4px"></div>
-        <button class="add-note-btn" onclick="addSubDrop(${id},\'p\')" style="margin-top:8px;border-color:#185FA5;color:#185FA5;touch-action:manipulation">+ Add Another Pick Up</button>
+        <button class="add-note-btn" onclick="addSubDrop(${id},'p')" style="margin-top:8px;border-color:#185FA5;color:#185FA5;touch-action:manipulation">+ Add Another Pick Up</button>
+        <button onclick="markPickupComplete(${id})" style="width:100%;margin-top:10px;padding:11px;border-radius:6px;border:none;background:#185FA5;color:white;font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:700;cursor:pointer;touch-action:manipulation">&#10003; Pick Up Complete</button>
       </div>
     </div>
-    <div id="puDropSection_${id}" style="display:none">
+
+    <!-- ③ DROP OFF AT EXPEDITORS -->
     <div class="fsub" style="margin-bottom:10px">
-      <div class="fsub-head pu-fsub-head">&#9314; Drop Off at Expeditors (849 / 3400)</div>
+      <div class="fsub-head pu-fsub-head">&#9314; Drop Off at Expeditors</div>
       <div class="fsub-body">
         <div class="fg fg2" style="margin-bottom:8px">
-          <div class="field"><label>Expeditors Location</label>
-            <select id="pdrop_${id}"><option value="">Select...</option></select>
+          <div class="field"><label>Drop Location</label>
+            <select id="pdrop_${id}" onchange="saveDraft()">
+              <option value="">Select...</option>
+              ${dropOpts}
+            </select>
           </div>
-          <div class="field"><label>Arrive &rarr; Depart Expeditors — 24hr</label><div class="time-pair" style="margin-top:5px"><input type="time" id="parr_${id}" onchange="_checkReturnPending(${id})"><span>&rarr;</span><input type="time" id="pdep2_${id}"></div></div>
+          <div class="field"><label>Arrive at Exp (24hr)</label><input type="time" id="parr_${id}" onchange="_checkReturnPending(${id})"></div>
         </div>
+        <div class="field"><label>Depart Expeditors (24hr)</label><input type="time" id="pdep2_${id}" onchange="saveDraft()"></div>
       </div>
     </div>
-    <div id="pnote_wrap_${id}" style="display:none;padding:10px 12px 0"><div class="field"><label>Note</label><textarea id="pnote_${id}" placeholder="e.g. Sub driver, pieces changed..." autocapitalize="sentences" rows="2" style="width:100%;padding:8px 10px;border:1.5px solid var(--warn);border-radius:6px;font-family:Barlow,sans-serif;font-size:14px;resize:vertical;background:var(--warn-light)"></textarea></div></div>
-        </div>
-    <button class="add-note-btn" id="pnotebtn_${id}" onclick="toggleNote('pnote_wrap_${id}', this)" style="margin:10px 12px 12px;display:block">&#128221; Add Note</button>
 
-  </div>`;
+    <!-- NOTE -->
+    <button class="add-note-btn" id="pnotebtn_${id}" onclick="toggleNote('pnote_wrap_${id}', this)">&#128221; Add Note</button>
+    <div id="pnote_wrap_${id}" style="display:none;margin-top:6px">
+      <textarea id="pnote_${id}" placeholder="Driver note..." rows="2" style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 12px;font-family:Barlow,sans-serif;font-size:14px;box-sizing:border-box;resize:none"></textarea>
+    </div>
+
+    <!-- DONE BUTTON -->
+    <button class="done-stop-btn pu-done-btn" onclick="_doneStop(${id})">&#10003; Done with this Stop</button>
+
+  </div>`;;
   document.getElementById('puRows').appendChild(div);
   buildDropLocationSelect('pdrop_'+id);
   setTimeout(()=>div.scrollIntoView({behavior:'smooth',block:'center'}),100);updateTotals();
