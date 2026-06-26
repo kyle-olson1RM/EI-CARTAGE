@@ -233,7 +233,7 @@ function startNewManifest(){
   ss('driverForm');
 }
 
-function clearForm(){['fTruck','fStart','fEnd','fSMi','fEMi'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});var etr=document.getElementById('endTimeRow');var emr=document.getElementById('endMiRow');if(etr)etr.style.display='none';if(emr)emr.style.display='none';document.getElementById('fDate').value=localDateStr();document.getElementById('delRows').innerHTML='';document.getElementById('puRows').innerHTML='';var asr=document.getElementById('allStopsRows');if(asr)asr.innerHTML='';delIds=[];puIds=[];delSubDrops={};puSubDrops={};subRc=0;if(typeof stopOrder!=='undefined')stopOrder=[];['fTotMi','tMi','tHrs','tStart','tEnd'].forEach(id=>document.getElementById(id).textContent='—');updateTotals();onDateChange();}
+function clearForm(){['fTruck','fStart','fEnd','fSMi','fEMi'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});var etr=document.getElementById('endTimeRow');var emr=document.getElementById('endMiRow');if(etr)etr.style.display='none';if(emr)emr.style.display='none';document.getElementById('fDate').value=localDateStr();document.getElementById('delRows').innerHTML='';document.getElementById('puRows').innerHTML='';var dr=document.getElementById('delRows');if(dr)dr.innerHTML='';var pr=document.getElementById('puRows');if(pr)pr.innerHTML='';delIds=[];puIds=[];delSubDrops={};puSubDrops={};subRc=0;if(typeof stopOrder!=='undefined')stopOrder=[];['fTotMi','tMi','tHrs','tStart','tEnd'].forEach(id=>document.getElementById(id).textContent='—');updateTotals();onDateChange();}
 
 function gD(id){return{proNum:document.getElementById('dref_'+id)?.value||'',shipper:document.getElementById('dship_'+id)?.value||'',pieces:parseInt(document.getElementById('dp_'+id)?.value)||0,weight:parseFloat(document.getElementById('dw_'+id)?.value)||0,city:document.getElementById('dcity_'+id)?.value||'',consignee:document.getElementById('dcons_'+id)?.value||'',timeIn:document.getElementById('dtin_'+id)?.value||'',timeOut:document.getElementById('dtout_'+id)?.value||'',note:document.getElementById('dnote_'+id)?.value.trim()||'',subDrops:getSubDrops(id,'d')};}
 
@@ -470,12 +470,18 @@ function addPUStop(){
   stopOrder.push({type:'p', id:id});
   _renderStopCard('p', id);
   _updateStopsLbl();
+  // Delay check so DOM is fully ready
+  setTimeout(_updateStopsLbl, 300);
 }
 
 function _updateStopsLbl(){
-  var el = document.getElementById('stopsLbl');
-  if(el) el.textContent = stopOrder.length + ' stop' + (stopOrder.length!==1?'s':'');
-  // Show/hide Return to Expeditors button based on open pickups
+  var delCount = delIds.length;
+  var puCount = puIds.length;
+  var dl = document.getElementById('delLbl');
+  var pl = document.getElementById('puLbl');
+  if(dl) dl.textContent = delCount + ' stop' + (delCount!==1?'s':'');
+  if(pl) pl.textContent = puCount + ' stop' + (puCount!==1?'s':'');
+  // Show/hide Arrived at Expeditors button
   var openCount = getOpenPickups ? getOpenPickups().length : 0;
   var retBtn = document.getElementById('returnExpBtn');
   if(retBtn) retBtn.style.display = openCount > 0 ? 'block' : 'none';
@@ -541,6 +547,10 @@ function _renderStopCard(type, id){
   var badgeTxt   = type==='d' ? 'DEL '+delN : 'P/U '+puN;
   var stopNum    = stopOrder.length;
 
+  // Get the right container for this stop type
+  var container = document.getElementById(type==='d' ? 'delRows' : 'puRows');
+  if(!container) return;
+
   // Get the row content from the hidden div that addDel/addPU created
   var srcRow = document.getElementById('row_'+id);
   if(!srcRow) return;
@@ -596,7 +606,7 @@ function _renderStopCard(type, id){
   // Remove the old hidden row
   srcRow.remove();
 
-  // Insert at bottom of stops list, ABOVE the add buttons
+  // Append to the correct section container
   container.appendChild(card);
 
   // For pickup cards, update summary with shipper name as driver types
@@ -726,6 +736,7 @@ function _doneStop(id){
   if(chev) chev.style.transform = 'rotate(-90deg)';
   // Check return pending for pickup cards
   _checkReturnPending(id);
+  _updateStopsLbl();
   updateTotals();
   saveDraft();
 }
