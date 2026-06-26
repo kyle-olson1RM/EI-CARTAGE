@@ -250,19 +250,19 @@
 
 
   <!-- API / Storage Layer -->
-  <script src="/js/config.js?v25"></script>
-  <script src="/js/api.js?v25"></script>
+  <script src="/js/config.js?v26"></script>
+  <script src="/js/api.js?v26"></script>
 
   <!-- Feature Modules -->
-  <script src="/js/auth.js?v25"></script>
-  <script src="/js/draft.js?v25"></script>
-  <script src="/js/form.js?v25"></script>
-  <script src="/js/manager.js?v25"></script>
-  <script src="/js/summary.js?v25"></script>
-  <script src="/js/drivers.js?v25"></script>
+  <script src="/js/auth.js?v26"></script>
+  <script src="/js/draft.js?v26"></script>
+  <script src="/js/form.js?v26"></script>
+  <script src="/js/manager.js?v26"></script>
+  <script src="/js/summary.js?v26"></script>
+  <script src="/js/drivers.js?v26"></script>
 
   <!-- App Init (load last) -->
-  <script src="/js/app.js?v25"></script>
+  <script src="/js/app.js?v26"></script>
 
 
 
@@ -580,28 +580,31 @@
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:white">J Files</div>
       <button onclick="document.getElementById('jfilesOv').classList.remove('open')" style="background:none;border:none;color:rgba(255,255,255,.6);font-size:24px;cursor:pointer;padding:0 4px">&#215;</button>
     </div>
-    <div style="padding:14px">
-      <!-- Add J File form -->
-      <div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:14px">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--accent);margin-bottom:10px">Add J File</div>
-        <div class="fg fg2" style="margin-bottom:8px">
-          <div class="field"><label>Date</label><input type="date" id="jfDate"></div>
-          <div class="field"><label>Ref #</label><input type="text" id="jfRef" placeholder="Reference #" autocapitalize="characters"></div>
+    <div style="padding:12px">
+      <!-- Add J File form - compact single screen -->
+      <div style="background:var(--surface2);border-radius:8px;padding:10px;margin-bottom:10px">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--accent);margin-bottom:8px">Add J File</div>
+        <!-- Row 1: Date, Ref#, Exp Ref# -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:6px">
+          <div class="field"><label>Date</label><input type="date" id="jfDate" style="font-size:13px;height:38px;padding:0 8px"></div>
+          <div class="field"><label>Ref #</label><input type="text" id="jfRef" placeholder="Ref #" autocapitalize="characters" style="font-size:13px;height:38px;padding:0 8px"></div>
+          <div class="field"><label>Exp Ref #</label><input type="text" id="jfExpRef" placeholder="Exp Ref #" autocapitalize="characters" style="font-size:13px;height:38px;padding:0 8px"></div>
         </div>
-        <div class="fg fg2" style="margin-bottom:8px">
-          <div class="field"><label>Exp Ref #</label><input type="text" id="jfExpRef" placeholder="Expeditors ref #" autocapitalize="characters"></div>
-          <div class="field"><label>Price ($)</label><input type="number" id="jfPrice" placeholder="0.00" inputmode="decimal"></div>
+        <!-- Row 2: Pieces, Weight, Price -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:6px">
+          <div class="field"><label>Pieces</label><input type="number" id="jfPcs" placeholder="0" inputmode="tel" style="font-size:13px;height:38px;padding:0 8px"></div>
+          <div class="field"><label>Weight (lbs)</label><input type="number" id="jfWt" placeholder="0" inputmode="decimal" style="font-size:13px;height:38px;padding:0 8px"></div>
+          <div class="field"><label>Price ($)</label><input type="number" id="jfPrice" placeholder="0.00" inputmode="decimal" style="font-size:13px;height:38px;padding:0 8px"></div>
         </div>
-        <div class="fg fg3" style="margin-bottom:8px">
-          <div class="field"><label>Pieces</label><input type="number" id="jfPcs" placeholder="0" inputmode="tel"></div>
-          <div class="field"><label>Weight (lbs)</label><input type="number" id="jfWt" placeholder="0" inputmode="decimal"></div>
-          <div class="field"><label>Shipper</label><input type="text" id="jfShipper" placeholder="Shipper" autocapitalize="characters"></div>
+        <!-- Row 3: Shipper, Consignee -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
+          <div class="field"><label>Shipper</label><input type="text" id="jfShipper" placeholder="Shipper" autocapitalize="characters" style="font-size:13px;height:38px;padding:0 8px"></div>
+          <div class="field"><label>Consignee</label><input type="text" id="jfConsignee" placeholder="Consignee" autocapitalize="characters" style="font-size:13px;height:38px;padding:0 8px"></div>
         </div>
-        <div class="field" style="margin-bottom:10px"><label>Consignee</label><input type="text" id="jfConsignee" placeholder="Consignee" autocapitalize="characters"></div>
-        <button onclick="addJFile()" style="width:100%;padding:11px;border-radius:6px;border:none;background:var(--accent);color:white;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer;touch-action:manipulation">+ Add J File</button>
+        <button onclick="addJFile()" style="width:100%;padding:9px;border-radius:6px;border:none;background:var(--accent);color:white;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;cursor:pointer;touch-action:manipulation">+ Add J File</button>
       </div>
       <!-- J Files list -->
-      <div id="jfilesList"></div>
+      <div id="jfilesList" style="max-height:35vh;overflow-y:auto"></div>
     </div>
   </div>
 </div>
