@@ -165,7 +165,7 @@ function addPU(){
   div.innerHTML=`<div class="row-entry-head"><span class="row-num">Pick Up ${n}</span><span class="row-wt"><span id="rwt_${id}">0</span> <span>lbs</span></span><button class="rm-btn" onclick="rmRow(${id},'p')">&#215;</button></div>
   <div class="row-body">
     <div class="fsub" style="margin-bottom:10px">
-      <div class="fsub-head">&#9312; Shipment Info</div>
+      <div class="fsub-head pu-fsub-head">&#9312; Shipment Info</div>
       <div class="fsub-body">
         <div class="fg fg2" style="margin-bottom:8px">
           <div class="field"><label>Pro # / AWB # / Ref #</label><input type="text" id="pref_${id}" placeholder="Reference number" inputmode="tel" pattern="[0-9]*"></div>
@@ -179,15 +179,16 @@ function addPU(){
       </div>
     </div>
     <div class="fsub" style="margin-bottom:10px">
-      <div class="fsub-head">&#9313; Pick Up &mdash; At Shipper Location</div>
+      <div class="fsub-head pu-fsub-head">&#9313; Pick Up &mdash; At Shipper Location</div>
       <div class="fsub-body">
         <div class="field"><label>Time In &rarr; Time Out — 24hr (at shipper)</label><div class="time-pair"><input type="time" id="ptin_${id}"><span>&rarr;</span><input type="time" id="ptout_${id}"></div></div>
         <div id="pusubs_${id}" style="margin-top:4px"></div>
-        <button class="add-note-btn" onclick="addSubDrop(${id},\'p\')" style="margin-top:8px;border-color:#185FA5;color:var(--accent2);touch-action:manipulation">+ Add Another Pick Up</button>
+        <button class="add-note-btn" onclick="addSubDrop(${id},\'p\')" style="margin-top:8px;border-color:#185FA5;color:#185FA5;touch-action:manipulation">+ Add Another Pick Up</button>
       </div>
     </div>
+    <div id="puDropSection_${id}" style="display:none">
     <div class="fsub" style="margin-bottom:10px">
-      <div class="fsub-head">&#9314; Drop Off at Expeditors (849 / 3400)</div>
+      <div class="fsub-head pu-fsub-head">&#9314; Drop Off at Expeditors (849 / 3400)</div>
       <div class="fsub-body">
         <div class="fg fg2" style="margin-bottom:8px">
           <div class="field"><label>Expeditors Location</label>
@@ -198,6 +199,7 @@ function addPU(){
       </div>
     </div>
     <div id="pnote_wrap_${id}" style="display:none;padding:10px 12px 0"><div class="field"><label>Note</label><textarea id="pnote_${id}" placeholder="e.g. Sub driver, pieces changed..." autocapitalize="sentences" rows="2" style="width:100%;padding:8px 10px;border:1.5px solid var(--warn);border-radius:6px;font-family:Barlow,sans-serif;font-size:14px;resize:vertical;background:var(--warn-light)"></textarea></div></div>
+        </div>
     <button class="add-note-btn" id="pnotebtn_${id}" onclick="toggleNote('pnote_wrap_${id}', this)" style="margin:10px 12px 12px;display:block">&#128221; Add Note</button>
 
   </div>`;
@@ -666,6 +668,41 @@ function _toggleStop(id){
     body.classList.remove('collapsed');
     if(chev) chev.style.transform = '';
   }
+}
+
+
+function markPickupComplete(id){
+  // Validate pickup times are entered
+  var tIn  = document.getElementById('ptin_'+id)?.value;
+  var tOut = document.getElementById('ptout_'+id)?.value;
+  if(!tIn){showToast('Please enter time in at shipper',3000);document.getElementById('ptin_'+id)?.focus();return;}
+  if(!tOut){showToast('Please enter time out at shipper',3000);document.getElementById('ptout_'+id)?.focus();return;}
+
+  // Show the drop off section
+  var dropSec = document.getElementById('puDropSection_'+id);
+  if(dropSec) dropSec.style.display = 'block';
+
+  // Hide the Pick Up Complete button
+  var btn = document.getElementById('puCompleteBtn_'+id);
+  if(btn) btn.style.display = 'none';
+
+  // Update the card summary with shipper info
+  var shipper = document.getElementById('pship_'+id)?.value || '';
+  var pcs = document.getElementById('pp_'+id)?.value || '0';
+  var sum = document.getElementById('stsum_'+id);
+  if(sum) sum.textContent = (shipper ? shipper+' · ' : '') + pcs + ' pcs · picked up';
+
+  // Collapse the card
+  var body = document.getElementById('stopbody_'+id);
+  var chev = document.getElementById('stchev_'+id);
+  if(body) body.classList.add('collapsed');
+  if(chev) chev.style.transform = 'rotate(-90deg)';
+
+  // Show return pending badge
+  _checkReturnPending(id);
+  _updateStopsLbl();
+  saveDraft();
+  showToast('\u2713 Pick up logged — return to Expeditors to complete');
 }
 
 function _doneStop(id){
