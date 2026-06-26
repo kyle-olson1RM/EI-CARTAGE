@@ -253,19 +253,19 @@
 
 
   <!-- API / Storage Layer -->
-  <script src="/js/config.js?v34"></script>
-  <script src="/js/api.js?v34"></script>
+  <script src="/js/config.js?v35"></script>
+  <script src="/js/api.js?v35"></script>
 
   <!-- Feature Modules -->
-  <script src="/js/auth.js?v34"></script>
-  <script src="/js/draft.js?v34"></script>
-  <script src="/js/form.js?v34"></script>
-  <script src="/js/manager.js?v34"></script>
-  <script src="/js/summary.js?v34"></script>
-  <script src="/js/drivers.js?v34"></script>
+  <script src="/js/auth.js?v35"></script>
+  <script src="/js/draft.js?v35"></script>
+  <script src="/js/form.js?v35"></script>
+  <script src="/js/manager.js?v35"></script>
+  <script src="/js/summary.js?v35"></script>
+  <script src="/js/drivers.js?v35"></script>
 
   <!-- App Init (load last) -->
-  <script src="/js/app.js?v34"></script>
+  <script src="/js/app.js?v35"></script>
 
 
 
@@ -577,8 +577,8 @@
 
 
 <!-- J FILES MODAL -->
-<div class="modal-overlay" id="jfilesOv" style="align-items:flex-end;z-index:999">
-  <div class="modal" style="border-radius:12px 12px 0 0;max-height:90vh;overflow-y:auto">
+<div class="modal-overlay" id="jfilesOv" style="align-items:flex-end;z-index:999" onclick="if(event.target===this)document.getElementById('jfilesOv').classList.remove('open')">
+  <div class="modal" style="border-radius:12px 12px 0 0;max-height:85vh;overflow-y:auto;touch-action:manipulation">
     <div style="background:#1a1a1a;padding:14px 18px;display:flex;align-items:center;justify-content:space-between">
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:white">J Files</div>
       <button onclick="document.getElementById('jfilesOv').classList.remove('open')" style="background:none;border:none;color:rgba(255,255,255,.6);font-size:24px;cursor:pointer;padding:0 4px">&#215;</button>

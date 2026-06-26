@@ -158,17 +158,19 @@ function renderCustomerDash(){
   var mon=document.getElementById('custWeekSel').value;
   var el=document.getElementById('custContent'),ml=document.getElementById('custWeekLabel');
   if(!mon){el.innerHTML='<div class="no-data"><div style="font-size:36px;margin-bottom:10px">&#128203;</div><div style="font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:700">No data yet</div></div>';return;}
-  var friDt=new Date(mon+'T12:00:00');friDt.setDate(friDt.getDate()+5);var friday=friDt.toISOString().split('T')[0];var sunDt=new Date(mon+'T12:00:00');sunDt.setDate(sunDt.getDate()-1);var sunday=sunDt.toISOString().split('T')[0];_custMon=sunday;_custFriday=friday;
-  if(ml)ml.textContent=fs(sunday||mon)+' — '+fs(friday);
+  var friDt=new Date(mon+'T12:00:00');friDt.setDate(friDt.getDate()+5);
+  var friday=friDt.toISOString().split('T')[0];
+  var sunDt=new Date(mon+'T12:00:00');sunDt.setDate(sunDt.getDate()-1);
+  var sunday=sunDt.toISOString().split('T')[0];
+  _custMon=sunday;_custFriday=friday;
+  if(ml)ml.textContent=fs(sunday)+' — '+fs(friday);
 
   var roster=getDriverRoster();
-  var wm=manifests.filter(function(m){return m.date>=(sunday||mon)&&m.date<=friday;});
+  var wm=manifests.filter(function(m){return m.date>=sunday&&m.date<=friday;});
   var dm={};
   wm.forEach(function(m){
-    // Sub drivers group under the driver they subbed for
     var key=m.isSubstitute&&m.subFor?m.subFor:m.driverName;
-    if(!dm[key])dm[key]=[];
-    dm[key].push(m);
+    if(!dm[key])dm[key]=[];dm[key].push(m);
   });
 
   var gD=0,gP=0,gS=0,gW=0,gM=0,gH=0,gC=0;
@@ -178,7 +180,17 @@ function renderCustomerDash(){
     d.forEach(function(m){gD+=m.ttlDeliveries||0;gP+=m.ttlPickups||0;gS+=m.ttlShipments||0;gW+=m.ttlWeight||0;gM+=m.totalMiles||0;gH+=m.totalHours||0;c+=(m.totalHours||0)*r;});
     gC+=c;
   });
-  var acps=gS>0?grandC/gS:0,acpl=grandW>0?grandC/grandW:0,asph=gH>0?gS/gH:0,amd=gM/5,acpm=gM>0?grandC/gM:0;
+
+  // J Files for this week
+  var allJF=[];try{allJF=JSON.parse(cacheGet('ei_jfiles')||'[]');}catch(e){}
+  var weekJF=allJF.filter(function(j){return j.date>=sunday&&j.date<=friday;});
+  var jfTotal=weekJF.reduce(function(s,j){return s+(parseFloat(j.price)||0);},0);
+  var jfWt=weekJF.reduce(function(s,j){return s+(parseFloat(j.wt)||0);},0);
+  var grandC=gC+jfTotal;
+  var grandW=gW+jfWt;
+  var jfRow=weekJF.length
+    ?'<tr class="data-row" style="background:#fffbeb"><td colspan="2"><strong>&#128196; J Files</strong> ('+weekJF.length+')</td><td>—</td><td>—</td><td>'+weekJF.length+'</td><td>'+jfWt.toLocaleString()+'</td><td>—</td><td>—</td><td class="chg-cell" style="color:#d97706">$'+jfTotal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td><td></td></tr>'
+    :'';
 
   var tbodyHtml=roster.map(function(drv){
     var name=drv.name,unit=drv.unit,d=dm[name],r=rate(name);
@@ -194,15 +206,15 @@ function renderCustomerDash(){
       +'</tr>'
       +'<tr id="custdetail_'+name.replace(/[^a-zA-Z0-9]/g,'_')+'" style="display:none">'
       +'<td colspan="10" style="padding:0;background:var(--surface2)">'
-      +custBuildDetail(d, name, mon, friday)
+      +custBuildDetail(d,name,sunday,friday)
       +'</td></tr>';
   }).join('');
 
   el.innerHTML=
     '<div style="display:flex;justify-content:flex-end;margin-bottom:10px">'
-    +'<div style="display:flex;justify-content:flex-end;margin-bottom:10px"><button onclick="custExportAll()" style="height:38px;padding:0 16px;border-radius:6px;border:none;background:var(--accent);color:white;font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;cursor:pointer;touch-action:manipulation">&#11015; Export All Ref #s (CSV)</button></div>'
+    +'<button onclick="custExportAll()" style="height:38px;padding:0 16px;border-radius:6px;border:none;background:var(--accent);color:white;font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;cursor:pointer;touch-action:manipulation">&#11015; Export All Ref #s (CSV)</button>'
     +'</div>'
-    +'<div class="grand-box"><h3>Program Totals &mdash; Week Ending '+fs(friday)+'</h3>'
+    +'<div class="grand-box"><h3>Program Totals &mdash; '+fs(sunday)+' &mdash; '+fs(friday)+'</h3>'
     +'<div class="grand-grid">'
     +'<div class="gi"><div class="gi-val">'+gD+'</div><div class="gi-lbl">Deliveries</div></div>'
     +'<div class="gi"><div class="gi-val">'+gP+'</div><div class="gi-lbl">Pick Ups</div></div>'
@@ -214,28 +226,15 @@ function renderCustomerDash(){
     +'<div class="gi"><div class="gi-val">$'+(grandW>0?(grandC/grandW).toFixed(4):'0.0000')+'</div><div class="gi-lbl">Cost Per Lb</div></div>'
     +'</div></div>'
     +'<div class="sum-report">'
-    +'<div class="sum-report-head"><div class="srh-title">Expeditors Cartage Program</div><div class="srh-week">Week Ending '+fs(friday)+' &nbsp;&middot;&nbsp; Click a driver row to see stop details</div></div>'
+    +'<div class="sum-report-head"><div class="srh-title">Expeditors Cartage Program</div><div class="srh-week">'+fs(sunday)+' — '+fs(friday)+' &nbsp;&middot;&nbsp; Click a driver row to see stop details</div></div>'
     +'<div style="overflow-x:auto"><table class="sum-tbl">'
     +'<thead><tr><th>Unit</th><th>Driver</th><th>Deliveries</th><th>Pick Ups</th><th>Shipments</th><th>Weight (lbs)</th><th>Miles</th><th>Hours</th><th>Charges</th><th></th></tr></thead>'
     +'<tbody>'+tbodyHtml+'</tbody>'
-    // Add J Files to customer view
-    var custJFiles=[];try{custJFiles=JSON.parse(cacheGet('ei_jfiles')||'[]');}catch(e){}
-    var custWeekJF=custJFiles.filter(function(j){return j.date>=(sunday||mon)&&j.date<=friday;});
-    var custJfTotal=custWeekJF.reduce(function(s,j){return s+j.price;},0);
-    var custJfWt=custWeekJF.reduce(function(s,j){return s+j.wt;},0);
-    var custJfRow=custWeekJF.length?'<tr class="data-row" style="background:#fffbeb"><td colspan="2"><strong>J Files</strong> ('+custWeekJF.length+')</td><td>—</td><td>—</td><td>'+custWeekJF.length+'</td><td>'+custJfWt.toLocaleString()+'</td><td>—</td><td>—</td><td class="chg-cell">$'+custJfTotal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td><td></td></tr>':'';
-    var custGrandC=gC+custJfTotal; var custGrandW=gW+custJfWt;
-    +'<tfoot>'+custJfRow+'<tr class="total-row"><td colspan="2"><strong>TOTAL</strong></td><td>'+gD+'</td><td>'+gP+'</td><td>'+gS+'</td><td>'+custGrandW.toLocaleString()+'</td><td>'+gM+'</td><td>'+gH.toFixed(2)+'</td><td class="chg-cell">$'+custGrandC.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td><td></td></tr></tfoot>'
+    +'<tfoot>'+jfRow+'<tr class="total-row"><td colspan="2"><strong>TOTAL</strong></td><td>'+gD+'</td><td>'+gP+'</td><td>'+gS+'</td><td>'+grandW.toLocaleString()+'</td><td>'+gM+'</td><td>'+gH.toFixed(2)+'</td><td class="chg-cell">$'+grandC.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td><td></td></tr></tfoot>'
     +'</table></div>'
-    +'<div class="sum-stats">'
-    +'<div class="ss-row"><div class="ss-lbl">Average Cost Per Shipment</div><div class="ss-val">$'+acps.toFixed(2)+'</div></div>'
-    +'<div class="ss-row"><div class="ss-lbl">Average Cost Per Pound</div><div class="ss-val">$'+acpl.toFixed(4)+'</div></div>'
-    +'<div class="ss-row"><div class="ss-lbl">Average Shipments Per Hour</div><div class="ss-val">'+asph.toFixed(2)+'</div></div>'
-    +'<div class="ss-row"><div class="ss-lbl">Average Miles Per Day</div><div class="ss-val">'+amd.toFixed(1)+'</div></div>'
-    +'<div class="ss-row"><div class="ss-lbl">Average Cost Per Mile</div><div class="ss-val">$'+acpm.toFixed(2)+'</div></div>'
-    +'</div>'
     +'</div>';
 }
+
 
 function custBuildDetail(manifests_arr, driverName, mon, friday){
   // Collect all deliveries and pickups for this driver this week
