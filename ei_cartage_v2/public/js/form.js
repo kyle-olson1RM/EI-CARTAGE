@@ -609,12 +609,14 @@ function _renderStopCard(type, id){
     }
   }
 
-  // Add "Done with this stop" button
-  var doneBtn = document.createElement('button');
-  doneBtn.className = 'done-stop-btn';
-  doneBtn.setAttribute('onclick', '_doneStop('+id+')');
-  doneBtn.textContent = '✓ Done with this stop';
-  body.appendChild(doneBtn);
+  // Add "Done with this stop" button only for deliveries (pickups have it in template)
+  if(type === 'd'){
+    var doneBtn = document.createElement('button');
+    doneBtn.className = 'done-stop-btn';
+    doneBtn.setAttribute('onclick', '_doneStop('+id+')');
+    doneBtn.textContent = '✓ Done with this stop';
+    body.appendChild(doneBtn);
+  }
 
   card.appendChild(head);
   card.appendChild(body);
