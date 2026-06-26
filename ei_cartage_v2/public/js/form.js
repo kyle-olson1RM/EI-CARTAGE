@@ -183,7 +183,7 @@ function addPU(){
       <div class="fsub-body">
         <div class="field"><label>Time In &rarr; Time Out — 24hr (at shipper)</label><div class="time-pair"><input type="time" id="ptin_${id}"><span>&rarr;</span><input type="time" id="ptout_${id}"></div></div>
         <div id="pusubs_${id}" style="margin-top:4px"></div>
-        <button class="add-note-btn" onclick="addSubDrop(${id},\'p\')" style="margin-top:8px;border-color:var(--accent2);color:var(--accent2);touch-action:manipulation">+ Add Another Pick Up</button>
+        <button class="add-note-btn" onclick="addSubDrop(${id},\'p\')" style="margin-top:8px;border-color:#185FA5;color:var(--accent2);touch-action:manipulation">+ Add Another Pick Up</button>
       </div>
     </div>
     <div class="fsub" style="margin-bottom:10px">
@@ -537,9 +537,6 @@ function _openReturnField(id){
 }
 
 function _renderStopCard(type, id){
-  var container = document.getElementById('allStopsRows');
-  if(!container) return;
-
   var delN = delIds.indexOf(id)+1;
   var puN  = puIds.indexOf(id)+1;
   var badgeClass = type==='d' ? 'del-badge' : 'pu-badge';
