@@ -872,13 +872,17 @@ function showDepartExp(){
     return parr&&parr.value&&(!pdep||!pdep.value);
   }).length;
   if(sub) sub.textContent = count+' pick up'+(count!==1?'s':'')+' — arrived '+_retExpArriveTime;
+  var depTimeEl = document.getElementById('departExpTime');
+  if(depTimeEl) depTimeEl.value = nowTime();
   document.getElementById('departExpOv').classList.add('open');
+  setTimeout(function(){ document.getElementById('departExpTime').focus(); }, 200);
 }
 
 function confirmDepartExp(){
   var drop = document.getElementById('departExpDrop')?.value;
   if(!drop){ showToast('Please select a drop location', 3000); return; }
-  var departTime = nowTime();
+  var departTime = document.getElementById('departExpTime')?.value;
+  if(!departTime){ showToast('Please enter depart time', 3000); return; }
   // Update all pickups that have arrive but no depart, then mark done
   var updated = 0;
   puIds.forEach(function(id){

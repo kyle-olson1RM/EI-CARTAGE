@@ -249,19 +249,19 @@
 
 
   <!-- API / Storage Layer -->
-  <script src="/js/config.js?v22"></script>
-  <script src="/js/api.js?v22"></script>
+  <script src="/js/config.js?v23"></script>
+  <script src="/js/api.js?v23"></script>
 
   <!-- Feature Modules -->
-  <script src="/js/auth.js?v22"></script>
-  <script src="/js/draft.js?v22"></script>
-  <script src="/js/form.js?v22"></script>
-  <script src="/js/manager.js?v22"></script>
-  <script src="/js/summary.js?v22"></script>
-  <script src="/js/drivers.js?v22"></script>
+  <script src="/js/auth.js?v23"></script>
+  <script src="/js/draft.js?v23"></script>
+  <script src="/js/form.js?v23"></script>
+  <script src="/js/manager.js?v23"></script>
+  <script src="/js/summary.js?v23"></script>
+  <script src="/js/drivers.js?v23"></script>
 
   <!-- App Init (load last) -->
-  <script src="/js/app.js?v22"></script>
+  <script src="/js/app.js?v23"></script>
 
 
 
@@ -537,6 +537,10 @@
         <select id="departExpDrop" style="width:100%;height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:16px;box-sizing:border-box;background:white">
           <option value="">Select location...</option>
         </select>
+      </div>
+      <div>
+        <label style="display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px">Depart Time (24hr)</label>
+        <input type="time" id="departExpTime" onkeydown="if(event.key==='Enter')confirmDepartExp()" style="width:100%;height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:16px;box-sizing:border-box">
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <button onclick="document.getElementById('departExpOv').classList.remove('open')" style="height:46px;border-radius:6px;border:1.5px solid var(--border2);background:var(--surface2);font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;cursor:pointer;color:var(--text2);touch-action:manipulation">Cancel</button>
