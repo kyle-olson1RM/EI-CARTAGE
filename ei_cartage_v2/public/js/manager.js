@@ -728,23 +728,6 @@ function renderJFilesList(){
         +'<button data-jid="'+j.id+'" onclick="deleteJFile(this.dataset.jid)" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;flex-shrink:0;padding:0">&#128465;</button>'
       +'</div>';
     }).join('');
-  // Build J Files row HTML for display below driver cards
-  var jfCardHtml='';
-  if(weekJFiles.length){
-    jfCardHtml='<div class="driver-group" style="border:1.5px solid #d97706;border-radius:8px;margin-bottom:10px;overflow:hidden">'
-      +'<div style="background:#fffbeb;padding:12px 14px;display:flex;align-items:center;justify-content:space-between">'
-      +'<div style="font-family:Barlow Condensed,sans-serif;font-size:17px;font-weight:700">&#128196; J Files <span style="font-size:13px;font-weight:400;color:var(--muted)">('+weekJFiles.length+' entries)</span></div>'
-      +'<div style="font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:800;color:#d97706">$'+jfTotal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div>'
-      +'</div>'
-      +'<div style="padding:10px 14px;font-size:12px;color:var(--text2)">'
-      +weekJFiles.map(function(j){
-        return '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)">'
-          +'<span>'+j.date+' &nbsp;·&nbsp; '+(j.ref||j.expRef||'—')+'</span>'
-          +'<span style="font-weight:700;color:#d97706">$'+(parseFloat(j.price)||0).toFixed(2)+'</span>'
-          +'</div>';
-      }).join('')
-      +'</div>'
-      +'</div>';
-  }
-  c.innerHTML=totalsBox+driverCardsHtml+jfCardHtml;
+  // Refresh dashboard to show updated J Files
+  if(typeof refreshMgr==='function') refreshMgr();
 }
