@@ -500,10 +500,28 @@ function _updateStopsLbl(){
   var pl = document.getElementById('puLbl');
   if(dl) dl.textContent = delCount + ' stop' + (delCount!==1?'s':'');
   if(pl) pl.textContent = puCount + ' stop' + (puCount!==1?'s':'');
-  // Show/hide Arrived at Expeditors button
-  var openCount = getOpenPickups ? getOpenPickups().length : 0;
   var retBtn = document.getElementById('returnExpBtn');
-  if(retBtn) retBtn.style.display = openCount > 0 ? 'block' : 'none';
+  if(!retBtn) return;
+  // Check state: pickups with no arrive = show Arrived button
+  // Pickups with arrive but no depart = show Departed button
+  var noArrive = puIds.filter(function(id){
+    var parr=document.getElementById('parr_'+id);
+    return parr && !parr.value;
+  });
+  var arrivedNotDep = puIds.filter(function(id){
+    var parr=document.getElementById('parr_'+id);
+    var pdep=document.getElementById('pdep2_'+id);
+    return parr && parr.value && pdep && !pdep.value;
+  });
+  if(noArrive.length > 0){
+    retBtn.style.display='block';
+    retBtn.innerHTML='<button onclick="arrivedAtExp()" style="width:100%;padding:12px;border-radius:8px;border:1.5px solid #185FA5;background:rgba(24,95,165,.08);color:#185FA5;font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:700;cursor:pointer;touch-action:manipulation">&#128336; Arrived at Expeditors</button>';
+  } else if(arrivedNotDep.length > 0){
+    retBtn.style.display='block';
+    retBtn.innerHTML='<button onclick="showDepartExp()" style="width:100%;padding:12px;border-radius:8px;border:1.5px solid #185FA5;background:#185FA5;color:white;font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:700;cursor:pointer;touch-action:manipulation">&#128337; Departed Expeditors — Confirm Drop Location</button>';
+  } else {
+    retBtn.style.display='none';
+  }
 }
 
 
