@@ -249,19 +249,19 @@
 
 
   <!-- API / Storage Layer -->
-  <script src="/js/config.js?v21"></script>
-  <script src="/js/api.js?v21"></script>
+  <script src="/js/config.js?v22"></script>
+  <script src="/js/api.js?v22"></script>
 
   <!-- Feature Modules -->
-  <script src="/js/auth.js?v21"></script>
-  <script src="/js/draft.js?v21"></script>
-  <script src="/js/form.js?v21"></script>
-  <script src="/js/manager.js?v21"></script>
-  <script src="/js/summary.js?v21"></script>
-  <script src="/js/drivers.js?v21"></script>
+  <script src="/js/auth.js?v22"></script>
+  <script src="/js/draft.js?v22"></script>
+  <script src="/js/form.js?v22"></script>
+  <script src="/js/manager.js?v22"></script>
+  <script src="/js/summary.js?v22"></script>
+  <script src="/js/drivers.js?v22"></script>
 
   <!-- App Init (load last) -->
-  <script src="/js/app.js?v21"></script>
+  <script src="/js/app.js?v22"></script>
 
 
 
@@ -541,6 +541,27 @@
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <button onclick="document.getElementById('departExpOv').classList.remove('open')" style="height:46px;border-radius:6px;border:1.5px solid var(--border2);background:var(--surface2);font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;cursor:pointer;color:var(--text2);touch-action:manipulation">Cancel</button>
         <button onclick="confirmDepartExp()" style="height:46px;border-radius:6px;border:none;background:#185FA5;color:white;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;cursor:pointer;touch-action:manipulation">Confirm</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ARRIVED AT EXPEDITORS POPUP -->
+<div class="modal-overlay" id="arrExpOv" style="align-items:center;justify-content:center;z-index:999">
+  <div style="background:var(--surface);border-radius:12px;width:calc(100% - 32px);max-width:340px;overflow:hidden;box-shadow:var(--shadow-lg)">
+    <div style="background:#185FA5;padding:14px 18px">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:white">Arrived at Expeditors</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.65);margin-top:2px" id="arrExpSubtitle">Confirm arrive time</div>
+    </div>
+    <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
+      <div>
+        <label style="display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px">Arrive Time (24hr)</label>
+        <input type="time" id="arrExpTime" onkeydown="if(event.key==='Enter')confirmArriveExp()" style="width:100%;height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:16px;box-sizing:border-box">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <button onclick="document.getElementById('arrExpOv').classList.remove('open')" style="height:46px;border-radius:6px;border:1.5px solid var(--border2);background:var(--surface2);font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;cursor:pointer;color:var(--text2);touch-action:manipulation">Cancel</button>
+        <button onclick="confirmArriveExp()" style="height:46px;border-radius:6px;border:none;background:#185FA5;color:white;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;cursor:pointer;touch-action:manipulation">Confirm</button>
       </div>
     </div>
   </div>

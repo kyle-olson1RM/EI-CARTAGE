@@ -825,22 +825,34 @@ function getOpenPickups(){
 }
 
 function arrivedAtExp(){
-  // Tap 1 — log arrive time instantly, switch button to Depart
   var openPUs = getOpenPickups();
   if(!openPUs.length){ showToast('No open pick ups to return'); return; }
-  _retExpArriveTime = nowTime();
-  // Set arrive time on all open pickups immediately
+  // Show arrive time popup
+  var arrEl = document.getElementById('arrExpTime');
+  if(arrEl) arrEl.value = nowTime();
+  var sub = document.getElementById('arrExpSubtitle');
+  if(sub) sub.textContent = openPUs.length+' pick up'+(openPUs.length!==1?'s':'')+' will be updated';
+  document.getElementById('arrExpOv').classList.add('open');
+  setTimeout(function(){ document.getElementById('arrExpTime').focus(); }, 200);
+}
+
+function confirmArriveExp(){
+  var arrTime = document.getElementById('arrExpTime')?.value;
+  if(!arrTime){ showToast('Please enter arrive time', 3000); return; }
+  var openPUs = getOpenPickups();
+  _retExpArriveTime = arrTime;
   openPUs.forEach(function(id){
     var arrEl = document.getElementById('parr_'+id);
-    if(arrEl) arrEl.value = _retExpArriveTime;
+    if(arrEl) arrEl.value = arrTime;
     _checkReturnPending(id);
   });
+  document.getElementById('arrExpOv').classList.remove('open');
   // Switch button to Depart
   var btn = document.getElementById('returnExpBtn');
   if(btn){
     btn.innerHTML = '<button onclick="showDepartExp()" style="width:100%;padding:12px;border-radius:8px;border:1.5px solid #185FA5;background:#185FA5;color:white;font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:700;cursor:pointer;touch-action:manipulation">&#128337; Departed Expeditors — Confirm Drop Location</button>';
   }
-  showToast('\u2713 Arrived at Expeditors — '+openPUs.length+' pick up'+(openPUs.length!==1?'s':'')+' logged', 3000);
+  showToast('\u2713 Arrived at Expeditors logged', 3000);
   saveDraft();
 }
 
