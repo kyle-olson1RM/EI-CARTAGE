@@ -571,7 +571,7 @@ function _renderStopCard(type, id){
 
   head.innerHTML =
     '<span class="stop-badge '+badgeClass+'">'+badgeTxt+'</span>'+
-    '<span class="stop-card-summary" id="stsum_'+id+'">Stop '+stopNum+'</span>'+
+    '<span class="stop-card-summary" id="stsum_'+id+'"><span style="font-size:10px;color:var(--muted);font-style:italic">tap header to collapse</span></span>'+
     retPendBadge+
     '<span id="stdone_'+id+'" class="stop-card-done" style="display:none">'+
       '<svg width="12" height="12" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" stroke="#16a34a" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>'+
