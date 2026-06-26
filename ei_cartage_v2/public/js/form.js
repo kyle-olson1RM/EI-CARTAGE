@@ -475,6 +475,10 @@ function addPUStop(){
 function _updateStopsLbl(){
   var el = document.getElementById('stopsLbl');
   if(el) el.textContent = stopOrder.length + ' stop' + (stopOrder.length!==1?'s':'');
+  // Show/hide Return to Expeditors button based on open pickups
+  var openCount = getOpenPickups ? getOpenPickups().length : 0;
+  var retBtn = document.getElementById('returnExpBtn');
+  if(retBtn) retBtn.style.display = openCount > 0 ? 'block' : 'none';
 }
 
 
@@ -745,3 +749,74 @@ addSubDrop = function(stopId, type){
   var addBtn = document.getElementById('adddrop_'+stopId);
   if(addBtn) setTimeout(function(){addBtn.scrollIntoView({behavior:'smooth',block:'center'});}, 200);
 };
+
+// ── RETURN TO EXPEDITORS ─────────────────────────────────────────────────────
+function getOpenPickups(){
+  // Returns array of puIds that have no return time filled in
+  return puIds.filter(function(id){
+    var parr = document.getElementById('parr_'+id);
+    return parr && !parr.value;
+  });
+}
+
+function showReturnExp(){
+  var openPUs = getOpenPickups();
+  if(!openPUs.length){ showToast('No open pick ups to return'); return; }
+
+  // Pre-fill times with current time
+  var now = nowTime();
+  var arrEl = document.getElementById('retExpArrive');
+  var depEl = document.getElementById('retExpDepart');
+  if(arrEl) arrEl.value = now;
+  if(depEl) depEl.value = '';
+
+  // Populate drop location selector
+  var dropSel = document.getElementById('retExpDrop');
+  if(dropSel){
+    var locs = getDropLocations();
+    dropSel.innerHTML = '<option value="">Select location...</option>';
+    if(locs.loc1) dropSel.innerHTML += '<option value="'+locs.loc1+'">'+locs.loc1+'</option>';
+    if(locs.loc2) dropSel.innerHTML += '<option value="'+locs.loc2+'">'+locs.loc2+'</option>';
+  }
+
+  // Show which pickups will be updated
+  var listEl = document.getElementById('retExpList');
+  var subtitle = document.getElementById('retExpSubtitle');
+  if(listEl){
+    listEl.innerHTML = openPUs.map(function(id, i){
+      var ship = document.getElementById('pship_'+id)?.value || 'Pick Up '+(puIds.indexOf(id)+1);
+      return '<div style="padding:3px 0;border-bottom:1px solid var(--border)">&#128336; '+ship+'</div>';
+    }).join('');
+  }
+  if(subtitle) subtitle.textContent = openPUs.length + ' open pick up'+(openPUs.length!==1?'s':'')+' will be updated';
+
+  document.getElementById('returnExpOv').classList.add('open');
+  setTimeout(function(){ document.getElementById('retExpArrive').focus(); }, 200);
+}
+
+function confirmReturnExp(){
+  var drop = document.getElementById('retExpDrop')?.value;
+  var arrive = document.getElementById('retExpArrive')?.value;
+  var depart = document.getElementById('retExpDepart')?.value;
+
+  if(!drop){ showToast('Please select a drop location', 3000); return; }
+  if(!arrive){ showToast('Please enter arrive time', 3000); return; }
+  if(!depart){ showToast('Please enter depart time', 3000); return; }
+
+  var openPUs = getOpenPickups();
+  openPUs.forEach(function(id){
+    var dropEl = document.getElementById('pdrop_'+id);
+    var arrEl  = document.getElementById('parr_'+id);
+    var depEl  = document.getElementById('pdep2_'+id);
+    if(dropEl) dropEl.value = drop;
+    if(arrEl)  arrEl.value  = arrive;
+    if(depEl)  depEl.value  = depart;
+    // Clear return pending badge
+    _checkReturnPending(id);
+  });
+
+  document.getElementById('returnExpOv').classList.remove('open');
+  showToast('\u2713 '+openPUs.length+' pick up'+(openPUs.length!==1?'s':'')+' returned to Expeditors');
+  updateTotals();
+  saveDraft();
+}
