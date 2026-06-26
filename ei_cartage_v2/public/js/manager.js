@@ -55,8 +55,9 @@ function renderCards(){
   // Group by driver name
   var groups={};
   list.forEach(function(m){
-    if(!groups[m.driverName])groups[m.driverName]=[];
-    groups[m.driverName].push(m);
+    var key=m.isSubstitute&&m.subFor?m.subFor:m.driverName;
+    if(!groups[key])groups[key]=[];
+    groups[key].push(m);
   });
 
   var driverNames=Object.keys(groups).sort();
