@@ -70,20 +70,30 @@ function renderCards(){
     pgW+=m.ttlWeight||0;pgM+=m.totalMiles||0;pgH+=m.totalHours||0;
     pgC+=(m.totalHours||0)*r;
   });
+  // Add J Files for this week
+  var allJFiles=getJFiles();
+  var weekJFiles=ffrom?allJFiles.filter(function(j){return j.date>=ffrom&&j.date<=fto;}):allJFiles;
+  var jfTotal=weekJFiles.reduce(function(s,j){return s+(parseFloat(j.price)||0);},0);
+  var jfWt=weekJFiles.reduce(function(s,j){return s+(parseFloat(j.wt)||0);},0);
+  var pgGrandC=pgC+jfTotal;
+  var pgGrandW=pgW+jfWt;
+  var jfRow=weekJFiles.length
+    ?'<tr class="data-row" style="background:#fffbeb"><td colspan="2"><strong>&#128196; J Files</strong> ('+weekJFiles.length+')</td><td>—</td><td>—</td><td>'+weekJFiles.length+'</td><td>'+jfWt.toLocaleString()+'</td><td>—</td><td>—</td><td class="chg-cell" style="color:#d97706">$'+jfTotal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td></tr>'
+    :'';
   var pgLabel=ffrom?('Week of '+(function(){var d=new Date(ffrom+'T12:00:00');return(d.getMonth()+1)+'/'+d.getDate()+'–'+(function(){var f=new Date(ffrom+'T12:00:00');f.setDate(f.getDate()+4);return(f.getMonth()+1)+'/'+f.getDate();})()+'/'+d.getFullYear();})()):'All Weeks';
   var totalsBox='<div class="grand-box" style="margin-bottom:14px"><h3>Program Totals &mdash; '+pgLabel+'</h3>'
     +'<div class="grand-grid">'
     +'<div class="gi"><div class="gi-val">'+pgD+'</div><div class="gi-lbl">Deliveries</div></div>'
     +'<div class="gi"><div class="gi-val">'+pgP+'</div><div class="gi-lbl">Pick Ups</div></div>'
     +'<div class="gi"><div class="gi-val">'+pgS+'</div><div class="gi-lbl">Shipments</div></div>'
-    +'<div class="gi"><div class="gi-val">'+pgW.toLocaleString()+'</div><div class="gi-lbl">Weight (lbs)</div></div>'
+    +'<div class="gi"><div class="gi-val">'+pgGrandW.toLocaleString()+'</div><div class="gi-lbl">Weight (lbs)</div></div>'
     +'<div class="gi"><div class="gi-val">'+pgM+'</div><div class="gi-lbl">Miles</div></div>'
     +'<div class="gi"><div class="gi-val">'+pgH.toFixed(2)+'</div><div class="gi-lbl">Hours</div></div>'
-    +'<div class="gi"><div class="gi-val">$'+pgC.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div><div class="gi-lbl">Total Charges</div></div>'
-    +'<div class="gi"><div class="gi-val">$'+(pgW>0?(pgC/pgW).toFixed(4):'0.0000')+'</div><div class="gi-lbl">Cost Per Lb</div></div>'
+    +'<div class="gi"><div class="gi-val">$'+pgGrandC.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div><div class="gi-lbl">Total Charges</div></div>'
+    +'<div class="gi"><div class="gi-val">$'+(pgGrandW>0?(pgGrandC/pgGrandW).toFixed(4):'0.0000')+'</div><div class="gi-lbl">Cost Per Lb</div></div>'
     +'</div></div>';
 
-  c.innerHTML=totalsBox+driverNames.map(function(name){
+  var driverCardsHtml=driverNames.map(function(name){
     var entries=groups[name];
     var init=name.split(' ').map(function(w){return w[0];}).join('').slice(0,2);
     var unit=UNIT_MAP[name]||'';
@@ -116,6 +126,25 @@ function renderCards(){
         var flagReason=isFlagged?((m.flaggedStops||[]).find(function(f){return f.type==='d'&&f.idx===i;})||{}).reason||'':'';
         return '<tr style="'+rowStyle+'"><td style="padding-left:24px">'+(i+1)+'</td><td style="font-family:monospace;font-size:11px">'+(d.proNum||'&mdash;')+'</td><td>'+(d.consignee||'&mdash;')+'</td><td>'+(d.city||'&mdash;')+'</td><td style="text-align:center">'+d.pieces+'</td><td style="text-align:center;font-weight:600">'+((d.weight||0).toLocaleString())+'</td><td style="font-size:11px">'+(d.timeIn||'&mdash;')+'&rarr;'+(d.timeOut||'&mdash;')+'</td>'+(d.note?'<td style="background:var(--warn-light);color:var(--warn);font-size:11px;font-weight:600">&#128221; '+d.note+'</td>':'<td></td>')+(isFlagged?'<td style="color:#d97706;font-weight:700;font-size:11px;white-space:nowrap">&#9888; '+flagReason+'</td>':'<td></td>')+'</tr>';
       }).join('');
+  // Build J Files row HTML for display below driver cards
+  var jfCardHtml='';
+  if(weekJFiles.length){
+    jfCardHtml='<div class="driver-group" style="border:1.5px solid #d97706;border-radius:8px;margin-bottom:10px;overflow:hidden">'
+      +'<div style="background:#fffbeb;padding:12px 14px;display:flex;align-items:center;justify-content:space-between">'
+      +'<div style="font-family:Barlow Condensed,sans-serif;font-size:17px;font-weight:700">&#128196; J Files <span style="font-size:13px;font-weight:400;color:var(--muted)">('+weekJFiles.length+' entries)</span></div>'
+      +'<div style="font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:800;color:#d97706">$'+jfTotal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div>'
+      +'</div>'
+      +'<div style="padding:10px 14px;font-size:12px;color:var(--text2)">'
+      +weekJFiles.map(function(j){
+        return '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)">'
+          +'<span>'+j.date+' &nbsp;·&nbsp; '+(j.ref||j.expRef||'—')+'</span>'
+          +'<span style="font-weight:700;color:#d97706">$'+(parseFloat(j.price)||0).toFixed(2)+'</span>'
+          +'</div>';
+      }).join('')
+      +'</div>'
+      +'</div>';
+  }
+  c.innerHTML=totalsBox+driverCardsHtml+jfCardHtml;
       var flaggedPuSet=new Set((m.flaggedStops||[]).filter(function(f){return f.type==='p';}).map(function(f){return f.idx;}));
       var puRows=(m.pickups||[]).map(function(p,i){
         var isFlagged=flaggedPuSet.has(i);
@@ -123,6 +152,25 @@ function renderCards(){
         var flagReason=isFlagged?((m.flaggedStops||[]).find(function(f){return f.type==='p'&&f.idx===i;})||{}).reason||'':'';
         return '<tr style="'+rowStyle+'"><td style="padding-left:24px">'+(i+1)+'</td><td style="font-family:monospace;font-size:11px">'+(p.proNum||'&mdash;')+'</td><td>'+(p.shipper||'&mdash;')+'</td><td style="text-align:center">'+p.pieces+'</td><td style="text-align:center;font-weight:600">'+((p.weight||0).toLocaleString())+'</td><td style="font-size:11px">PU: '+(p.pickupIn||'&mdash;')+'&rarr;'+(p.pickupOut||'&mdash;')+'</td><td style="font-size:11px">'+(p.dropLocation||'&mdash;')+': '+(p.arriveExp||'&mdash;')+'&rarr;'+(p.departExp||'&mdash;')+'</td>'+(p.note?'<td style="background:var(--warn-light);color:var(--warn);font-size:11px;font-weight:600">&#128221; '+p.note+'</td>':'<td></td>')+(isFlagged?'<td style="color:#d97706;font-weight:700;font-size:11px;white-space:nowrap">&#9888; '+flagReason+'</td>':'<td></td>')+'</tr>';
       }).join('');
+  // Build J Files row HTML for display below driver cards
+  var jfCardHtml='';
+  if(weekJFiles.length){
+    jfCardHtml='<div class="driver-group" style="border:1.5px solid #d97706;border-radius:8px;margin-bottom:10px;overflow:hidden">'
+      +'<div style="background:#fffbeb;padding:12px 14px;display:flex;align-items:center;justify-content:space-between">'
+      +'<div style="font-family:Barlow Condensed,sans-serif;font-size:17px;font-weight:700">&#128196; J Files <span style="font-size:13px;font-weight:400;color:var(--muted)">('+weekJFiles.length+' entries)</span></div>'
+      +'<div style="font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:800;color:#d97706">$'+jfTotal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div>'
+      +'</div>'
+      +'<div style="padding:10px 14px;font-size:12px;color:var(--text2)">'
+      +weekJFiles.map(function(j){
+        return '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)">'
+          +'<span>'+j.date+' &nbsp;·&nbsp; '+(j.ref||j.expRef||'—')+'</span>'
+          +'<span style="font-weight:700;color:#d97706">$'+(parseFloat(j.price)||0).toFixed(2)+'</span>'
+          +'</div>';
+      }).join('')
+      +'</div>'
+      +'</div>';
+  }
+  c.innerHTML=totalsBox+driverCardsHtml+jfCardHtml;
       var detailTbls='';
       if(m.deliveries&&m.deliveries.length){
         detailTbls+='<div style="padding:0 12px 8px"><div style="font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.5px;text-transform:uppercase;padding:6px 0 4px">Deliveries</div><div style="overflow-x:auto"><table class="det-tbl"><thead><tr><th>#</th><th>Ref #</th><th>Consignee</th><th>City</th><th style="text-align:center">Pcs</th><th style="text-align:center">Wt</th><th>Times</th></tr></thead><tbody>'+delRows+'</tbody></table></div></div>';
@@ -157,6 +205,25 @@ function renderCards(){
         '</div>'+
       '</div>';
     }).join('');
+  // Build J Files row HTML for display below driver cards
+  var jfCardHtml='';
+  if(weekJFiles.length){
+    jfCardHtml='<div class="driver-group" style="border:1.5px solid #d97706;border-radius:8px;margin-bottom:10px;overflow:hidden">'
+      +'<div style="background:#fffbeb;padding:12px 14px;display:flex;align-items:center;justify-content:space-between">'
+      +'<div style="font-family:Barlow Condensed,sans-serif;font-size:17px;font-weight:700">&#128196; J Files <span style="font-size:13px;font-weight:400;color:var(--muted)">('+weekJFiles.length+' entries)</span></div>'
+      +'<div style="font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:800;color:#d97706">$'+jfTotal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div>'
+      +'</div>'
+      +'<div style="padding:10px 14px;font-size:12px;color:var(--text2)">'
+      +weekJFiles.map(function(j){
+        return '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)">'
+          +'<span>'+j.date+' &nbsp;·&nbsp; '+(j.ref||j.expRef||'—')+'</span>'
+          +'<span style="font-weight:700;color:#d97706">$'+(parseFloat(j.price)||0).toFixed(2)+'</span>'
+          +'</div>';
+      }).join('')
+      +'</div>'
+      +'</div>';
+  }
+  c.innerHTML=totalsBox+driverCardsHtml+jfCardHtml;
 
     return '<div class="driver-group" data-gid="'+name+'">'+
       '<div class="dg-header" onclick="toggleGroup(this)">'+
@@ -175,6 +242,25 @@ function renderCards(){
       '<div class="dg-body" style="display:none">'+dayRows+'</div>'+
     '</div>';
   }).join('');
+  // Build J Files row HTML for display below driver cards
+  var jfCardHtml='';
+  if(weekJFiles.length){
+    jfCardHtml='<div class="driver-group" style="border:1.5px solid #d97706;border-radius:8px;margin-bottom:10px;overflow:hidden">'
+      +'<div style="background:#fffbeb;padding:12px 14px;display:flex;align-items:center;justify-content:space-between">'
+      +'<div style="font-family:Barlow Condensed,sans-serif;font-size:17px;font-weight:700">&#128196; J Files <span style="font-size:13px;font-weight:400;color:var(--muted)">('+weekJFiles.length+' entries)</span></div>'
+      +'<div style="font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:800;color:#d97706">$'+jfTotal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div>'
+      +'</div>'
+      +'<div style="padding:10px 14px;font-size:12px;color:var(--text2)">'
+      +weekJFiles.map(function(j){
+        return '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)">'
+          +'<span>'+j.date+' &nbsp;·&nbsp; '+(j.ref||j.expRef||'—')+'</span>'
+          +'<span style="font-weight:700;color:#d97706">$'+(parseFloat(j.price)||0).toFixed(2)+'</span>'
+          +'</div>';
+      }).join('')
+      +'</div>'
+      +'</div>';
+  }
+  c.innerHTML=totalsBox+driverCardsHtml+jfCardHtml;
 }
 
 function openMod(id){
@@ -642,4 +728,23 @@ function renderJFilesList(){
         +'<button data-jid="'+j.id+'" onclick="deleteJFile(this.dataset.jid)" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;flex-shrink:0;padding:0">&#128465;</button>'
       +'</div>';
     }).join('');
+  // Build J Files row HTML for display below driver cards
+  var jfCardHtml='';
+  if(weekJFiles.length){
+    jfCardHtml='<div class="driver-group" style="border:1.5px solid #d97706;border-radius:8px;margin-bottom:10px;overflow:hidden">'
+      +'<div style="background:#fffbeb;padding:12px 14px;display:flex;align-items:center;justify-content:space-between">'
+      +'<div style="font-family:Barlow Condensed,sans-serif;font-size:17px;font-weight:700">&#128196; J Files <span style="font-size:13px;font-weight:400;color:var(--muted)">('+weekJFiles.length+' entries)</span></div>'
+      +'<div style="font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:800;color:#d97706">$'+jfTotal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div>'
+      +'</div>'
+      +'<div style="padding:10px 14px;font-size:12px;color:var(--text2)">'
+      +weekJFiles.map(function(j){
+        return '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)">'
+          +'<span>'+j.date+' &nbsp;·&nbsp; '+(j.ref||j.expRef||'—')+'</span>'
+          +'<span style="font-weight:700;color:#d97706">$'+(parseFloat(j.price)||0).toFixed(2)+'</span>'
+          +'</div>';
+      }).join('')
+      +'</div>'
+      +'</div>';
+  }
+  c.innerHTML=totalsBox+driverCardsHtml+jfCardHtml;
 }
