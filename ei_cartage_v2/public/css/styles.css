@@ -53,7 +53,7 @@ html{overflow-x:hidden;max-width:100vw;}body{font-family:'Barlow',sans-serif;bac
 
 /* FORM */
 #driverForm{background:var(--bg);}
-.form-body{flex:1;overflow-y:auto;padding:14px;padding-bottom:90px;}
+.form-body{flex:1;overflow-y:auto;padding:14px;padding-bottom:120px;}
 .fsec{background:var(--surface);border-radius:8px;margin-bottom:14px;box-shadow:var(--shadow);overflow:hidden;}
 .fsec-head{background:var(--accent);color:white;padding:11px 14px;display:flex;align-items:center;justify-content:space-between;}
 .fsec-head h2{font-family:Barlow Condensed,sans-serif;font-size:17px;font-weight:700;letter-spacing:1px;text-transform:uppercase;}
@@ -62,7 +62,7 @@ html{overflow-x:hidden;max-width:100vw;}body{font-family:'Barlow',sans-serif;bac
 .fsub{border:1.5px solid var(--border);border-radius:6px;margin-bottom:10px;overflow:hidden;}
 .fsub-head{background:var(--surface2);padding:8px 12px;font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--accent);border-bottom:1px solid var(--border);}
 .fsub-body{padding:10px 12px;}
-.fg{display:grid;gap:10px;}.fg2{grid-template-columns:1fr 1fr;}.fg3{grid-template-columns:1fr 1fr 1fr;}
+.fg{display:grid;gap:10px;max-width:100%;min-width:0;}.fg2{grid-template-columns:1fr 1fr;}.fg3{grid-template-columns:1fr 1fr 1fr;}
 .field{display:flex;flex-direction:column;gap:5px;}
 .field label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);}
 .field input,.field select{height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-family:'Barlow',sans-serif;font-size:15px;color:var(--text);background:var(--surface);-webkit-appearance:none;}
@@ -234,7 +234,7 @@ html{overflow-x:hidden;max-width:100vw;}body{font-family:'Barlow',sans-serif;bac
 @media(max-width:480px){.mgr-stats{grid-template-columns:repeat(2,1fr);}.grand-grid{grid-template-columns:repeat(2,1fr);}.fg3{grid-template-columns:1fr 1fr;}}
 
 /* ── NEW STOP CARDS ─────────────────────────────────────────────── */
-.stop-card{background:var(--surface);border-radius:0 8px 8px 0;margin-bottom:12px;border:1.5px solid var(--border);border-left:4px solid var(--border);overflow:hidden;transition:box-shadow .15s;}
+.stop-card{background:var(--surface);border-radius:0 8px 8px 0;margin-bottom:12px;border:1.5px solid var(--border);border-left:4px solid var(--border);overflow:hidden;transition:box-shadow .15s;max-width:100%;width:100%;}
 .stop-card.del-card{border-left-color:#E31837;}
 .stop-card.pu-card{border-left-color:#185FA5;}
 .stop-card-head{padding:11px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;background:var(--surface2);}
@@ -243,10 +243,14 @@ html{overflow-x:hidden;max-width:100vw;}body{font-family:'Barlow',sans-serif;bac
 .stop-badge.pu-badge{background:#185FA5;color:white;}
 .stop-card-summary{flex:1;font-size:13px;font-weight:500;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .stop-card-done{width:22px;height:22px;border-radius:50%;background:var(--success-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.stop-card-body{padding:12px 14px;border-top:1px solid var(--border);}
+.stop-card-body{padding:12px 14px;border-top:1px solid var(--border);overflow:hidden;max-width:100%;}
 .stop-card-body.collapsed{display:none;}
 .done-stop-btn{width:100%;margin-top:10px;padding:11px;border-radius:6px;border:none;background:var(--success-light);color:var(--success);font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer;touch-action:manipulation;}
 .done-stop-btn:active{opacity:.8;}
 
 /* Return pending badge on pickup cards */
 .return-pending-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#d97706;background:#fffbeb;border:1px solid #fcd34d;border-radius:20px;padding:2px 8px;white-space:nowrap;flex-shrink:0;}
+
+#allStopsRows{max-width:100%;overflow-x:hidden;}
+.stop-card *{min-width:0;}
+.stop-card input,.stop-card select,.stop-card textarea{max-width:100%;}

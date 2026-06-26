@@ -30,6 +30,19 @@ function showToast(msg, dur){
 }
 
 
+
+
+
+// ── WINDOWS TABLET SCROLL FIX ────────────────────────────────────────────────
+document.addEventListener('focusin', function(e){
+  var el = e.target;
+  if(el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT'){
+    setTimeout(function(){
+      el.scrollIntoView({behavior:'smooth', block:'center'});
+    }, 100);
+  }
+});
+
 // ── INIT ──────────────────────────────────────────────────────────────────────
 async function bootApp(){
   // Detect if running through Railway server or local file
