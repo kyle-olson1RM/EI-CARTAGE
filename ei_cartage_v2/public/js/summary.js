@@ -421,6 +421,17 @@ function renderSum(){
     gD+=wD;gP+=wP;gS+=wS;gW+=wW;gM+=wM;gH+=wH;gC+=wC;
     return '<tr class="data-row"><td><strong>'+unit+'</strong></td><td>'+name+'</td><td>'+wD+'</td><td>'+wP+'</td><td>'+wS+'</td><td>'+wW.toLocaleString()+'</td><td>'+wM+'</td><td>'+wH.toFixed(2)+'</td><td class="chg-cell">$'+wC.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td></tr>';
   }).join('');
+
+  // J Files for this week
+  var jfiles=[];try{jfiles=JSON.parse(cacheGet('ei_jfiles')||'[]');}catch(e){}
+  var weekJFiles=jfiles.filter(function(j){return j.date>=sunday&&j.date<=friday;});
+  var jfTotal=weekJFiles.reduce(function(s,j){return s+j.price;},0);
+  var jfWt=weekJFiles.reduce(function(s,j){return s+j.wt;},0);
+  var jfRow=weekJFiles.length
+    ?'<tr class="data-row" style="background:#fffbeb"><td colspan="2"><strong>J Files</strong> ('+weekJFiles.length+')</td><td>—</td><td>—</td><td>'+weekJFiles.length+'</td><td>'+jfWt.toLocaleString()+'</td><td>—</td><td>—</td><td class="chg-cell">$'+jfTotal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td></tr>'
+    :'';
+  var grandC=gC+jfTotal;
+  var grandW=gW+jfWt;
   var acps=gS>0?grandC/gS:0,acpl=grandW>0?grandC/grandW:0,asph=gH>0?gS/gH:0,amd=gM/5,acpm=gM>0?grandC/gM:0;
 
   el.innerHTML=
@@ -429,25 +440,17 @@ function renderSum(){
     +'<div class="gi"><div class="gi-val">'+gD+'</div><div class="gi-lbl">Deliveries</div></div>'
     +'<div class="gi"><div class="gi-val">'+gP+'</div><div class="gi-lbl">Pick Ups</div></div>'
     +'<div class="gi"><div class="gi-val">'+gS+'</div><div class="gi-lbl">Shipments</div></div>'
-    +'<div class="gi"><div class="gi-val">'+gW.toLocaleString()+'</div><div class="gi-lbl">Weight (lbs)</div></div>'
+    +'<div class="gi"><div class="gi-val">'+grandW.toLocaleString()+'</div><div class="gi-lbl">Weight (lbs)</div></div>'
     +'<div class="gi"><div class="gi-val">'+gM+'</div><div class="gi-lbl">Miles</div></div>'
     +'<div class="gi"><div class="gi-val">'+gH.toFixed(2)+'</div><div class="gi-lbl">Hours</div></div>'
-    +'<div class="gi"><div class="gi-val">$'+gC.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div><div class="gi-lbl">Total Charges</div></div>'
-    +'<div class="gi"><div class="gi-val">$'+(gW>0?(gC/gW).toFixed(4):'0.0000')+'</div><div class="gi-lbl">Cost Per Lb</div></div>'
+    +'<div class="gi"><div class="gi-val">$'+grandC.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div><div class="gi-lbl">Total Charges</div></div>'
+    +'<div class="gi"><div class="gi-val">$'+(grandW>0?(grandC/grandW).toFixed(4):'0.0000')+'</div><div class="gi-lbl">Cost Per Lb</div></div>'
     +'</div></div>'
     +'<div class="sum-report">'
     +'<div class="sum-report-head"><div class="srh-title">Expeditors Cartage Program</div><div class="srh-week">Week Ending '+fs(friday)+'</div></div>'
     +'<div style="overflow-x:auto"><table class="sum-tbl">'
     +'<thead><tr><th>Unit</th><th>Driver</th><th>Deliveries</th><th>Pick Ups</th><th>Shipments</th><th>Weight (lbs)</th><th>Miles</th><th>Hours</th><th>Charges</th></tr></thead>'
     +'<tbody>'+rows+'</tbody>'
-    // Add J Files row
-    var jfiles=[];try{jfiles=JSON.parse(cacheGet('ei_jfiles')||'[]');}catch(e){}
-    var weekJFiles=jfiles.filter(function(j){return j.date>=mon&&j.date<=friday;});
-    var jfTotal=weekJFiles.reduce(function(s,j){return s+j.price;},0);
-    var jfPcs=weekJFiles.reduce(function(s,j){return s+j.pcs;},0);
-    var jfWt=weekJFiles.reduce(function(s,j){return s+j.wt;},0);
-    var jfRow=weekJFiles.length?'<tr class="data-row" style="background:#fffbeb"><td colspan="2"><strong>J Files</strong> ('+weekJFiles.length+')</td><td>—</td><td>—</td><td>'+weekJFiles.length+'</td><td>'+jfWt.toLocaleString()+'</td><td>—</td><td>—</td><td class="chg-cell">$'+jfTotal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td></tr>':'';
-    var grandC=gC+jfTotal; var grandW=gW+jfWt;
     +'<tfoot>'+jfRow+'<tr class="total-row"><td colspan="2"><strong>TOTAL</strong></td><td>'+gD+'</td><td>'+gP+'</td><td>'+gS+'</td><td>'+grandW.toLocaleString()+'</td><td>'+gM+'</td><td>'+gH.toFixed(2)+'</td><td class="chg-cell">$'+grandC.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td></tr></tfoot>'
     +'</table></div>'
     +'<div class="sum-stats">'
@@ -459,6 +462,7 @@ function renderSum(){
     +'</div>'
     +'</div>';
 }
+
 
 function dlWeekly(){
   var mon=document.getElementById('weekSel').value;
