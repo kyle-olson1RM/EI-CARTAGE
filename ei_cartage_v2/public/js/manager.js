@@ -567,3 +567,78 @@ function showFlagPopup(el){
     });
   }, 100);
 }
+
+// ── J FILES ──────────────────────────────────────────────────────────────────
+function getJFiles(){
+  try{ return JSON.parse(cacheGet('ei_jfiles')||'[]'); }catch(e){ return []; }
+}
+
+function saveJFiles(jfiles){
+  saveToStore('ei_jfiles', JSON.stringify(jfiles));
+}
+
+function showJFiles(){
+  var today = new Date().toISOString().split('T')[0];
+  var dateEl = document.getElementById('jfDate');
+  if(dateEl && !dateEl.value) dateEl.value = today;
+  renderJFilesList();
+  document.getElementById('jfilesOv').classList.add('open');
+}
+
+function addJFile(){
+  var date      = document.getElementById('jfDate')?.value;
+  var ref       = document.getElementById('jfRef')?.value.trim().toUpperCase();
+  var expRef    = document.getElementById('jfExpRef')?.value.trim().toUpperCase();
+  var price     = parseFloat(document.getElementById('jfPrice')?.value)||0;
+  var pcs       = parseInt(document.getElementById('jfPcs')?.value)||0;
+  var wt        = parseFloat(document.getElementById('jfWt')?.value)||0;
+  var shipper   = document.getElementById('jfShipper')?.value.trim().toUpperCase();
+  var consignee = document.getElementById('jfConsignee')?.value.trim().toUpperCase();
+
+  if(!date){ showToast('Please enter a date',3000); return; }
+  if(!ref && !expRef){ showToast('Please enter at least one reference #',3000); return; }
+  if(!price){ showToast('Please enter a price',3000); return; }
+
+  var jfiles = getJFiles();
+  jfiles.push({
+    id: Date.now().toString(),
+    date, ref, expRef, price, pcs, wt, shipper, consignee
+  });
+  saveJFiles(jfiles);
+
+  // Clear form
+  ['jfRef','jfExpRef','jfPrice','jfPcs','jfWt','jfShipper','jfConsignee']
+    .forEach(function(id){ var el=document.getElementById(id); if(el)el.value=''; });
+
+  renderJFilesList();
+  showToast('\u2713 J File added');
+}
+
+function deleteJFile(id){
+  if(!confirm('Remove this J File?')) return;
+  var jfiles = getJFiles().filter(function(j){ return j.id !== id; });
+  saveJFiles(jfiles);
+  renderJFilesList();
+}
+
+function renderJFilesList(){
+  var el = document.getElementById('jfilesList');
+  if(!el) return;
+  var jfiles = getJFiles();
+  if(!jfiles.length){
+    el.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:12px">No J Files added yet</div>';
+    return;
+  }
+  var total = jfiles.reduce(function(s,j){ return s+j.price; }, 0);
+  el.innerHTML = '<div style="font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:8px">'+jfiles.length+' J Files — $'+total.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div>'
+    + jfiles.map(function(j){
+      return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px">'
+        +'<div style="flex:1;font-size:13px">'
+          +'<div style="font-weight:700;color:var(--accent)">'+j.date+' &nbsp;·&nbsp; $'+j.price.toFixed(2)+'</div>'
+          +'<div style="color:var(--text2);margin-top:2px">'+(j.ref||'—')+' / '+(j.expRef||'—')+'</div>'
+          +'<div style="color:var(--muted);font-size:12px;margin-top:2px">'+(j.shipper||'—')+' → '+(j.consignee||'—')+' &nbsp;·&nbsp; '+j.pcs+' pcs &nbsp;·&nbsp; '+j.wt+' lbs</div>'
+        +'</div>'
+        +'<button data-jid="'+j.id+'" onclick="deleteJFile(this.dataset.jid)" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;flex-shrink:0;padding:0">&#128465;</button>'
+      +'</div>';
+    }).join('');
+}

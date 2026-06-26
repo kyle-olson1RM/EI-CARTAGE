@@ -430,7 +430,15 @@ function renderSum(){
     +'<div style="overflow-x:auto"><table class="sum-tbl">'
     +'<thead><tr><th>Unit</th><th>Driver</th><th>Deliveries</th><th>Pick Ups</th><th>Shipments</th><th>Weight (lbs)</th><th>Miles</th><th>Hours</th><th>Charges</th></tr></thead>'
     +'<tbody>'+rows+'</tbody>'
-    +'<tfoot><tr class="total-row"><td colspan="2"><strong>TOTAL</strong></td><td>'+gD+'</td><td>'+gP+'</td><td>'+gS+'</td><td>'+gW.toLocaleString()+'</td><td>'+gM+'</td><td>'+gH.toFixed(2)+'</td><td class="chg-cell">$'+gC.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td></tr></tfoot>'
+    // Add J Files row
+    var jfiles=[];try{jfiles=JSON.parse(cacheGet('ei_jfiles')||'[]');}catch(e){}
+    var weekJFiles=jfiles.filter(function(j){return j.date>=mon&&j.date<=friday;});
+    var jfTotal=weekJFiles.reduce(function(s,j){return s+j.price;},0);
+    var jfPcs=weekJFiles.reduce(function(s,j){return s+j.pcs;},0);
+    var jfWt=weekJFiles.reduce(function(s,j){return s+j.wt;},0);
+    var jfRow=weekJFiles.length?'<tr class="data-row" style="background:#fffbeb"><td colspan="2"><strong>J Files</strong> ('+weekJFiles.length+')</td><td>—</td><td>—</td><td>'+weekJFiles.length+'</td><td>'+jfWt.toLocaleString()+'</td><td>—</td><td>—</td><td class="chg-cell">$'+jfTotal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td></tr>':'';
+    var grandC=gC+jfTotal; var grandW=gW+jfWt;
+    +'<tfoot>'+jfRow+'<tr class="total-row"><td colspan="2"><strong>TOTAL</strong></td><td>'+gD+'</td><td>'+gP+'</td><td>'+gS+'</td><td>'+grandW.toLocaleString()+'</td><td>'+gM+'</td><td>'+gH.toFixed(2)+'</td><td class="chg-cell">$'+grandC.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td></tr></tfoot>'
     +'</table></div>'
     +'<div class="sum-stats">'
     +'<div class="ss-row"><div class="ss-lbl">Average Cost Per Shipment</div><div class="ss-val">$'+acps.toFixed(2)+'</div></div>'

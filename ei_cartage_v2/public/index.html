@@ -210,6 +210,7 @@
     <div id="mCards"></div>
   </div>
   <div class="bot-bar" style="justify-content:center">
+    <button class="bot-btn" onclick="showJFiles()">&#128196; J Files</button>
     <button class="bot-btn bot-btn-s" onclick="showDriverMgr()">&#128100; Drivers</button>
     <button class="bot-btn bot-btn-s" onclick="showManagerAccess()">&#128274; Managers</button>
   </div>
@@ -249,19 +250,19 @@
 
 
   <!-- API / Storage Layer -->
-  <script src="/js/config.js?v24"></script>
-  <script src="/js/api.js?v24"></script>
+  <script src="/js/config.js?v25"></script>
+  <script src="/js/api.js?v25"></script>
 
   <!-- Feature Modules -->
-  <script src="/js/auth.js?v24"></script>
-  <script src="/js/draft.js?v24"></script>
-  <script src="/js/form.js?v24"></script>
-  <script src="/js/manager.js?v24"></script>
-  <script src="/js/summary.js?v24"></script>
-  <script src="/js/drivers.js?v24"></script>
+  <script src="/js/auth.js?v25"></script>
+  <script src="/js/draft.js?v25"></script>
+  <script src="/js/form.js?v25"></script>
+  <script src="/js/manager.js?v25"></script>
+  <script src="/js/summary.js?v25"></script>
+  <script src="/js/drivers.js?v25"></script>
 
   <!-- App Init (load last) -->
-  <script src="/js/app.js?v24"></script>
+  <script src="/js/app.js?v25"></script>
 
 
 
@@ -567,6 +568,40 @@
         <button onclick="document.getElementById('arrExpOv').classList.remove('open')" style="height:46px;border-radius:6px;border:1.5px solid var(--border2);background:var(--surface2);font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;cursor:pointer;color:var(--text2);touch-action:manipulation">Cancel</button>
         <button onclick="confirmArriveExp()" style="height:46px;border-radius:6px;border:none;background:#185FA5;color:white;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;cursor:pointer;touch-action:manipulation">Confirm</button>
       </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- J FILES MODAL -->
+<div class="modal-overlay" id="jfilesOv" style="align-items:flex-end;z-index:999">
+  <div class="modal" style="border-radius:12px 12px 0 0;max-height:90vh;overflow-y:auto">
+    <div style="background:#1a1a1a;padding:14px 18px;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:white">J Files</div>
+      <button onclick="document.getElementById('jfilesOv').classList.remove('open')" style="background:none;border:none;color:rgba(255,255,255,.6);font-size:24px;cursor:pointer;padding:0 4px">&#215;</button>
+    </div>
+    <div style="padding:14px">
+      <!-- Add J File form -->
+      <div style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:14px">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--accent);margin-bottom:10px">Add J File</div>
+        <div class="fg fg2" style="margin-bottom:8px">
+          <div class="field"><label>Date</label><input type="date" id="jfDate"></div>
+          <div class="field"><label>Ref #</label><input type="text" id="jfRef" placeholder="Reference #" autocapitalize="characters"></div>
+        </div>
+        <div class="fg fg2" style="margin-bottom:8px">
+          <div class="field"><label>Exp Ref #</label><input type="text" id="jfExpRef" placeholder="Expeditors ref #" autocapitalize="characters"></div>
+          <div class="field"><label>Price ($)</label><input type="number" id="jfPrice" placeholder="0.00" inputmode="decimal"></div>
+        </div>
+        <div class="fg fg3" style="margin-bottom:8px">
+          <div class="field"><label>Pieces</label><input type="number" id="jfPcs" placeholder="0" inputmode="tel"></div>
+          <div class="field"><label>Weight (lbs)</label><input type="number" id="jfWt" placeholder="0" inputmode="decimal"></div>
+          <div class="field"><label>Shipper</label><input type="text" id="jfShipper" placeholder="Shipper" autocapitalize="characters"></div>
+        </div>
+        <div class="field" style="margin-bottom:10px"><label>Consignee</label><input type="text" id="jfConsignee" placeholder="Consignee" autocapitalize="characters"></div>
+        <button onclick="addJFile()" style="width:100%;padding:11px;border-radius:6px;border:none;background:var(--accent);color:white;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer;touch-action:manipulation">+ Add J File</button>
+      </div>
+      <!-- J Files list -->
+      <div id="jfilesList"></div>
     </div>
   </div>
 </div>
