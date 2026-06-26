@@ -751,72 +751,77 @@ addSubDrop = function(stopId, type){
 };
 
 // ── RETURN TO EXPEDITORS ─────────────────────────────────────────────────────
+var _retExpArriveTime = ''; // stores arrive time between tap 1 and tap 2
+
 function getOpenPickups(){
-  // Returns array of puIds that have no return time filled in
   return puIds.filter(function(id){
     var parr = document.getElementById('parr_'+id);
     return parr && !parr.value;
   });
 }
 
-function showReturnExp(){
+function arrivedAtExp(){
+  // Tap 1 — log arrive time instantly, switch button to Depart
   var openPUs = getOpenPickups();
   if(!openPUs.length){ showToast('No open pick ups to return'); return; }
+  _retExpArriveTime = nowTime();
+  // Set arrive time on all open pickups immediately
+  openPUs.forEach(function(id){
+    var arrEl = document.getElementById('parr_'+id);
+    if(arrEl) arrEl.value = _retExpArriveTime;
+    _checkReturnPending(id);
+  });
+  // Switch button to Depart
+  var btn = document.getElementById('returnExpBtn');
+  if(btn){
+    btn.innerHTML = '<button onclick="showDepartExp()" style="width:100%;padding:12px;border-radius:8px;border:1.5px solid #185FA5;background:#185FA5;color:white;font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:700;cursor:pointer;touch-action:manipulation">&#128337; Departed Expeditors — Confirm Drop Location</button>';
+  }
+  showToast('\u2713 Arrived at Expeditors — '+openPUs.length+' pick up'+(openPUs.length!==1?'s':'')+' logged', 3000);
+  saveDraft();
+}
 
-  // Pre-fill times with current time
-  var now = nowTime();
-  var arrEl = document.getElementById('retExpArrive');
-  var depEl = document.getElementById('retExpDepart');
-  if(arrEl) arrEl.value = now;
-  if(depEl) depEl.value = '';
-
-  // Populate drop location selector
-  var dropSel = document.getElementById('retExpDrop');
+function showDepartExp(){
+  // Tap 2 — show drop location popup
+  var dropSel = document.getElementById('departExpDrop');
   if(dropSel){
     var locs = getDropLocations();
     dropSel.innerHTML = '<option value="">Select location...</option>';
     if(locs.loc1) dropSel.innerHTML += '<option value="'+locs.loc1+'">'+locs.loc1+'</option>';
     if(locs.loc2) dropSel.innerHTML += '<option value="'+locs.loc2+'">'+locs.loc2+'</option>';
   }
-
-  // Show which pickups will be updated
-  var listEl = document.getElementById('retExpList');
-  var subtitle = document.getElementById('retExpSubtitle');
-  if(listEl){
-    listEl.innerHTML = openPUs.map(function(id, i){
-      var ship = document.getElementById('pship_'+id)?.value || 'Pick Up '+(puIds.indexOf(id)+1);
-      return '<div style="padding:3px 0;border-bottom:1px solid var(--border)">&#128336; '+ship+'</div>';
-    }).join('');
-  }
-  if(subtitle) subtitle.textContent = openPUs.length + ' open pick up'+(openPUs.length!==1?'s':'')+' will be updated';
-
-  document.getElementById('returnExpOv').classList.add('open');
-  setTimeout(function(){ document.getElementById('retExpArrive').focus(); }, 200);
+  var sub = document.getElementById('departExpSubtitle');
+  var count = puIds.filter(function(id){
+    var parr=document.getElementById('parr_'+id);
+    var pdep=document.getElementById('pdep2_'+id);
+    return parr&&parr.value&&(!pdep||!pdep.value);
+  }).length;
+  if(sub) sub.textContent = count+' pick up'+(count!==1?'s':'')+' — arrived '+_retExpArriveTime;
+  document.getElementById('departExpOv').classList.add('open');
 }
 
-function confirmReturnExp(){
-  var drop = document.getElementById('retExpDrop')?.value;
-  var arrive = document.getElementById('retExpArrive')?.value;
-  var depart = document.getElementById('retExpDepart')?.value;
-
+function confirmDepartExp(){
+  var drop = document.getElementById('departExpDrop')?.value;
   if(!drop){ showToast('Please select a drop location', 3000); return; }
-  if(!arrive){ showToast('Please enter arrive time', 3000); return; }
-  if(!depart){ showToast('Please enter depart time', 3000); return; }
-
-  var openPUs = getOpenPickups();
-  openPUs.forEach(function(id){
+  var departTime = nowTime();
+  // Update all pickups that have arrive but no depart, then mark done
+  var updated = 0;
+  puIds.forEach(function(id){
+    var parr = document.getElementById('parr_'+id);
+    var pdep = document.getElementById('pdep2_'+id);
     var dropEl = document.getElementById('pdrop_'+id);
-    var arrEl  = document.getElementById('parr_'+id);
-    var depEl  = document.getElementById('pdep2_'+id);
-    if(dropEl) dropEl.value = drop;
-    if(arrEl)  arrEl.value  = arrive;
-    if(depEl)  depEl.value  = depart;
-    // Clear return pending badge
-    _checkReturnPending(id);
+    if(parr && parr.value && pdep && !pdep.value){
+      pdep.value = departTime;
+      if(dropEl) dropEl.value = drop;
+      updated++;
+      // Auto-complete the stop
+      _doneStop(id);
+    }
   });
-
-  document.getElementById('returnExpOv').classList.remove('open');
-  showToast('\u2713 '+openPUs.length+' pick up'+(openPUs.length!==1?'s':'')+' returned to Expeditors');
+  document.getElementById('departExpOv').classList.remove('open');
+  // Hide the return button entirely
+  var btn = document.getElementById('returnExpBtn');
+  if(btn) btn.style.display = 'none';
+  showToast('\u2713 Departed Expeditors — '+updated+' pick up'+(updated!==1?'s':'')+' complete');
   updateTotals();
   saveDraft();
 }

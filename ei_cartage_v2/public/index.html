@@ -118,7 +118,7 @@
         <div id="delRows" style="display:none"></div>
         <div id="puRows" style="display:none"></div>
         <div id="returnExpBtn" style="display:none;margin-top:4px">
-          <button onclick="showReturnExp()" style="width:100%;padding:12px;border-radius:8px;border:1.5px solid #185FA5;background:rgba(24,95,165,.08);color:#185FA5;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer;touch-action:manipulation">&#128336; Return to Expeditors — Mark Pick Ups Delivered</button>
+          <button onclick="arrivedAtExp()" style="width:100%;padding:12px;border-radius:8px;border:1.5px solid #185FA5;background:rgba(24,95,165,.08);color:#185FA5;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer;touch-action:manipulation">&#128336; Arrived at Expeditors</button>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px">
           <button class="add-btn" onclick="addDelStop()" style="background:rgba(227,24,55,.06);color:#E31837;border-color:rgba(227,24,55,.3)">+ Delivery</button>
@@ -245,19 +245,19 @@
 
 
   <!-- API / Storage Layer -->
-  <script src="/js/config.js?v9"></script>
-  <script src="/js/api.js?v9"></script>
+  <script src="/js/config.js?v11"></script>
+  <script src="/js/api.js?v11"></script>
 
   <!-- Feature Modules -->
-  <script src="/js/auth.js?v9"></script>
-  <script src="/js/draft.js?v9"></script>
-  <script src="/js/form.js?v9"></script>
-  <script src="/js/manager.js?v9"></script>
-  <script src="/js/summary.js?v9"></script>
-  <script src="/js/drivers.js?v9"></script>
+  <script src="/js/auth.js?v11"></script>
+  <script src="/js/draft.js?v11"></script>
+  <script src="/js/form.js?v11"></script>
+  <script src="/js/manager.js?v11"></script>
+  <script src="/js/summary.js?v11"></script>
+  <script src="/js/drivers.js?v11"></script>
 
   <!-- App Init (load last) -->
-  <script src="/js/app.js?v9"></script>
+  <script src="/js/app.js?v11"></script>
 
 
 
@@ -520,34 +520,23 @@
 </div>
 
 
-<!-- RETURN TO EXPEDITORS POPUP -->
-<div class="modal-overlay" id="returnExpOv" style="align-items:center;justify-content:center;z-index:999">
-  <div style="background:var(--surface);border-radius:12px;width:calc(100% - 32px);max-width:380px;overflow:hidden;box-shadow:var(--shadow-lg)">
+<!-- DEPART EXPEDITORS POPUP (drop location only) -->
+<div class="modal-overlay" id="departExpOv" style="align-items:center;justify-content:center;z-index:999">
+  <div style="background:var(--surface);border-radius:12px;width:calc(100% - 32px);max-width:340px;overflow:hidden;box-shadow:var(--shadow-lg)">
     <div style="background:#185FA5;padding:14px 18px">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:white">Return to Expeditors</div>
-      <div style="font-size:13px;color:rgba(255,255,255,.65);margin-top:2px" id="retExpSubtitle">Updating open pick ups</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:white">Departed Expeditors</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.65);margin-top:2px" id="departExpSubtitle">Select drop location</div>
     </div>
     <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
       <div>
         <label style="display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px">Drop Location</label>
-        <select id="retExpDrop" style="width:100%;height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:16px;box-sizing:border-box;background:white">
+        <select id="departExpDrop" style="width:100%;height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:16px;box-sizing:border-box;background:white">
           <option value="">Select location...</option>
         </select>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div>
-          <label style="display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px">Arrive Time</label>
-          <input type="time" id="retExpArrive" style="width:100%;height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:16px;box-sizing:border-box">
-        </div>
-        <div>
-          <label style="display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px">Depart Time</label>
-          <input type="time" id="retExpDepart" style="width:100%;height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:16px;box-sizing:border-box">
-        </div>
-      </div>
-      <div id="retExpList" style="background:var(--surface2);border-radius:6px;padding:10px 14px;font-size:13px;color:var(--text2)"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <button onclick="document.getElementById('returnExpOv').classList.remove('open')" style="height:46px;border-radius:6px;border:1.5px solid var(--border2);background:var(--surface2);font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;cursor:pointer;color:var(--text2);touch-action:manipulation">Cancel</button>
-        <button onclick="confirmReturnExp()" style="height:46px;border-radius:6px;border:none;background:#185FA5;color:white;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;cursor:pointer;touch-action:manipulation">Confirm</button>
+        <button onclick="document.getElementById('departExpOv').classList.remove('open')" style="height:46px;border-radius:6px;border:1.5px solid var(--border2);background:var(--surface2);font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;cursor:pointer;color:var(--text2);touch-action:manipulation">Cancel</button>
+        <button onclick="confirmDepartExp()" style="height:46px;border-radius:6px;border:none;background:#185FA5;color:white;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;cursor:pointer;touch-action:manipulation">Confirm</button>
       </div>
     </div>
   </div>
