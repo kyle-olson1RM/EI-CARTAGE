@@ -198,15 +198,15 @@ function addPU(){
     <div class="fsub" style="margin-bottom:10px">
       <div class="fsub-head pu-fsub-head">&#9314; Drop Off at Expeditors</div>
       <div class="fsub-body">
-        <div class="fg fg2" style="margin-bottom:8px">
+        <div class="fg fg3">
           <div class="field"><label>Drop Location</label>
             <select id="pdrop_${id}" onchange="saveDraft()">
               <option value="">Select...</option>
             </select>
           </div>
-          <div class="field"><label>Arrive at Exp (24hr)</label><input type="time" id="parr_${id}" onchange="_checkReturnPending(${id})"></div>
+          <div class="field"><label>Arrive (24hr)</label><input type="time" id="parr_${id}" onchange="_checkReturnPending(${id})"></div>
+          <div class="field"><label>Depart (24hr)</label><input type="time" id="pdep2_${id}" onchange="saveDraft()"></div>
         </div>
-        <div class="field"><label>Depart Expeditors (24hr)</label><input type="time" id="pdep2_${id}" onchange="saveDraft()"></div>
       </div>
     </div>
 
