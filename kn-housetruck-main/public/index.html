@@ -1,0 +1,2940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>K+N — House Driver Manifest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f0f2f5;--surface:#fff;--surface2:#f7f8fa;--border:#dde1e8;--border2:#c8cdd8;
+  --accent:#1a4fa0;--accent2:#2563cc;--accent-light:#e8eef8;
+  --danger:#dc2626;--danger-light:#fef2f2;
+  --success:#16a34a;--success-light:#f0fdf4;
+  --warn:#d97706;--warn-light:#fffbeb;
+  --text:#1a1d26;--text2:#4b5266;--muted:#8b92a5;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.05);
+  --shadow-lg:0 4px 16px rgba(0,0,0,.10);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+.screen{display:none;min-height:100vh;flex-direction:column;}.screen.active{display:flex;}
+
+/* LOGIN */
+#login{background:linear-gradient(145deg,#0a1e3d 0%,#1a4fa0 60%,#2563cc 100%);align-items:center;justify-content:center;padding:32px;}
+.login-logo{font-family:'Barlow Condensed',sans-serif;font-size:72px;font-weight:800;color:white;letter-spacing:-2px;line-height:1;text-align:center;margin-bottom:4px;}
+.login-sub{font-family:'Barlow Condensed',sans-serif;font-size:16px;color:rgba(255,255,255,.6);letter-spacing:4px;text-transform:uppercase;text-align:center;margin-bottom:36px;}
+.login-card{background:white;border-radius:12px;padding:28px 24px;width:100%;max-width:380px;box-shadow:0 8px 32px rgba(0,0,0,.25);}
+.login-card h2{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;margin-bottom:20px;text-align:center;text-transform:uppercase;letter-spacing:1px;}
+.lf{margin-bottom:16px;}.lf label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px;}
+.lf select,.lf input{width:100%;height:52px;padding:0 16px;border:2px solid var(--border);border-radius:8px;font-family:'Barlow',sans-serif;font-size:17px;color:var(--text);background:white;-webkit-appearance:none;}
+.lf select:focus,.lf input:focus{outline:none;border-color:var(--accent2);}
+.login-btn{width:100%;height:54px;margin-top:20px;border-radius:8px;border:none;background:var(--accent);color:white;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;letter-spacing:1px;text-transform:uppercase;}
+.login-btn:hover{background:var(--accent2);}
+.login-err{color:var(--danger);font-size:13px;text-align:center;margin-top:10px;min-height:18px;}
+.login-divider{text-align:center;margin-top:16px;font-size:13px;color:var(--muted);}
+.mgr-link{background:none;border:none;color:var(--accent2);cursor:pointer;font-size:13px;font-weight:600;text-decoration:underline;padding:0;}
+
+/* HOME */
+#home{background:linear-gradient(145deg,#0a1e3d 0%,#1a4fa0 60%,#2563cc 100%);align-items:center;justify-content:center;padding:32px;}
+.home-logo{font-family:'Barlow Condensed',sans-serif;font-size:72px;font-weight:800;color:white;letter-spacing:-2px;line-height:1;text-align:center;margin-bottom:4px;}
+.home-sub{font-family:'Barlow Condensed',sans-serif;font-size:16px;color:rgba(255,255,255,.6);letter-spacing:4px;text-transform:uppercase;text-align:center;margin-bottom:8px;}
+.home-welcome{color:rgba(255,255,255,.85);font-size:16px;font-family:'Barlow Condensed',sans-serif;text-align:center;margin-bottom:32px;letter-spacing:.5px;}
+.home-btns{display:flex;flex-direction:column;gap:14px;width:100%;max-width:340px;}
+.hbtn{padding:20px 28px;border-radius:6px;border:none;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;letter-spacing:1px;text-transform:uppercase;transition:all .15s;display:flex;align-items:center;gap:12px;}
+.hbtn span{font-size:24px;}.hbtn-p{background:white;color:var(--accent);}.hbtn-p:hover{background:#f0f4ff;}
+.hbtn-s{background:rgba(255,255,255,.12);color:white;border:1px solid rgba(255,255,255,.25);}.hbtn-s:hover{background:rgba(255,255,255,.2);}
+.version{color:rgba(255,255,255,.3);font-size:12px;margin-top:40px;font-family:monospace;}
+
+/* APP HEADER */
+.app-header{background:var(--accent);color:white;padding:0 16px;height:54px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.2);}
+.app-header h1{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;letter-spacing:.5px;}
+.hdr-back{background:rgba(255,255,255,.15);border:none;color:white;padding:7px 14px;border-radius:4px;cursor:pointer;font-family:'Barlow',sans-serif;font-size:14px;font-weight:500;}
+.hdr-back:hover{background:rgba(255,255,255,.25);}
+.hdr-meta{font-size:12px;color:rgba(255,255,255,.7);}
+
+/* FORM */
+#driverForm{background:var(--bg);}
+.form-body{flex:1;overflow-y:auto;padding:14px;padding-bottom:90px;}
+.fsec{background:var(--surface);border-radius:8px;margin-bottom:14px;box-shadow:var(--shadow);overflow:hidden;}
+.fsec-head{background:var(--accent);color:white;padding:11px 14px;display:flex;align-items:center;justify-content:space-between;}
+.fsec-head h2{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;letter-spacing:1px;text-transform:uppercase;}
+.fsec-meta{font-size:12px;color:rgba(255,255,255,.7);}
+.fsec-body{padding:14px;}
+.fg{display:grid;gap:10px;}.fg2{grid-template-columns:1fr 1fr;}.fg3{grid-template-columns:1fr 1fr 1fr;}.fg4{grid-template-columns:1fr 1fr 1fr 1fr;}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);}
+.field input,.field select,.field textarea{padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-family:'Barlow',sans-serif;font-size:15px;color:var(--text);background:var(--surface);-webkit-appearance:none;}
+.field input,.field select{height:46px;}
+.field textarea{padding:10px 12px;height:70px;resize:vertical;line-height:1.4;}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent2);box-shadow:0 0 0 3px rgba(37,99,204,.1);}
+.field input[type=number]{-moz-appearance:textfield;}.field input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
+.auto-calc{height:46px;padding:0 12px;border-radius:6px;background:var(--accent-light);border:1.5px solid #c5d3f0;font-size:15px;font-weight:600;color:var(--accent);display:flex;align-items:center;}
+.auto-calc-sm{padding:4px 10px;border-radius:5px;background:var(--accent-light);border:1.5px solid #c5d3f0;font-size:13px;font-weight:600;color:var(--accent);display:inline-flex;align-items:center;}
+
+/* RUN ROWS */
+.run-entry{border:1.5px solid var(--border);border-radius:8px;margin-bottom:12px;overflow:hidden;}
+.run-entry-head{background:var(--surface2);padding:9px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
+.run-num{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:var(--accent);background:var(--accent-light);padding:3px 9px;border-radius:4px;}
+.run-cost{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--text);}
+.run-cost span{color:var(--muted);font-size:11px;font-weight:400;}
+.run-body{padding:10px;}
+.rm-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:2px 6px;border-radius:4px;line-height:1;}
+.rm-btn:hover{color:var(--danger);background:var(--danger-light);}
+.add-btn{width:100%;padding:13px;border:2px dashed var(--border2);background:none;border-radius:8px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:600;color:var(--text2);letter-spacing:.5px;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.add-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light);}
+
+/* TOTALS SUMMARY BAR */
+.sum-bar{background:var(--surface2);border-top:1.5px solid var(--border);padding:12px 14px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.si{text-align:center;}.si-val{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--accent);line-height:1;}
+.si-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-top:2px;}
+
+/* TOTALS SECTION */
+.totals-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.tot-card{background:var(--surface2);border:1.5px solid var(--border);border-radius:8px;padding:12px 14px;}
+.tot-card.highlight{background:var(--accent-light);border-color:#c5d3f0;}
+.tot-lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:4px;}
+.tot-val{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;color:var(--accent);line-height:1;}
+.tot-val.big{font-size:32px;}
+.savings-pos{color:var(--success)!important;}
+.savings-neg{color:var(--danger)!important;}
+
+.submit-bar{position:fixed;bottom:0;left:0;right:0;background:var(--surface);padding:12px 14px;box-shadow:0 -2px 12px rgba(0,0,0,.1);display:flex;gap:10px;z-index:100;}
+.sub-btn{flex:1;height:50px;border-radius:6px;border:none;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;letter-spacing:1px;text-transform:uppercase;}
+.sub-btn-p{background:var(--accent);color:white;}.sub-btn-p:hover{background:var(--accent2);}
+.sub-btn-s{background:var(--surface2);color:var(--text2);border:1.5px solid var(--border2);flex:0 0 90px;font-size:15px;}
+.sub-mawb-entry{border:1px solid var(--border);border-radius:6px;margin-top:8px;overflow:hidden;background:var(--surface2);}
+.sub-mawb-head{background:var(--accent-light);padding:7px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
+.sub-mawb-label{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.5px;text-transform:uppercase;}
+.sub-mawb-body{padding:10px;}
+.fee-entry{display:flex;gap:8px;align-items:center;margin-bottom:8px;}
+.fee-entry input{height:44px;border:1.5px solid var(--border);border-radius:6px;font-family:'Barlow',sans-serif;font-size:15px;padding:0 10px;background:var(--surface);}
+.fee-entry input:focus{outline:none;border-color:var(--accent2);}
+.fee-entry input.fee-amount{flex:0 0 110px;font-family:'Barlow Condensed',sans-serif;font-weight:700;}
+.fee-entry input.fee-desc{flex:1;}
+.sub-check-row{display:flex;align-items:center;gap:10px;padding:10px 0 4px;}
+.sub-check-row input[type=checkbox]{width:20px;height:20px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;}
+.sub-check-row label{font-size:14px;font-weight:500;color:var(--text);cursor:pointer;}
+.sub-driver-fields{background:var(--warn-light);border:1.5px solid var(--warn);border-radius:8px;padding:12px;margin-top:6px;}
+.sub-badge{display:inline-block;font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;background:var(--warn-light);color:var(--warn);letter-spacing:.5px;}
+.add-mawb-btn{background:none;border:1.5px dashed var(--accent-light);color:var(--accent);padding:6px 12px;border-radius:5px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;letter-spacing:.3px;transition:all .15s;margin-right:6px;}
+.add-mawb-btn:hover{background:var(--accent-light);border-color:var(--accent);}
+.add-note-btn{background:var(--surface2);border:1.5px solid var(--border2);color:var(--text2);padding:6px 12px;border-radius:5px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;letter-spacing:.3px;transition:all .15s;}
+.add-note-btn:hover{background:var(--warn-light);border-color:var(--warn);color:var(--warn);}
+
+/* MANAGER */
+#manager{background:var(--bg);}
+.mgr-body{flex:1;overflow-y:auto;padding:14px;padding-bottom:80px;}
+.mgr-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px;}
+.stat-card{background:var(--surface);border-radius:8px;padding:12px 14px;box-shadow:var(--shadow);}
+.stat-val{font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:800;color:var(--accent);line-height:1;}
+.stat-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-top:3px;}
+.toolbar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;}
+.fsel{padding:8px 12px;border:1.5px solid var(--border);border-radius:6px;font-family:'Barlow',sans-serif;font-size:13px;background:white;color:var(--text);cursor:pointer;-webkit-appearance:none;}
+.driver-group{background:var(--surface);border-radius:8px;margin-bottom:10px;box-shadow:var(--shadow);overflow:hidden;}
+.dg-header{padding:13px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:background .15s;}
+.dg-header:hover{background:var(--surface2);}
+.dg-body{border-top:1px solid var(--border);}
+.mcard{background:var(--surface);overflow:hidden;}
+.mcard-head{padding:11px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);background:var(--surface2);}
+.avatar{width:38px;height:38px;border-radius:50%;background:var(--accent);color:white;display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;flex-shrink:0;}
+.mcard-info{flex:1;}.mcard-driver{font-size:14px;font-weight:600;}.mcard-date{font-size:13px;color:var(--accent);font-weight:700;}.mcard-meta{font-size:11px;color:var(--muted);}
+.mbadge{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px;letter-spacing:.5px;white-space:nowrap;}
+.bp{background:var(--warn-light);color:var(--warn);}.br{background:var(--success-light);color:var(--success);}
+.mcard-stats{padding:10px 14px;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;border-bottom:1px solid var(--border);}
+.cs{text-align:center;}.cs-val{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--text);}
+.cs-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+.expand-actions{display:flex;gap:8px;padding:12px 14px;align-items:center;}
+.ea-btn{border-radius:6px;border:none;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;letter-spacing:.5px;white-space:nowrap;height:42px;}
+.ea-ok{flex:3;background:var(--success);color:white;}
+.ea-edit{flex:2;background:var(--accent-light);color:var(--accent);border:1.5px solid #c5d3f0;}
+.ea-del{flex:1;background:var(--danger-light);color:var(--danger);border:1.5px solid #fca5a5;}
+.expand-section{padding:12px 14px;border-bottom:1px solid var(--border);}
+.expand-sec-head{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--accent);margin-bottom:8px;}
+.det-tbl{width:100%;border-collapse:collapse;font-size:11px;}
+.det-tbl th{background:var(--surface2);padding:6px 7px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);border-bottom:1px solid var(--border);}
+.det-tbl td{padding:7px 7px;border-bottom:1px solid var(--border);font-family:'Barlow Condensed',sans-serif;font-size:12px;}
+.det-tbl tr:last-child td{border-bottom:none;}
+.flag-bar{margin:0 14px 10px;padding:8px 12px;border-radius:6px;background:var(--danger-light);border:1px solid #fca5a5;font-size:12px;color:var(--danger);}
+.bot-bar{background:var(--surface);border-top:1px solid var(--border);padding:10px 14px;display:flex;gap:8px;flex-shrink:0;}
+.bot-btn{flex:1;height:46px;border-radius:6px;border:none;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;letter-spacing:.5px;}
+.bot-btn-p{background:var(--accent);color:white;}.bot-btn-p:hover{background:var(--accent2);}
+.bot-btn-s{background:var(--surface2);color:var(--text2);border:1.5px solid var(--border2);flex:0 0 auto;padding:0 18px;}
+.week-nav-bar{display:flex;align-items:center;gap:10px;background:var(--surface);border-radius:8px;padding:10px 14px;margin-bottom:10px;box-shadow:var(--shadow);justify-content:center;}
+.week-nav-bar .wnav{height:36px;padding:0 14px;border:1.5px solid var(--border);border-radius:6px;background:white;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--accent);}
+.week-nav-bar .wnav:hover{background:var(--accent-light);border-color:var(--accent);}
+.week-label{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;color:var(--text);flex:1;text-align:center;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:flex-end;z-index:200;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border-radius:16px 16px 0 0;width:100%;max-height:90vh;overflow-y:auto;padding:20px;}
+.modal-handle{width:40px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 18px;}
+.modal h2{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;margin-bottom:14px;}
+.modal-actions{display:flex;gap:10px;margin-top:18px;}
+.mbtn{flex:1;height:46px;border-radius:6px;border:none;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;letter-spacing:.5px;}
+.mbtn-ok{background:var(--accent);color:white;}.mbtn-cancel{background:var(--surface2);color:var(--text2);border:1.5px solid var(--border2);}
+#mgrLoginOv{align-items:center;justify-content:center;}
+#mgrLoginOv .modal{border-radius:12px;max-width:340px;width:calc(100% - 32px);}
+
+/* SUMMARY */
+#summary{background:var(--bg);}
+.sum-body{flex:1;overflow-y:auto;padding:14px;padding-bottom:80px;}
+.sum-report{background:var(--surface);border-radius:8px;overflow:hidden;box-shadow:var(--shadow-lg);margin-bottom:14px;}
+.sum-report-head{background:var(--accent);color:white;padding:16px 18px;}
+.srh-title{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:800;letter-spacing:.5px;}
+.srh-week{font-size:13px;color:rgba(255,255,255,.75);margin-top:3px;}
+.sum-scroll{overflow-x:auto;}
+.sum-tbl{width:100%;border-collapse:collapse;font-size:12px;min-width:900px;}
+.sum-tbl th{background:#0f2548;color:rgba(255,255,255,.75);padding:10px 10px;text-align:right;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;border-right:1px solid rgba(255,255,255,.08);white-space:nowrap;}
+.sum-tbl th:first-child,.sum-tbl th:nth-child(2){text-align:left;}
+.sum-tbl td{padding:10px 10px;text-align:right;border-bottom:1px solid var(--border);border-right:1px solid var(--border);font-family:'Barlow Condensed',sans-serif;font-size:13px;}
+.sum-tbl td:first-child{text-align:left;font-family:'Barlow',sans-serif;font-weight:600;}
+.sum-tbl td:nth-child(2){text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:12px;color:var(--text2);}
+.sum-tbl .data-row td{background:var(--surface);}
+.sum-tbl .data-row:hover td{background:var(--accent-light);}
+.sum-tbl .zero-row td{background:var(--surface2);color:var(--muted);}
+.sum-tbl .total-row td{background:#0f2548;color:white;font-weight:700;border-top:2px solid var(--accent2);}
+.sum-tbl .total-row .chg-cell{color:#f5a623;font-size:15px;}
+.sum-stats-box{background:#0f2548;border-radius:8px;padding:16px 18px;margin-bottom:14px;box-shadow:var(--shadow-lg);}
+.ss-title{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:14px;}
+.ss-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+.ss-card{background:rgba(255,255,255,.08);border-radius:6px;padding:12px 14px;}
+.ss-lbl{font-size:10px;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;}
+.ss-val{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;color:white;line-height:1;}
+.ss-val.pos{color:#4ade80;}.ss-val.neg{color:#f87171;}
+.ss-sub{font-size:11px;color:rgba(255,255,255,.4);margin-top:2px;}
+.import-export-box{background:var(--surface);border-radius:8px;padding:14px;margin-bottom:14px;box-shadow:var(--shadow);}
+.ie-title{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--accent);margin-bottom:12px;}
+.ie-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.ie-card{text-align:center;background:var(--surface2);border-radius:6px;padding:10px;}
+.ie-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;}
+.ie-val{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;color:var(--text);}
+.sum-action-bar{display:flex;gap:10px;margin-bottom:14px;}
+.sa-btn{flex:1;height:46px;border-radius:6px;border:none;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;letter-spacing:.5px;}
+.sa-btn-p{background:var(--accent);color:white;}.sa-btn-p:hover{background:var(--accent2);}
+.sa-btn-s{background:var(--surface);color:var(--text2);border:1.5px solid var(--border2);box-shadow:var(--shadow);}
+.week-sel-bar{background:var(--surface);border-radius:8px;padding:12px 14px;margin-bottom:14px;box-shadow:var(--shadow);display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+.week-sel-bar label{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;white-space:nowrap;}
+.wnav{height:38px;padding:0 14px;border:1.5px solid var(--border);border-radius:6px;background:white;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;color:var(--accent);}
+.wnav:hover{background:var(--accent-light);border-color:var(--accent);}
+
+/* ROSTER */
+#roster{background:var(--bg);}
+.roster-body{flex:1;overflow-y:auto;padding:14px;padding-bottom:80px;}
+.roster-card{background:var(--surface);border-radius:8px;margin-bottom:8px;box-shadow:var(--shadow);display:flex;align-items:center;padding:12px 14px;gap:12px;}
+.rc-info{flex:1;}
+.rc-name{font-size:15px;font-weight:600;}.rc-meta{font-size:12px;color:var(--muted);margin-top:2px;}
+.rc-rate{font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:var(--accent);}
+.rc-btns{display:flex;gap:6px;}
+.rc-btn{height:36px;padding:0 12px;border-radius:5px;border:1.5px solid var(--border);background:var(--surface2);cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;}
+.rc-btn.edit{color:var(--accent);border-color:var(--accent-light);}.rc-btn.del{color:var(--danger);border-color:var(--danger-light);}
+.add-driver-btn{width:100%;padding:14px;border:2px dashed var(--border2);background:none;border-radius:8px;cursor:pointer;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:600;color:var(--text2);letter-spacing:.5px;display:flex;align-items:center;justify-content:center;gap:8px;}
+.add-driver-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light);}
+.sect-label{font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin:14px 0 8px;}
+
+/* NOTIFICATION */
+.notif{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:#1a1d26;color:white;padding:11px 20px;border-radius:8px;font-size:14px;font-weight:500;z-index:999;opacity:0;pointer-events:none;transition:opacity .2s;white-space:nowrap;}
+.notif.show{opacity:1;}
+
+@media(max-width:480px){
+  .mgr-stats{grid-template-columns:repeat(2,1fr);}
+  .fg4{grid-template-columns:1fr 1fr;}
+  .ie-grid{grid-template-columns:1fr 1fr;}
+  .ss-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- NOTIFICATION TOAST -->
+<div class="notif" id="notif"></div>
+
+<!-- MANAGER LOGIN OVERLAY -->
+<div class="modal-overlay" id="mgrLoginOv">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2>Manager Access</h2>
+    <div class="lf"><label>Badge / Employee Number</label><input type="password" id="mgrBadge" placeholder="Enter badge number" inputmode="numeric"></div>
+    <div class="login-err" id="mgrErr"></div>
+    <div class="modal-actions">
+      <button class="mbtn mbtn-cancel" onclick="closeMgrLogin()">Cancel</button>
+      <button class="mbtn mbtn-ok" onclick="doMgrLogin()">Sign In</button>
+    </div>
+  </div>
+</div>
+
+<!-- CUSTOMER VIEW LOGIN OVERLAY -->
+<div class="modal-overlay" id="custLoginOv">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2>Customer View</h2>
+    <div class="lf"><label>Access Code</label><input type="password" id="custCode" placeholder="Enter access code" onkeydown="if(event.key==='Enter')doCustomerLogin()" style="text-align:center;letter-spacing:3px;"></div>
+    <div class="login-err" id="custErr"></div>
+    <div class="modal-actions">
+      <button class="mbtn mbtn-cancel" onclick="closeCustomerLogin()">Cancel</button>
+      <button class="mbtn mbtn-ok" onclick="doCustomerLogin()">Enter</button>
+    </div>
+  </div>
+</div>
+
+<!-- DRIVER ADD/EDIT MODAL -->
+<div class="modal-overlay" id="driverModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h2 id="driverModalTitle">Add Driver</h2>
+    <div class="fg" style="gap:12px;">
+      <div class="fg2">
+        <div class="field"><label>Driver Name</label><input type="text" id="dm_name" placeholder="Full name"></div>
+        <div class="field"><label>Driver #</label><input type="text" id="dm_driverNum" placeholder="Number" inputmode="numeric"></div>
+      </div>
+      <div class="field"><label>Unit Type</label>
+        <select id="dm_unit" onchange="updateDmRatePreview()">
+          <option value="Straight Truck">Straight Truck</option>
+          <option value="Tractor">Tractor</option>
+        </select>
+      </div>
+      <div style="background:var(--accent-light);border-radius:6px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:13px;color:var(--accent);font-weight:600;">Rate for this unit type</span>
+        <span style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:var(--accent);" id="dm_ratePreview">$75/hr</span>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="mbtn mbtn-cancel" onclick="closeDriverModal()">Cancel</button>
+      <button class="mbtn mbtn-ok" onclick="saveDriver()">Save Driver</button>
+    </div>
+  </div>
+</div>
+
+<!-- WAIT FEE MODAL -->
+<div class="modal-overlay" id="waitFeeOv">
+  <div class="modal" style="max-width:380px;width:calc(100% - 32px);border-radius:12px;">
+    <div class="modal-handle"></div>
+    <h2>Add Waiting Time</h2>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:16px;" id="waitFeeDesc"></div>
+    <div class="field" style="margin-bottom:6px;">
+      <label>Hours of Waiting Time</label>
+      <input type="number" id="waitFeeHours" placeholder="e.g. 2.5" step="0.5" inputmode="decimal" oninput="const h=parseFloat(this.value)||0;document.getElementById('waitFeeHoursPreview').textContent=h;document.getElementById('waitFeeTotal').textContent='$'+(h*90).toFixed(2);"
+        style="height:54px;font-size:22px;font-family:'Barlow Condensed',sans-serif;font-weight:700;text-align:center;">
+    </div>
+    <div style="background:var(--accent-light);border-radius:6px;padding:10px 14px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-size:13px;color:var(--accent);font-weight:600;">$90/hr × <span id="waitFeeHoursPreview">0</span> hrs</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;color:var(--accent);" id="waitFeeTotal">$0.00</span>
+    </div>
+    <div class="modal-actions">
+      <button class="mbtn mbtn-cancel" onclick="closeWaitFeeModal()">Cancel</button>
+      <button class="mbtn mbtn-ok" onclick="confirmWaitFee()">Add Fee</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT MANIFEST MODAL -->
+<div class="modal-overlay" id="editManifestOv" style="align-items:flex-end;">
+  <div class="modal" style="border-radius:16px 16px 0 0;max-height:92vh;overflow-y:auto;padding:20px 20px 32px;">
+    <div class="modal-handle"></div>
+    <h2>Edit Manifest</h2>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:16px;" id="editManifestMeta"></div>
+
+    <!-- Trip Info -->
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Trip Info</div>
+    <div class="fg fg2" style="margin-bottom:10px;">
+      <div class="field"><label>Date</label><input type="date" id="em_date"></div>
+      <div class="field"><label>Driver</label><input type="text" id="em_driver"></div>
+    </div>
+    <div class="fg fg2" style="margin-bottom:10px;">
+      <div class="field"><label>Start Time</label><input type="time" id="em_startTime"></div>
+      <div class="field"><label>End Time</label><input type="time" id="em_endTime"></div>
+    </div>
+    <div class="fg fg2" style="margin-bottom:14px;">
+      <div class="field"><label>Sub Driver Name</label><input type="text" id="em_subName" placeholder="Leave blank if none"></div>
+      <div class="field"><label>Sub Driver #</label><input type="text" id="em_subNum" placeholder="Number"></div>
+    </div>
+
+    <!-- Shipments -->
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Shipments</div>
+    <div id="em_runsContainer"></div>
+
+    <!-- Notes -->
+    <div style="font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin:14px 0 8px;">Manifest Notes</div>
+    <div class="field" style="margin-bottom:16px;">
+      <textarea id="em_notes" style="height:64px;padding:10px 12px;border:1.5px solid var(--border);border-radius:6px;font-family:'Barlow',sans-serif;font-size:15px;width:100%;resize:vertical;" placeholder="Manifest notes…"></textarea>
+    </div>
+
+    <div class="modal-actions">
+      <button class="mbtn mbtn-cancel" onclick="closeEditManifest()">Cancel</button>
+      <button class="mbtn mbtn-ok" onclick="saveEditManifest()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ SCREEN: LOGIN -->
+<div class="screen" id="login">
+  <div class="login-logo">K+N</div>
+  <div class="login-sub">House Driver Manifest</div>
+  <div class="login-card">
+    <h2>Driver Sign-In</h2>
+    <div class="lf">
+      <label>Select Your Name</label>
+      <select id="loginName">
+        <option value="">— Select Driver —</option>
+      </select>
+    </div>
+    <div class="lf">
+      <label>Driver Number</label>
+      <input type="number" id="loginNum" placeholder="Enter driver number" inputmode="numeric" >
+    </div>
+    <button class="login-btn" onclick="doDriverLogin()">Sign In</button>
+    <div class="login-err" id="loginErr"></div>
+    <div class="login-divider">Manager? <button class="mgr-link" onclick="openMgrLogin()">Access Dashboard →</button></div>
+    <div class="login-divider">Customer? <button class="mgr-link" onclick="openCustomerLogin()">View Shipment Summary →</button></div>
+  </div>
+</div>
+
+<!-- ============================================================ SCREEN: HOME -->
+<div class="screen" id="home">
+  <div class="home-logo">K+N</div>
+  <div class="home-sub">House Driver Manifest</div>
+  <div class="home-welcome" id="homeWelcome">Welcome</div>
+  <div class="home-btns">
+    <div id="continueDraftBtn" style="display:none;">
+      <button class="hbtn hbtn-p" onclick="loadDraft()" style="background:#f5a623;color:white;"><span>📋</span>Continue Today's Manifest</button>
+      <div style="font-size:12px;color:rgba(255,255,255,.6);text-align:center;margin-top:-6px;margin-bottom:6px;" id="draftMeta"></div>
+    </div>
+    <button class="hbtn hbtn-p" id="newManifestBtn" onclick="confirmNewManifest()"><span>✈️</span>New Manifest</button>
+    <button class="hbtn hbtn-s" onclick="signOut()"><span>🚪</span>Sign Out</button>
+  </div>
+  <div class="version">v1.0 — K+N Dedicated Fleet</div>
+</div>
+
+<!-- ============================================================ SCREEN: DRIVER FORM -->
+<div class="screen" id="driverForm">
+  <div class="app-header">
+    <button class="hdr-back" onclick="showScreen('home')">← Home</button>
+    <h1>New Manifest</h1>
+    <div class="hdr-meta" id="formHeaderMeta"></div>
+  </div>
+  <div class="form-body" id="formBody">
+
+    <!-- SECTION 1: Trip Info -->
+    <div class="fsec">
+      <div class="fsec-head"><h2>Trip Info</h2></div>
+      <div class="fsec-body">
+        <div class="fg fg2" style="margin-bottom:10px;">
+          <div class="field"><label>Driver</label><div class="auto-calc" id="f_driver">—</div></div>
+          <div class="field"><label>Date</label><input type="date" id="f_date"></div>
+        </div>
+        <div class="fg fg2">
+          <div class="field"><label>Start Time</label><input type="time" id="f_startTime" oninput="calcTotals()"></div>
+          <div class="field"><label>End Time</label><input type="time" id="f_endTime" oninput="calcTotals()"></div>
+        </div>
+        <div class="sub-check-row" style="margin-top:10px;">
+          <input type="checkbox" id="f_subCheck" onchange="toggleSubDriver()">
+          <label for="f_subCheck">Substitute driver on this run</label>
+        </div>
+        <div id="f_subDriverFields" style="display:none;">
+          <div class="sub-driver-fields">
+            <div class="fg fg2">
+              <div class="field"><label>Sub Driver Name</label><input type="text" id="f_subName" placeholder="Driver name"></div>
+              <div class="field"><label>Sub Driver #</label><input type="text" id="f_subNum" placeholder="Driver number" inputmode="numeric"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECTION 2: Runs -->
+    <div class="fsec">
+      <div class="fsec-head">
+        <h2>Shipments</h2>
+        <div class="fsec-meta" id="runCountMeta">0 runs</div>
+      </div>
+      <div class="fsec-body" id="runsContainer"></div>
+      <div style="padding:0 14px 14px;">
+        <button class="add-btn" onclick="addRun()">＋ Add Shipment</button>
+      </div>
+      <div class="sum-bar" id="runSummaryBar">
+        <div class="si"><div class="si-val" id="sb_runs">0</div><div class="si-lbl">Shipments</div></div>
+        <div class="si"><div class="si-val" id="sb_pcs">0</div><div class="si-lbl">Total PCS</div></div>
+        <div class="si"><div class="si-val" id="sb_lbs">0</div><div class="si-lbl">Total LBS</div></div>
+        <div class="si"><div class="si-val" id="sb_rm">$0</div><div class="si-lbl">Total R&M</div></div>
+      </div>
+    </div>
+
+    <!-- SECTION 3: Trip Totals -->
+    <div class="fsec">
+      <div class="fsec-head"><h2>Trip Totals</h2></div>
+      <div class="fsec-body">
+        <div class="totals-grid">
+          <div class="tot-card"><div class="tot-lbl">Total Hours</div><div class="tot-val big" id="t_hours">0.00</div></div>
+          <div class="tot-card highlight"><div class="tot-lbl">Daily Charges</div><div class="tot-val big" id="t_hourlyCost">$0.00</div></div>
+          <div class="tot-card"><div class="tot-lbl">Total Weight KGS</div><div class="tot-val" id="t_kgs">0.00</div></div>
+          <div class="tot-card"><div class="tot-lbl">Total Weight LBS</div><div class="tot-val" id="t_lbs">0.00</div></div>
+          <div class="tot-card highlight"><div class="tot-lbl">Cost / LB</div><div class="tot-val big" id="t_costLb">$0.0000</div></div>
+          <div class="tot-card highlight"><div class="tot-lbl">Cost / KG</div><div class="tot-val big" id="t_costKg">$0.0000</div></div>
+          <div class="tot-card"><div class="tot-lbl">Full Run Time (K+N→K+N)</div><div class="tot-val" id="t_kn_transit">0:00</div></div>
+          <div class="tot-card"><div class="tot-lbl">Airline Waiting Time</div><div class="tot-val" id="t_al_transit">0:00</div></div>
+          <div class="tot-card"><div class="tot-lbl">Imports LBS</div><div class="tot-val" id="t_impLbs">0</div></div>
+          <div class="tot-card"><div class="tot-lbl">Exports LBS</div><div class="tot-val" id="t_expLbs">0</div></div>
+          <div class="tot-card highlight"><div class="tot-lbl">Added Fees</div><div class="tot-val" id="t_addedFees">$0.00</div></div>
+          <div class="tot-card highlight"><div class="tot-lbl">Total Charges</div><div class="tot-val big" id="t_totalCharges">$0.00</div></div>
+        </div>
+        <div style="margin-top:12px;">
+          <div class="field"><label>Notes / Flags</label><textarea id="f_notes" placeholder="Optional notes for this manifest…"></textarea></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <div class="submit-bar">
+    <button class="sub-btn sub-btn-s" onclick="showScreen('home')">Cancel</button>
+    <button class="sub-btn sub-btn-p" onclick="submitManifest()">Submit Manifest</button>
+  </div>
+</div>
+
+<!-- ============================================================ SCREEN: MANAGER -->
+<div class="screen" id="manager">
+  <div class="app-header">
+    <button class="hdr-back" onclick="showScreen('login')">← Sign Out</button>
+    <h1>Manager Dashboard</h1>
+    <div class="hdr-meta" id="mgrHeaderMeta"></div>
+  </div>
+  <div class="mgr-body">
+    <div class="mgr-stats">
+      <div class="stat-card"><div class="stat-val" id="ms_manifests">0</div><div class="stat-lbl">Manifests</div></div>
+      <div class="stat-card"><div class="stat-val" id="ms_drivers">0</div><div class="stat-lbl">Drivers</div></div>
+      <div class="stat-card"><div class="stat-val" id="ms_lbs">0</div><div class="stat-lbl">Total LBS</div></div>
+      <div class="stat-card"><div class="stat-val" id="ms_cost">—</div><div class="stat-lbl">Avg $/LB</div></div>
+    </div>
+    <div class="week-nav-bar">
+      <button class="wnav" onclick="changeWeek(-1)">◀</button>
+      <div class="week-label" id="weekLabel">—</div>
+      <button class="wnav" onclick="changeWeek(1)">▶</button>
+    </div>
+    <div class="toolbar">
+      <select class="fsel" id="filterDriver" onchange="renderManager()">
+        <option value="">All Drivers</option>
+      </select>
+      <select class="fsel" id="filterStatus" onchange="renderManager()">
+        <option value="">All Status</option>
+        <option value="pending">Pending</option>
+        <option value="reviewed">Reviewed</option>
+      </select>
+      <select class="fsel" id="filterDay" onchange="renderManager()">
+        <option value="">All Days</option>
+        <option>Sunday</option><option>Monday</option><option>Tuesday</option>
+        <option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option>
+      </select>
+    </div>
+    <div id="mgrList"></div>
+  </div>
+  <div class="bot-bar">
+    <button class="bot-btn bot-btn-s" onclick="showScreen('roster')">Drivers</button>
+    <button class="bot-btn bot-btn-p" onclick="sumWeekOffset=weekOffset;showScreen('summary')">Weekly Summary</button>
+  </div>
+</div>
+
+<!-- ============================================================ SCREEN: SUMMARY -->
+<div class="screen" id="summary">
+  <div class="app-header">
+    <button class="hdr-back" onclick="showScreen('manager')">← Dashboard</button>
+    <h1>Weekly Summary</h1>
+  </div>
+  <div class="sum-body">
+    <div class="week-sel-bar">
+      <button class="wnav" onclick="changeSumWeek(-1)">◀</button>
+      <div class="week-label" id="sumWeekLabel">—</div>
+      <button class="wnav" onclick="changeSumWeek(1)">▶</button>
+    </div>
+    <div class="sum-action-bar">
+      <button class="sa-btn sa-btn-s" onclick="downloadCSV()">⬇ CSV</button>
+      <button class="sa-btn sa-btn-p" onclick="printSummary()">🖨 Print PDF</button>
+    </div>
+    <div id="summaryContent"></div>
+  </div>
+</div>
+
+<!-- ============================================================ SCREEN: CUSTOMER DASHBOARD (read-only) -->
+<div class="screen" id="customerDash">
+  <div class="app-header">
+    <button class="hdr-back" onclick="showScreen('login')">← Sign Out</button>
+    <h1>Shipment Summary</h1>
+  </div>
+  <div class="sum-body">
+    <div class="week-sel-bar">
+      <button class="wnav" onclick="changeCustWeek(-1)">◀</button>
+      <div class="week-label" id="custWeekLabel">—</div>
+      <button class="wnav" onclick="changeCustWeek(1)">▶</button>
+    </div>
+    <div id="custContent"></div>
+  </div>
+</div>
+
+<!-- ============================================================ SCREEN: ROSTER -->
+<div class="screen" id="roster">
+  <div class="app-header">
+    <button class="hdr-back" onclick="showScreen('manager')">← Dashboard</button>
+    <h1>Driver Roster</h1>
+    <button class="hdr-back" onclick="printRoster()" style="background:rgba(255,255,255,.25);">🖨 Print</button>
+  </div>
+  <div class="roster-body" id="rosterBody"></div>
+</div>
+
+<script>
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let currentDriver = null;
+let draftSaveTimer = null;
+let currentMgr = false;
+let weekOffset = 0;
+let sumWeekOffset = 0;
+let custWeekOffset = 0;
+let editDriverIdx = -1;
+
+// ─── STORAGE HELPERS ──────────────────────────────────────────────────────────
+// All shared data is stored in the server via /api/store (backed by Supabase).
+// Drafts (kn_draft_*) stay in localStorage — they are intentionally per-device.
+// An in-memory cache makes all reads synchronous after the initial page load.
+
+const _cache = {};
+let _storeReady = false;
+
+function isDraftKey(key) { return key.startsWith('kn_draft_'); }
+
+// Load all data from server into cache on startup
+async function initStore() {
+  try {
+    const res = await fetch('/api/store');
+    const json = await res.json();
+    if (json.ok && json.data) {
+      Object.assign(_cache, json.data);
+    }
+  } catch(e) {
+    console.warn('Could not load from server, using defaults:', e);
+  }
+  _storeReady = true;
+}
+
+// Save to server (async, non-blocking) + update cache immediately
+function save(key, val) {
+  _cache[key] = val;
+  if (isDraftKey(key)) {
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {}
+    return;
+  }
+  fetch('/api/store/' + encodeURIComponent(key), {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ value: val })
+  }).catch(e => console.error('Save failed for', key, e));
+}
+
+// Load from cache (synchronous — cache is populated at startup)
+function load(key, def) {
+  if (key in _cache) return _cache[key];
+  if (isDraftKey(key)) {
+    try {
+      const v = localStorage.getItem(key);
+      if (v) { _cache[key] = JSON.parse(v); return _cache[key]; }
+    } catch(e) {}
+  }
+  return def;
+}
+
+function getDrivers() { return load('kn_drivers', [
+  {name:'Suleyman Hasanov',  driverNum:'324',  unit:'Straight Truck', rate:67},
+  {name:'Pete Kitowski',     driverNum:'342',  unit:'Straight Truck', rate:67},
+  {name:'Gill Echeverria',   driverNum:'332',  unit:'Tractor', rate:75},
+  {name:'Musa Fetahi',       driverNum:'345',  unit:'Tractor', rate:75},
+  {name:'Nedzad Garic',      driverNum:'3013', unit:'Tractor', rate:75},
+  {name:'Richard Guallpa',   driverNum:'3022', unit:'Tractor', rate:75},
+  {name:'Sammy Illa',        driverNum:'347',  unit:'Tractor', rate:75},
+  {name:'Surjeet Kumar',     driverNum:'421',  unit:'Tractor', rate:75},
+  {name:'Eduardo Laguna',    driverNum:'338',  unit:'Tractor', rate:75},
+  {name:'Alberto Morales',   driverNum:'343',  unit:'Tractor', rate:75},
+  {name:'Noe Ponce',         driverNum:'395',  unit:'Tractor', rate:75},
+  {name:'Danny Quispe',      driverNum:'3017', unit:'Tractor', rate:75},
+  {name:'Fadil Rasic',       driverNum:'307',  unit:'Tractor', rate:75},
+  {name:'Jose Rivas',        driverNum:'382',  unit:'Tractor', rate:75},
+  {name:'Zafar Saleem',      driverNum:'3940', unit:'Tractor', rate:75},
+  {name:'Maynor Vidal',      driverNum:'3220', unit:'Tractor', rate:75},
+  {name:'', unit:'Tractor', rate:75},
+  {name:'', unit:'Tractor', rate:75},
+  {name:'', unit:'Tractor', rate:75}
+]); }
+function saveDrivers(d) { save('kn_drivers', d); }
+function getManagers() { return load('kn_managers', [{name:'Manager', badge:'1234'}]); }
+function saveManagers(m) { save('kn_managers', m); }
+function getUnitRates() { return load('kn_unit_rates', {'Straight Truck':67,'Tractor':75}); }
+function saveUnitRates(r) { save('kn_unit_rates', r); }
+function getRateForUnit(unit) { const rates = getUnitRates(); return rates[unit] || 75; }
+function getManifests() { return load('kn_manifests', []); }
+function saveManifests(m) { save('kn_manifests', m); }
+function getCustomerCode() { return load('kn_customer_code', 'KNHOUSE'); }
+function saveCustomerCode(c) { save('kn_customer_code', c); }
+
+// ─── SCREEN NAV ───────────────────────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id === 'manager') { weekOffset = 0; renderManager(); }
+  if (id === 'home') { checkDraft(); }
+  if (id === 'summary') { renderSummary(); }
+  if (id === 'customerDash') { renderCustomerDash(); }
+  if (id === 'roster') renderRoster();
+  if (id === 'login') populateLoginDropdown();
+}
+
+// ─── NOTIFICATIONS ────────────────────────────────────────────────────────────
+function notify(msg, dur=2200) {
+  const n = document.getElementById('notif');
+  n.textContent = msg;
+  n.classList.add('show');
+  setTimeout(() => n.classList.remove('show'), dur);
+}
+
+// ─── LOGIN ────────────────────────────────────────────────────────────────────
+function populateLoginDropdown() {
+  const sel = document.getElementById('loginName');
+  const drivers = getDrivers();
+  sel.innerHTML = '<option value="">— Select Driver —</option>';
+  drivers.forEach((d,i) => {
+    const o = document.createElement('option');
+    o.value = i; o.textContent = d.name || 'Unassigned';
+    sel.appendChild(o);
+  });
+}
+
+function doDriverLogin() {
+  const idx = document.getElementById('loginName').value;
+  const num = document.getElementById('loginNum').value.trim();
+  const err = document.getElementById('loginErr');
+  if (idx === '') { err.textContent = 'Please select your name.'; return; }
+  if (!num) { err.textContent = 'Please enter your driver number.'; return; }
+
+  const drivers = getDrivers();
+  const driver = drivers[idx];
+
+  if (!driver.driverNum || driver.driverNum.toString().trim() === '') {
+    err.textContent = 'No driver number on file. Ask your manager to update the roster.';
+    return;
+  }
+  if (num !== driver.driverNum.toString().trim()) {
+    err.textContent = 'Incorrect driver number. Please try again.';
+    const inp = document.getElementById('loginNum');
+    inp.style.borderColor = 'var(--danger)';
+    setTimeout(function(){ inp.style.borderColor = ''; }, 2000);
+    return;
+  }
+
+  err.textContent = '';
+  currentDriver = { ...driver };
+  document.getElementById('homeWelcome').textContent = 'Welcome, ' + currentDriver.name;
+  showScreen('home');
+  checkDraft();
+}
+
+function signOut() {
+  currentDriver = null;
+  document.getElementById('loginName').value = '';
+  document.getElementById('loginNum').value = '';
+  document.getElementById('loginErr').textContent = '';
+  showScreen('login');
+}
+
+function openMgrLogin() {
+  document.getElementById('mgrLoginOv').classList.add('open');
+  document.getElementById('mgrBadge').value = '';
+  document.getElementById('mgrErr').textContent = '';
+  setTimeout(() => document.getElementById('mgrBadge').focus(), 200);
+}
+function closeMgrLogin() { document.getElementById('mgrLoginOv').classList.remove('open'); }
+
+function doMgrLogin() {
+  const badge = document.getElementById('mgrBadge').value.trim();
+  const managers = getManagers();
+  const found = managers.find(m => m.badge === badge);
+  if (!found) { document.getElementById('mgrErr').textContent = 'Invalid badge number.'; return; }
+  currentMgr = true;
+  closeMgrLogin();
+  weekOffset = 0;
+  showScreen('manager');
+  document.getElementById('mgrHeaderMeta').textContent = found.name;
+}
+
+// ─── CUSTOMER VIEW (read-only) ─────────────────────────────────────────────────
+function openCustomerLogin() {
+  document.getElementById('custLoginOv').classList.add('open');
+  document.getElementById('custCode').value = '';
+  document.getElementById('custErr').textContent = '';
+  setTimeout(() => document.getElementById('custCode').focus(), 200);
+}
+function closeCustomerLogin() { document.getElementById('custLoginOv').classList.remove('open'); }
+
+function doCustomerLogin() {
+  const entered = (document.getElementById('custCode').value || '').trim().toUpperCase();
+  const actual = (getCustomerCode() || '').trim().toUpperCase();
+  if (!entered || entered !== actual) {
+    document.getElementById('custErr').textContent = 'Incorrect access code.';
+    return;
+  }
+  closeCustomerLogin();
+  custWeekOffset = 0;
+  showScreen('customerDash');
+}
+
+function changeCustWeek(dir) { custWeekOffset += dir; renderCustomerDash(); }
+
+function renderCustomerDash() {
+  const { label, html } = buildWeeklySummaryHTML(custWeekOffset);
+  document.getElementById('custWeekLabel').textContent = label;
+  document.getElementById('custContent').innerHTML = html;
+}
+
+// ─── FORM ─────────────────────────────────────────────────────────────────────
+function getUnitLabel(driverName) {
+  const drivers = getDrivers();
+  const unitCounts = {};
+  for (let i = 0; i < drivers.length; i++) {
+    const u = drivers[i].unit;
+    if (!unitCounts[u]) unitCounts[u] = 0;
+    unitCounts[u]++;
+    if (drivers[i].name === driverName) return u + ' ' + unitCounts[u];
+  }
+  return driverName ? 'Tractor' : '—';
+}
+
+function toggleSubDriver() {
+  const checked = document.getElementById('f_subCheck').checked;
+  document.getElementById('f_subDriverFields').style.display = checked ? 'block' : 'none';
+  if (!checked) {
+    document.getElementById('f_subName').value = '';
+    document.getElementById('f_subNum').value = '';
+  }
+}
+
+function addShipmentFee(runIdx) {
+  const container = document.getElementById('r'+runIdx+'_feesContainer');
+  if (!container) return;
+  const feeIdx = container.children.length;
+  const div = document.createElement('div');
+  div.className = 'fee-entry';
+  div.innerHTML =
+    '<span style="font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;color:#8b92a5;min-width:18px;">' + (feeIdx+1) + '</span>' +
+    '<input type="number" class="fee-amount" id="r'+runIdx+'_fee_'+feeIdx+'_amt" placeholder="$0.00" step="0.01" inputmode="decimal" oninput="calcTotals()">'  +
+    '<input type="text" class="fee-desc" id="r'+runIdx+'_fee_'+feeIdx+'_desc" placeholder="Fee description">' +
+    '<button class="rm-btn" onclick="removeShipmentFee(this,' + runIdx + ')">✕</button>';
+  container.appendChild(div);
+  calcTotals();
+}
+
+function removeShipmentFee(btn, runIdx) {
+  btn.closest('.fee-entry').remove();
+  // Re-number and re-id
+  const container = document.getElementById('r'+runIdx+'_feesContainer');
+  if (!container) return;
+  container.querySelectorAll('.fee-entry').forEach(function(e, i) {
+    const numEl = e.querySelector('span');
+    if (numEl) numEl.textContent = i + 1;
+    const inputs = e.querySelectorAll('input');
+    if (inputs[0]) inputs[0].id = 'r'+runIdx+'_fee_'+i+'_amt';
+    if (inputs[1]) inputs[1].id = 'r'+runIdx+'_fee_'+i+'_desc';
+  });
+  calcTotals();
+}
+
+function getShipmentFees(runIdx) {
+  const container = document.getElementById('r'+runIdx+'_feesContainer');
+  if (!container) return [];
+  const fees = [];
+  container.querySelectorAll('.fee-entry').forEach(function(e, i) {
+    const amt = parseFloat(document.getElementById('r'+runIdx+'_fee_'+i+'_amt')?.value) || 0;
+    const desc = (document.getElementById('r'+runIdx+'_fee_'+i+'_desc')?.value || '').trim();
+    if (amt || desc) fees.push({ amount: amt, description: desc });
+  });
+  return fees;
+}
+
+// Legacy stub — no longer used at manifest level
+function getFees() { return []; }
+
+// ─── DRAFT / AUTO-SAVE ────────────────────────────────────────────────────────
+function draftKey() {
+  if (!currentDriver) return null;
+  const today = new Date().toISOString().split('T')[0];
+  return 'kn_draft_' + currentDriver.name.replace(/\s+/g,'_') + '_' + today;
+}
+
+function saveDraft() {
+  const key = draftKey();
+  if (!key) return;
+  try {
+    const runs = getRunData();
+    const fees = document.getElementById('feesContainer') ? Array.from(document.getElementById('feesContainer').querySelectorAll('.fee-entry')).map(function(e,i){
+      return { amount: parseFloat(document.getElementById('fee_'+i+'_amt')?.value)||0, description: document.getElementById('fee_'+i+'_desc')?.value||'' };
+    }) : [];
+    const draft = {
+      date: document.getElementById('f_date').value,
+      startTime: document.getElementById('f_startTime').value,
+      endTime: document.getElementById('f_endTime').value,
+      notes: document.getElementById('f_notes').value,
+      subCheck: document.getElementById('f_subCheck').checked,
+      subName: document.getElementById('f_subName').value,
+      subNum: document.getElementById('f_subNum').value,
+      runs: runs,
+      savedAt: new Date().toISOString()
+    };
+    localStorage.setItem(key, JSON.stringify(draft));
+  } catch(e) {}
+}
+
+function clearDraft() {
+  const key = draftKey();
+  if (key) localStorage.removeItem(key);
+}
+
+function getDraft() {
+  const key = draftKey();
+  if (!key) return null;
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch(e) { return null; }
+}
+
+function checkDraft() {
+  const draft = getDraft();
+  const btn = document.getElementById('continueDraftBtn');
+  const meta = document.getElementById('draftMeta');
+  if (draft && btn) {
+    btn.style.display = 'block';
+    if (meta) {
+      const t = new Date(draft.savedAt);
+      const timeStr = t.toLocaleTimeString('en-US', {hour:'numeric',minute:'2-digit'});
+      const runCount = draft.runs ? draft.runs.length : 0;
+      meta.textContent = 'Last saved ' + timeStr + ' · ' + runCount + ' shipment' + (runCount!==1?'s':'');
+    }
+  } else if (btn) {
+    btn.style.display = 'none';
+  }
+}
+
+function confirmNewManifest() {
+  const draft = getDraft();
+  if (draft) {
+    if (!confirm('You have a draft in progress for today. Start a new manifest? Your current draft will be lost.')) return;
+    clearDraft();
+  }
+  showScreen('driverForm');
+  initForm();
+}
+
+function loadDraft() {
+  const draft = getDraft();
+  if (!draft) { showScreen('driverForm'); initForm(); return; }
+  showScreen('driverForm');
+  // Set header
+  document.getElementById('f_driver').textContent = currentDriver.name + ' (' + currentDriver.unit + ')';
+  document.getElementById('formHeaderMeta').textContent = currentDriver.name;
+  // Restore basic fields
+  document.getElementById('f_date').value = draft.date || new Date().toISOString().split('T')[0];
+  document.getElementById('f_startTime').value = draft.startTime || '';
+  document.getElementById('f_endTime').value = draft.endTime || '';
+  document.getElementById('f_notes').value = draft.notes || '';
+  document.getElementById('f_subCheck').checked = !!draft.subCheck;
+  document.getElementById('f_subDriverFields').style.display = draft.subCheck ? 'block' : 'none';
+  document.getElementById('f_subName').value = draft.subName || '';
+  document.getElementById('f_subNum').value = draft.subNum || '';
+  // Rebuild runs
+  document.getElementById('runsContainer').innerHTML = '';
+  if (draft.runs && draft.runs.length > 0) {
+    draft.runs.forEach(function(r) { addRun(); });
+    // Now populate each run's fields
+    const entries = document.querySelectorAll('.run-entry');
+    draft.runs.forEach(function(r, i) {
+      if (!entries[i]) return;
+      const set = function(id, val) { const el = document.getElementById(id); if (el) el.value = val || ''; };
+      const setTxt = function(id, val) { const el = document.getElementById(id); if (el) el.textContent = val || ''; };
+      set('r'+i+'_dkn', r.dkn); set('r'+i+'_aal', r.aal);
+      set('r'+i+'_dal', r.dal); set('r'+i+'_akn', r.akn);
+      set('r'+i+'_awb', r.awb); set('r'+i+'_airline', r.airline);
+      set('r'+i+'_knref', r.knRef); set('r'+i+'_impexp', r.impExp);
+      set('r'+i+'_pcs', r.pcs); set('r'+i+'_wgt', r.wgt);
+      set('r'+i+'_wgtType', r.wgtType || 'KG');
+      set('r'+i+'_type', r.type || '');
+      set('r'+i+'_note', r.note || '');
+      // Trigger weight/type recalc
+      calcRunWeight(i);
+      if (r.type) onTypeChange(i);
+      calcRunTimes(i);
+      // Restore fees
+      if (r.fees && r.fees.length > 0) {
+        r.fees.forEach(function(f) { addShipmentFee(i); });
+        r.fees.forEach(function(f, fi) {
+          const amt = document.getElementById('r'+i+'_fee_'+fi+'_amt');
+          const desc = document.getElementById('r'+i+'_fee_'+fi+'_desc');
+          if (amt) amt.value = f.amount || 0;
+          if (desc) desc.value = f.description || '';
+        });
+      }
+      // Restore sub-MAWBs
+      if (r.subMawbs && r.subMawbs.length > 0) {
+        r.subMawbs.forEach(function(s) { addSubMawb(i); });
+        const subContainer = document.getElementById('r'+i+'_subMawbs');
+        if (subContainer) {
+          r.subMawbs.forEach(function(s, si) {
+            const setS = function(id, val) { const el = document.getElementById(id); if (el) el.value = val || ''; };
+            setS('r'+i+'_s'+si+'_awb', s.awb);
+            setS('r'+i+'_s'+si+'_airline', s.airline);
+            setS('r'+i+'_s'+si+'_knref', s.knRef);
+            setS('r'+i+'_s'+si+'_impexp', s.impExp);
+            setS('r'+i+'_s'+si+'_pcs', s.pcs);
+            setS('r'+i+'_s'+si+'_wgt', s.wgt);
+            setS('r'+i+'_s'+si+'_wgtType', s.wgtType || 'KG');
+            setS('r'+i+'_s'+si+'_type', s.type || '');
+            calcSubWeight(i, si);
+            if (s.type) onSubTypeChange(i, si);
+          });
+        }
+      }
+    });
+  } else {
+    addRun();
+  }
+  calcTotals();
+  notify('📋 Draft restored!');
+}
+
+function initForm() {
+  if (!currentDriver) { showScreen('login'); return; }
+  document.getElementById('f_driver').textContent = currentDriver.name + ' (' + currentDriver.unit + ')';
+  document.getElementById('formHeaderMeta').textContent = currentDriver.name;
+  const today = new Date();
+  document.getElementById('f_date').value = today.toISOString().split('T')[0];
+  document.getElementById('f_startTime').value = '';
+  document.getElementById('f_endTime').value = '';
+  document.getElementById('f_notes').value = '';
+  document.getElementById('f_subCheck').checked = false;
+  document.getElementById('f_subDriverFields').style.display = 'none';
+  document.getElementById('f_subName').value = '';
+  document.getElementById('f_subNum').value = '';
+  document.getElementById('runsContainer').innerHTML = '';
+  addRun();
+  calcTotals();
+}
+
+function addRun() {
+  const container = document.getElementById('runsContainer');
+  const idx = container.children.length;
+  const div = document.createElement('div');
+  div.className = 'run-entry';
+  div.dataset.idx = idx;
+  div.innerHTML = `
+    <div class="run-entry-head">
+      <span class="run-num">Run ${idx+1}</span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="run-cost" id="rc_${idx}">$0.00 <span>/ run</span></span>
+        <button class="rm-btn" onclick="removeRun(this)">✕</button>
+      </div>
+    </div>
+    <div class="run-body">
+      <!-- Times Row -->
+      <div class="fg fg4" style="margin-bottom:10px;">
+        <div class="field"><label>Depart K+N</label><input type="time" id="r${idx}_dkn" oninput="calcRunTimes(${idx})"></div>
+        <div class="field"><label>Arrive A/L</label><input type="time" id="r${idx}_aal" oninput="calcRunTimes(${idx})"></div>
+        <div class="field"><label>Depart A/L</label><input type="time" id="r${idx}_dal" oninput="calcRunTimes(${idx})"></div>
+        <div class="field"><label>Arrive K+N</label><input type="time" id="r${idx}_akn" oninput="calcRunTimes(${idx})"></div>
+      </div>
+      <!-- Calculated Times -->
+      <div class="fg fg2" style="margin-bottom:10px;">
+        <div class="field"><label>Airline Waiting Time <span style="font-size:9px;color:var(--muted);">(Arrive→Depart A/L)</span></label><div class="auto-calc" id="r${idx}_alTransit">—</div></div>
+        <div class="field"><label>Full Run Time <span style="font-size:9px;color:var(--muted);">(Depart K+N→Arrive K+N)</span></label><div class="auto-calc" id="r${idx}_fullRun">—</div></div>
+      </div>
+      <!-- Shipment Info -->
+      <div class="fg fg3" style="margin-bottom:10px;">
+        <div class="field"><label>MAWB #</label><input type="text" id="r${idx}_awb" placeholder="e.g. 016-12345678" inputmode="numeric" oninput="lookupAirline(${idx})"></div>
+        <div class="field">
+          <label>Airline <span id="r${idx}_airlineHint" style="font-size:9px;color:var(--success);font-weight:700;background:var(--success-light);padding:1px 5px;border-radius:3px;display:none;">AUTO</span></label>
+          <input type="text" id="r${idx}_airline" placeholder="Auto-fills from MAWB" oninput="markManualAirline(${idx})">
+        </div>
+        <div class="field"><label>K+N Ref</label><input type="text" id="r${idx}_knref" placeholder="K+N Reference"></div>
+      </div>
+      <!-- IMP/EXP · PCS · Weight all on one compact row -->
+      <div style="display:flex;gap:8px;margin-bottom:10px;align-items:flex-end;flex-wrap:wrap;">
+        <div class="field" style="flex:0 0 100px;">
+          <label>IMP / EXP</label>
+          <select id="r${idx}_impexp" onchange="calcTotals()" style="height:46px;padding:0 8px;font-size:14px;">
+            <option value="">—</option>
+            <option value="IMP">IMP</option>
+            <option value="EXP">EXP</option>
+          </select>
+        </div>
+        <div class="field" style="flex:0 0 70px;">
+          <label>PCS</label>
+          <input type="number" id="r${idx}_pcs" placeholder="0" inputmode="numeric" oninput="calcTotals()"
+            style="height:46px;padding:0 8px;font-size:15px;text-align:center;">
+        </div>
+        <div id="r${idx}_wgtSection" style="display:flex;gap:8px;align-items:flex-end;flex:1;min-width:0;">
+          <div class="field" style="flex:1;min-width:80px;">
+            <label>Weight</label>
+            <input type="number" id="r${idx}_wgt" placeholder="0" step="0.01" inputmode="decimal" oninput="calcRunWeight(${idx})"
+              style="height:46px;padding:0 8px;font-size:15px;">
+          </div>
+          <div class="field" style="flex:0 0 68px;">
+            <label>Unit</label>
+            <select id="r${idx}_wgtType" onchange="calcRunWeight(${idx})" style="height:46px;padding:0 6px;font-size:14px;text-align:center;">
+              <option value="KG">KG</option>
+              <option value="LBS">LBS</option>
+            </select>
+          </div>
+          <div class="field" style="flex:1;min-width:70px;">
+            <label>KGS</label>
+            <div class="auto-calc" id="r${idx}_kgs" style="font-size:13px;">0.00</div>
+          </div>
+          <div class="field" style="flex:1;min-width:70px;">
+            <label>LBS</label>
+            <div class="auto-calc" id="r${idx}_lbs" style="font-size:13px;">0.00</div>
+          </div>
+        </div>
+      </div>
+      <!-- Type -->
+      <div class="fg fg2" style="margin-bottom:6px;">
+        <div class="field">
+          <label>Type <span id="r${idx}_flatRateTag" style="display:none;font-size:9px;color:var(--warn);font-weight:700;background:var(--warn-light);padding:1px 5px;border-radius:3px;">FLAT RATE</span></label>
+          <input type="text" id="r${idx}_type" placeholder="e.g. AKE — leave blank for weight-based" maxlength="3"
+            oninput="onTypeChange(${idx})" autocomplete="off" autocorrect="off"
+            autocapitalize="characters" spellcheck="false"
+            style="text-transform:uppercase;letter-spacing:2px;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;">
+          <div id="r${idx}_typeHint" style="font-size:11px;color:var(--muted);margin-top:3px;min-height:14px;"></div>
+        </div>
+      </div>
+      <!-- Cost -->
+      <div class="fg fg2" style="margin-bottom:6px;">
+        <div class="field"><label>R&amp;M Charges <span style="font-size:9px;color:var(--success);font-weight:700;background:var(--success-light);padding:1px 5px;border-radius:3px;">AUTO</span></label><div class="auto-calc" id="r${idx}_rm" style="font-size:17px;">$0.00</div></div>
+        <div class="field"><label>R&amp;M / LB</label><div class="auto-calc" id="r${idx}_costLb">—</div></div>
+      </div>
+      <!-- Sub-MAWBs -->
+      <div id="r${idx}_subMawbs" style="margin-top:4px;"></div>
+      <!-- Fees -->
+      <div id="r${idx}_feesContainer" style="margin-top:4px;"></div>
+      <!-- Actions -->
+      <div style="margin-top:8px;display:flex;align-items:center;flex-wrap:wrap;gap:6px;">
+        <button class="add-mawb-btn" onclick="addSubMawb(${idx})">＋ Add MAWB</button>
+        <button class="add-mawb-btn" onclick="addShipmentFee(${idx})" style="border-color:#c5d3f0;color:var(--accent);">＋ Add Fee</button>
+        <button class="add-note-btn" onclick="toggleNote(${idx})">＋ Add Note</button>
+      </div>
+      <div id="r${idx}_noteWrap" style="display:none;margin-top:8px;">
+        <div class="field"><label>Note</label><textarea id="r${idx}_note" placeholder="Note for this run…"></textarea></div>
+      </div>
+    </div>`;
+  container.appendChild(div);
+  updateRunNumbers();
+  calcTotals();
+}
+
+function removeRun(btn) {
+  const entry = btn.closest('.run-entry');
+  if (document.querySelectorAll('.run-entry').length <= 1) { notify('Add at least one shipment.'); return; }
+  entry.remove();
+  updateRunNumbers();
+  calcTotals();
+}
+
+function updateRunNumbers() {
+  const entries = document.querySelectorAll('.run-entry');
+  entries.forEach((e, i) => {
+    e.dataset.idx = i;
+    const numEl = e.querySelector('.run-num');
+    if (numEl) numEl.textContent = 'Shipment ' + (i+1);
+  });
+  let totalShipmentCount = entries.length;
+  entries.forEach(function(e) {
+    const sub = e.querySelector('[id$="_subMawbs"]');
+    if (sub) totalShipmentCount += sub.querySelectorAll('.sub-mawb-entry').length;
+  });
+  document.getElementById('runCountMeta').textContent = totalShipmentCount + ' shipment' + (totalShipmentCount !== 1 ? 's' : '');
+}
+
+function addSubMawb(runIdx) {
+  const container = document.getElementById('r'+runIdx+'_subMawbs');
+  if (!container) return;
+  const subIdx = container.children.length;
+  const div = document.createElement('div');
+  div.className = 'sub-mawb-entry';
+  div.dataset.subIdx = subIdx;
+  div.innerHTML = `
+    <div class="sub-mawb-head">
+      <span class="sub-mawb-label">+ MAWB ${subIdx+1} <span style="color:var(--muted);font-size:10px;font-weight:400;">(same times)</span></span>
+      <button class="rm-btn" onclick="removeSubMawb(this)">✕</button>
+    </div>
+    <div class="sub-mawb-body">
+      <div class="fg fg3" style="margin-bottom:8px;">
+        <div class="field"><label>MAWB #</label><input type="text" id="r${runIdx}_s${subIdx}_awb" placeholder="e.g. 016-12345678" inputmode="numeric" oninput="lookupSubAirline(${runIdx},${subIdx})"></div>
+        <div class="field">
+          <label>Airline <span id="r${runIdx}_s${subIdx}_airlineHint" style="display:none;font-size:9px;color:var(--success);font-weight:700;background:var(--success-light);padding:1px 5px;border-radius:3px;">AUTO</span></label>
+          <input type="text" id="r${runIdx}_s${subIdx}_airline" placeholder="Auto-fills from MAWB" oninput="markManualSubAirline(${runIdx},${subIdx})">
+        </div>
+        <div class="field"><label>K+N Ref</label><input type="text" id="r${runIdx}_s${subIdx}_knref" placeholder="K+N Reference"></div>
+      </div>
+      <div id="r${runIdx}_s${subIdx}_wgtSection" style="display:flex;gap:8px;margin-bottom:8px;align-items:flex-end;flex-wrap:wrap;">
+        <div class="field" style="flex:0 0 90px;">
+          <label>IMP / EXP</label>
+          <select id="r${runIdx}_s${subIdx}_impexp" onchange="calcTotals()" style="height:46px;padding:0 6px;font-size:14px;">
+            <option value="">—</option>
+            <option value="IMP">IMP</option>
+            <option value="EXP">EXP</option>
+          </select>
+        </div>
+        <div class="field" style="flex:0 0 70px;">
+          <label>PCS</label>
+          <input type="number" id="r${runIdx}_s${subIdx}_pcs" placeholder="0" inputmode="numeric" oninput="calcTotals()"
+            style="height:46px;padding:0 8px;font-size:15px;text-align:center;">
+        </div>
+        <div class="field" style="flex:1;min-width:80px;">
+          <label>Weight</label>
+          <input type="number" id="r${runIdx}_s${subIdx}_wgt" placeholder="0" step="0.01" inputmode="decimal"
+            oninput="calcSubWeight(${runIdx},${subIdx})" style="height:46px;padding:0 8px;font-size:15px;">
+        </div>
+        <div class="field" style="flex:0 0 68px;">
+          <label>Unit</label>
+          <select id="r${runIdx}_s${subIdx}_wgtType" onchange="calcSubWeight(${runIdx},${subIdx})"
+            style="height:46px;padding:0 6px;font-size:14px;text-align:center;">
+            <option value="KG">KG</option>
+            <option value="LBS">LBS</option>
+          </select>
+        </div>
+        <div class="field" style="flex:1;min-width:70px;">
+          <label>KGS</label>
+          <div class="auto-calc" id="r${runIdx}_s${subIdx}_kgs" style="font-size:13px;">0.00</div>
+        </div>
+        <div class="field" style="flex:1;min-width:70px;">
+          <label>LBS</label>
+          <div class="auto-calc" id="r${runIdx}_s${subIdx}_lbs" style="font-size:13px;">0.00</div>
+        </div>
+      </div>
+      <div class="fg fg2">
+        <div class="field">
+          <label>Type <span id="r${runIdx}_s${subIdx}_flatRateTag" style="display:none;font-size:9px;color:var(--warn);font-weight:700;background:var(--warn-light);padding:1px 5px;border-radius:3px;">FLAT RATE</span></label>
+          <input type="text" id="r${runIdx}_s${subIdx}_type" placeholder="e.g. AKE" maxlength="3"
+            oninput="onSubTypeChange(${runIdx},${subIdx})" autocomplete="off" autocorrect="off"
+            autocapitalize="characters" spellcheck="false"
+            style="text-transform:uppercase;letter-spacing:2px;font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;">
+          <div id="r${runIdx}_s${subIdx}_typeHint" style="font-size:11px;color:var(--muted);margin-top:3px;min-height:14px;"></div>
+        </div>
+        <div class="field"><label>R&M Charges <span style="font-size:9px;color:var(--success);font-weight:700;background:var(--success-light);padding:1px 5px;border-radius:3px;">AUTO</span></label>
+          <div class="auto-calc" id="r${runIdx}_s${subIdx}_rm" style="font-size:17px;">$0.00</div>
+        </div>
+      </div>
+    </div>`;
+  container.appendChild(div);
+  calcTotals();
+}
+
+function removeSubMawb(btn) {
+  btn.closest('.sub-mawb-entry').remove();
+  calcTotals();
+}
+
+function lookupSubAirline(runIdx, subIdx) {
+  const awbEl = document.getElementById('r'+runIdx+'_s'+subIdx+'_awb');
+  const airlineEl = document.getElementById('r'+runIdx+'_s'+subIdx+'_airline');
+  const hintEl = document.getElementById('r'+runIdx+'_s'+subIdx+'_airlineHint');
+  if (!awbEl || !airlineEl) return;
+  const digits = awbEl.value.replace(/[^0-9]/g, '');
+  const prefix = digits.substring(0, 3);
+  if (prefix.length === 3 && IATA_PREFIXES[prefix]) {
+    if (!airlineEl.dataset.manualEntry) {
+      airlineEl.value = IATA_PREFIXES[prefix];
+      airlineEl.dataset.autoFilled = '1';
+      if (hintEl) hintEl.style.display = 'inline';
+    }
+  } else {
+    if (airlineEl.dataset.autoFilled) {
+      airlineEl.value = '';
+      delete airlineEl.dataset.autoFilled;
+      if (hintEl) hintEl.style.display = 'none';
+    }
+  }
+}
+
+function markManualSubAirline(runIdx, subIdx) {
+  const airlineEl = document.getElementById('r'+runIdx+'_s'+subIdx+'_airline');
+  const hintEl = document.getElementById('r'+runIdx+'_s'+subIdx+'_airlineHint');
+  if (!airlineEl) return;
+  if (airlineEl.value.trim() === '') {
+    delete airlineEl.dataset.manualEntry;
+    delete airlineEl.dataset.autoFilled;
+    if (hintEl) hintEl.style.display = 'none';
+  } else if (!airlineEl.dataset.autoFilled) {
+    airlineEl.dataset.manualEntry = '1';
+    if (hintEl) hintEl.style.display = 'none';
+  }
+}
+
+function calcSubWeight(runIdx, subIdx) {
+  const wgt = parseFloat(document.getElementById('r'+runIdx+'_s'+subIdx+'_wgt')?.value) || 0;
+  const type = document.getElementById('r'+runIdx+'_s'+subIdx+'_wgtType')?.value || 'KG';
+  let kgs = 0, lbs = 0;
+  if (type === 'KG') { kgs = wgt; lbs = wgt / 0.45359237; }
+  else { lbs = wgt; kgs = wgt * 0.45359237; }
+  const kgsEl = document.getElementById('r'+runIdx+'_s'+subIdx+'_kgs');
+  const lbsEl = document.getElementById('r'+runIdx+'_s'+subIdx+'_lbs');
+  if (kgsEl) kgsEl.textContent = kgs.toFixed(2);
+  if (lbsEl) lbsEl.textContent = lbs.toFixed(2);
+  const typeVal = (document.getElementById('r'+runIdx+'_s'+subIdx+'_type')?.value || '').toUpperCase().trim();
+  const flatRate = getFlatRate(typeVal);
+  const rmEl = document.getElementById('r'+runIdx+'_s'+subIdx+'_rm');
+  if (rmEl && flatRate === null) rmEl.textContent = '$' + calcRM(lbs).toFixed(2);
+  calcTotals();
+}
+
+function onSubTypeChange(runIdx, subIdx) {
+  const typeEl = document.getElementById('r'+runIdx+'_s'+subIdx+'_type');
+  const rmEl = document.getElementById('r'+runIdx+'_s'+subIdx+'_rm');
+  const tagEl = document.getElementById('r'+runIdx+'_s'+subIdx+'_flatRateTag');
+  const wgtSection = document.getElementById('r'+runIdx+'_s'+subIdx+'_wgtSection');
+  const hintEl = document.getElementById('r'+runIdx+'_s'+subIdx+'_typeHint');
+  if (!typeEl) return;
+  const code = typeEl.value.toUpperCase().trim();
+  typeEl.value = code;
+  const flatRate = getFlatRate(code);
+  if (flatRate !== null) {
+    if (rmEl) rmEl.textContent = '$' + flatRate.toFixed(2);
+    if (tagEl) tagEl.style.display = 'inline';
+    if (wgtSection) wgtSection.style.display = 'none';
+    if (hintEl) hintEl.innerHTML = '<span style="color:var(--warn);font-weight:600;">' + code + ' — $' + flatRate.toFixed(2) + ' flat rate</span>';
+  } else {
+    if (tagEl) tagEl.style.display = 'none';
+    if (wgtSection) wgtSection.style.display = '';
+    if (hintEl) hintEl.textContent = code.length === 3 ? 'Weight-based pricing' : '';
+    calcSubWeight(runIdx, subIdx);
+  }
+  calcTotals();
+}
+
+function getSubMawbs(runIdx) {
+  const container = document.getElementById('r'+runIdx+'_subMawbs');
+  if (!container) return [];
+  const subs = [];
+  container.querySelectorAll('.sub-mawb-entry').forEach((entry, si) => {
+    const wgt = parseFloat(document.getElementById('r'+runIdx+'_s'+si+'_wgt')?.value) || 0;
+    const wgtType = document.getElementById('r'+runIdx+'_s'+si+'_wgtType')?.value || 'KG';
+    let kgs = 0, lbs = 0;
+    if (wgtType === 'KG') { kgs = wgt; lbs = wgt / 0.45359237; }
+    else { lbs = wgt; kgs = wgt * 0.45359237; }
+    const typeVal = (document.getElementById('r'+runIdx+'_s'+si+'_type')?.value || '').toUpperCase().trim();
+    const flatRate = getFlatRate(typeVal);
+    const rmEl = document.getElementById('r'+runIdx+'_s'+si+'_rm');
+    const rm = rmEl ? parseFloat(rmEl.textContent.replace('$','')) || 0 : 0;
+    subs.push({
+      awb: document.getElementById('r'+runIdx+'_s'+si+'_awb')?.value || '',
+      airline: document.getElementById('r'+runIdx+'_s'+si+'_airline')?.value || '',
+      knRef: document.getElementById('r'+runIdx+'_s'+si+'_knref')?.value || '',
+      impExp: document.getElementById('r'+runIdx+'_s'+si+'_impexp')?.value || '',
+      pcs: parseInt(document.getElementById('r'+runIdx+'_s'+si+'_pcs')?.value) || 0,
+      type: typeVal, wgt, wgtType, kgs, lbs,
+      isFlatRate: flatRate !== null,
+      rm,
+      costLb: lbs > 0 && flatRate === null ? rm / lbs : 0
+    });
+  });
+  return subs;
+}
+
+function toggleNote(idx) {
+  const wrap = document.getElementById('r'+idx+'_noteWrap');
+  if (!wrap) return;
+  const shown = wrap.style.display !== 'none';
+  wrap.style.display = shown ? 'none' : 'block';
+}
+
+// ─── IATA AWB PREFIX → AIRLINE LOOKUP ────────────────────────────────────────
+const IATA_PREFIXES = {
+  '549':'ABSA Cargo / LATAM Cargo Brasil',
+  '390':'Aegean Airlines',
+  '053':'Aer Lingus Cargo',
+  '555':'Aeroflot',
+  '044':'Aerolineas Argentinas',
+  '139':'Aeromexico Cargo',
+  '873':'AeroUnion',
+  '546':'Afriqiyah Airways',
+  '124':'Air Algerie',
+  '514':'Air Arabia',
+  '465':'Air Astana',
+  '657':'Air Baltic',
+  '142':'Air Belgium',
+  '063':'Air Caledonie International',
+  '014':'Air Canada',
+  '999':'Air China',
+  '996':'Air Europa Cargo',
+  '057':'Air France',
+  '288':'Air Hong Kong',
+  '098':'Air India',
+  '643':'Air Malta',
+  '239':'Air Mauritius',
+  '572':'Air Moldova',
+  '086':'Air New Zealand',
+  '656':'Air Niugini',
+  '350':'Air Premia',
+  '490':'Air Senegal',
+  '115':'Air Serbia',
+  '061':'Air Seychelles',
+  '244':'Air Tahiti Nui',
+  '649':'Air Transat',
+  '843':'AirAsia',
+  '807':'AirAsia Berhad',
+  '580':'AirBridge Cargo',
+  '510':'Airclass Lineas Aereas',
+  '027':'Alaska Airlines',
+  '055':'Alitalia',
+  '574':'Allied Air',
+  '001':'American Airlines',
+  '810':'Amerijet International',
+  '205':'ANA All Nippon Cargo',
+  '988':'Asiana Airlines',
+  '032':'Asky Airlines',
+  '756':'ASL Airlines Belgium',
+  '485':'Astral Aviation',
+  '369':'Atlas Air',
+  '729':'Avianca',
+  '133':'Avianca Costa Rica',
+  '757':'Avient Aviation',
+  '331':'Azores Airlines',
+  '577':'Azul Brazilian Airlines',
+  '938':'Batik Air',
+  '997':'Biman Bangladesh',
+  '417':'Bringer Air Cargo',
+  '623':'Bulgaria Air',
+  '700':'CAL Cargo Air Lines',
+  '898':'Capital Airlines',
+  '489':'Cargojet Airways',
+  '172':'Cargolux Airlines',
+  '356':'Cargolux Italia',
+  '021':'Carpatair',
+  '043':'Cathay Dragon',
+  '160':'Cathay Pacific',
+  '203':'Cebu Air',
+  '744':'Challenge Airlines',
+  '297':'China Airlines',
+  '112':'China Cargo Airlines',
+  '959':'China Central Airlines',
+  '784':'China Southern Airlines',
+  '003':'CMA CGM Air Cargo',
+  '881':'Condor',
+  '230':'Copa Airlines Cargo',
+  '923':'Corsair',
+  '831':'Croatia Airlines',
+  '064':'Czech Airlines',
+  '006':'Delta Air Lines',
+  '155':'DHL',
+  '936':'DHL (IJ)',
+  '992':'DHL Aero Expreso',
+  '615':'DHL Aviation / European Air Transport',
+  '947':'DHL de Guatemala',
+  '077':'Egypt Air',
+  '114':'EL AL',
+  '176':'Emirates',
+  '071':'Ethiopian Airlines',
+  '607':'Etihad Airways',
+  '695':'Eva Airways',
+  '336':'Express Air Cargo',
+  '023':'FedEx',
+  '260':'Fiji Airways',
+  '105':'Finnair',
+  '130':'Fly One',
+  '141':'flydubai',
+  '022':'Flylal Lithuanian Airlines',
+  '396':'Frenchbee',
+  '126':'Garuda Indonesia',
+  '606':'Georgian Airlines',
+  '301':'Global Air Transport',
+  '072':'Gulf Air',
+  '880':'Hainan Airlines',
+  '173':'Hawaiian Airlines',
+  '828':'Hong Kong Air Cargo',
+  '851':'Hong Kong Airlines',
+  '128':'Hong Kong Express',
+  '125':'IAG Cargo / British Airways',
+  '075':'Iberia',
+  '060':'Iberia Express',
+  '108':'Icelandair',
+  '312':'IndiGo CarGo',
+  '131':'Japan Airlines',
+  '806':'Jeju Air',
+  '718':'Jin Air',
+  '018':'Juneyao Air',
+  '272':'Kalitta Air',
+  '706':'Kenya Airways',
+  '074':'KLM Cargo',
+  '180':'Korean Air',
+  '229':'Kuwait Airways',
+  '145':'LAN Chile Cargo',
+  '985':'Lanco',
+  '035':'LATAM Air Colombia',
+  '045':'LATAM Airlines',
+  '174':'Lineas Aereas Suramericanas',
+  '080':'LOT Polish Airlines',
+  '020':'Lufthansa Cargo',
+  '259':'Magma Aviation',
+  '537':'Mahan Airlines',
+  '232':'Malaysian Airlines',
+  '816':'Malindo Airways',
+  '865':'MASAir',
+  '805':'Mercury Americas',
+  '076':'Middle East Airlines',
+  '716':'MNG Airlines',
+  '703':'Neos SPA',
+  '933':'Nippon Cargo Airlines',
+  '910':'Oman Air',
+  '214':'Pakistan International Airlines',
+  '624':'Pegasus Cargo',
+  '079':'Philippine Airlines',
+  '031':'Precision Air',
+  '081':'Qantas Airways',
+  '157':'Qatar Airways',
+  '539':'Raya Airways',
+  '147':'Royal Air Maroc',
+  '672':'Royal Brunei Airlines',
+  '512':'Royal Jordanian',
+  '459':'RwandAir',
+  '117':'SAS Scandinavian Airlines',
+  '065':'Saudi Arabian Airlines',
+  '921':'SF Airlines',
+  '479':'Shenzhen Airlines',
+  '876':'Sichuan Airlines',
+  '501':'Silk Way West Airlines',
+  '618':'Singapore Airlines',
+  '083':'South African Airways',
+  '526':'Southwest Airlines',
+  '775':'SpiceJet',
+  '603':'Sri Lankan Airlines',
+  '242':'Stabo Air',
+  '189':'Starlux Cargo',
+  '630':'Sunclass Airlines',
+  '724':'Swiss',
+  '118':'TAAG Angola Airlines',
+  '202':'TACA International Airlines',
+  '047':'TAP Portugal',
+  '281':'Tarom',
+  '940':'Thai AirAsia X',
+  '217':'Thai Airways',
+  '612':'TUI Airlines',
+  '235':'Turkish Airlines',
+  '016':'United Airlines',
+  '406':'UPS Air Cargo',
+  '250':'Uzbekistan Airways',
+  '042':'VARIG',
+  '978':'VietJet Air',
+  '738':'Vietnam Airlines',
+  '932':'Virgin Atlantic',
+  '228':'Vistara Cargo',
+  '036':'Volaris',
+  '838':'WestJet Cargo',
+  '731':'XiamenAir',
+  '860':'YTO Cargo Airlines'
+};
+
+function lookupAirline(idx) {
+  const awbEl = document.getElementById('r'+idx+'_awb');
+  const airlineEl = document.getElementById('r'+idx+'_airline');
+  const hintEl = document.getElementById('r'+idx+'_airlineHint');
+  if (!awbEl || !airlineEl) return;
+
+  const awb = awbEl.value.trim();
+  // Extract first 3 digits (ignore dashes/spaces)
+  const digits = awb.replace(/[^0-9]/g, '');
+  const prefix = digits.substring(0, 3);
+
+  if (prefix.length === 3 && IATA_PREFIXES[prefix]) {
+    const name = IATA_PREFIXES[prefix];
+    // Only auto-fill if field is empty or was previously auto-filled
+    if (!airlineEl.dataset.manualEntry) {
+      airlineEl.value = name;
+      airlineEl.dataset.autoFilled = '1';
+      if (hintEl) hintEl.style.display = 'inline';
+    }
+  } else if (digits.length >= 3) {
+    // 3+ digits but no match — clear auto-fill indicator but keep manual value
+    if (airlineEl.dataset.autoFilled) {
+      airlineEl.value = '';
+      delete airlineEl.dataset.autoFilled;
+      if (hintEl) hintEl.style.display = 'none';
+    }
+  } else if (digits.length < 3) {
+    // AWB cleared/incomplete — clear auto-filled value
+    if (airlineEl.dataset.autoFilled) {
+      airlineEl.value = '';
+      delete airlineEl.dataset.autoFilled;
+      if (hintEl) hintEl.style.display = 'none';
+    }
+  }
+}
+
+function markManualAirline(idx) {
+  const airlineEl = document.getElementById('r'+idx+'_airline');
+  const hintEl = document.getElementById('r'+idx+'_airlineHint');
+  if (!airlineEl) return;
+  if (airlineEl.value.trim() === '') {
+    // Cleared — allow auto-fill again
+    delete airlineEl.dataset.manualEntry;
+    delete airlineEl.dataset.autoFilled;
+    if (hintEl) hintEl.style.display = 'none';
+  } else if (!airlineEl.dataset.autoFilled) {
+    // User typed something manually
+    airlineEl.dataset.manualEntry = '1';
+    if (hintEl) hintEl.style.display = 'none';
+  }
+}
+
+// ─── FLAT RATE PRICING ────────────────────────────────────────────────────────
+const FLAT_RATES = {
+  'DPE':65,'AKE':65,'AKN':65,'AVE':65,'DKN':65,'RKN':65,
+  'ALF':95,'FLA':95,'DQP':95,'DQF':95,'DQN':95,'FQA':95,'ALP':95,'PLA':95,
+  'PQA':95,'PLB':95,'PQF':95,'PQP':95,'P9A':95,'FQF':95,'PNA':95,
+  'PAG':95,'PAH':95,'PAJ':95,'PAP':95,'PLD':95,
+  'PMC':95,'PGP':95,'PIP':95,'AAF':95,'AMA':95,'AMD':95,'AMJ':95,
+  'AMP':95,'PMP':95,'PMW':95,'RAP':95,
+  'PGA':145,'PZA':145,'PGE':145,'PGF':145
+};
+
+function getFlatRate(typeCode) {
+  return typeCode && FLAT_RATES[typeCode] ? FLAT_RATES[typeCode] : null;
+}
+
+function onTypeChange(idx) {
+  const typeEl = document.getElementById('r'+idx+'_type');
+  const rmEl = document.getElementById('r'+idx+'_rm');
+  const tagEl = document.getElementById('r'+idx+'_flatRateTag');
+  const wgtSection = document.getElementById('r'+idx+'_wgtSection');
+  const hintEl = document.getElementById('r'+idx+'_typeHint');
+  if (!typeEl || !rmEl) return;
+
+  const code = typeEl.value.toUpperCase().trim();
+  typeEl.value = code; // force uppercase
+  const flatRate = getFlatRate(code);
+
+  if (flatRate !== null) {
+    rmEl.textContent = '$' + flatRate.toFixed(2);
+    if (tagEl) tagEl.style.display = 'inline';
+    if (wgtSection) wgtSection.style.display = 'none';
+    if (hintEl) hintEl.innerHTML = '<span style="color:var(--warn);font-weight:600;">' + code + ' — $' + flatRate.toFixed(2) + ' flat rate</span>';
+  } else {
+    if (tagEl) tagEl.style.display = 'none';
+    if (wgtSection) wgtSection.style.display = '';
+    if (hintEl) hintEl.textContent = code.length === 3 ? 'Weight-based pricing' : '';
+    calcRunWeight(idx);
+  }
+  calcTotals();
+}
+
+// ─── CALCULATIONS ─────────────────────────────────────────────────────────────
+function timeDiffMinutes(t1, t2) {
+  if (!t1 || !t2) return 0;
+  const [h1, m1] = t1.split(':').map(Number);
+  const [h2, m2] = t2.split(':').map(Number);
+  let diff = (h2 * 60 + m2) - (h1 * 60 + m1);
+  if (diff < 0) diff += 1440;
+  return diff;
+}
+
+function minsToHHMM(mins) {
+  if (mins <= 0) return '0:00';
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return h + ':' + String(m).padStart(2,'0');
+}
+
+function calcRunTimes(idx) {
+  const dkn = document.getElementById('r'+idx+'_dkn')?.value;
+  const aal = document.getElementById('r'+idx+'_aal')?.value;
+  const dal = document.getElementById('r'+idx+'_dal')?.value;
+  const akn = document.getElementById('r'+idx+'_akn')?.value;
+
+  // Col E: A/L Transit = Depart A/L − Arrive A/L
+  const alMins = timeDiffMinutes(aal, dal);
+  const alEl = document.getElementById('r'+idx+'_alTransit');
+  if (alEl) alEl.textContent = (aal && dal) ? minsToHHMM(alMins) : '—';
+
+  // Col F: Full Run Time = Arrive K+N − Depart K+N
+  const fullMins = timeDiffMinutes(dkn, akn);
+  const fullEl = document.getElementById('r'+idx+'_fullRun');
+  if (fullEl) fullEl.textContent = (dkn && akn) ? minsToHHMM(fullMins) : '—';
+
+  calcTotals();
+}
+
+// R&M formula: $0.035/lb, min $20, max $395 (from spreadsheet column R)
+function calcRM(lbs) {
+  if (!lbs || lbs <= 0) return 0;
+  if (lbs < 571.5) return 20;
+  if (lbs > 11286.58) return 395;
+  return lbs * 0.035;
+}
+
+function calcRunWeight(idx) {
+  const wgt = parseFloat(document.getElementById('r'+idx+'_wgt')?.value) || 0;
+  const type = document.getElementById('r'+idx+'_wgtType')?.value || 'KG';
+  let kgs = 0, lbs = 0;
+  if (type === 'KG') { kgs = wgt; lbs = wgt / 0.45359237; }
+  else { lbs = wgt; kgs = wgt * 0.45359237; }
+  const kgsEl = document.getElementById('r'+idx+'_kgs');
+  const lbsEl = document.getElementById('r'+idx+'_lbs');
+  if (kgsEl) kgsEl.textContent = kgs.toFixed(2);
+  if (lbsEl) lbsEl.textContent = lbs.toFixed(2);
+  // Auto-calculate R&M charges from LBS
+  const rmEl = document.getElementById('r'+idx+'_rm');
+  if (rmEl) rmEl.textContent = '$' + calcRM(lbs).toFixed(2);
+  calcTotals();
+}
+
+function getRunData() {
+  const entries = document.querySelectorAll('.run-entry');
+  const runs = [];
+  entries.forEach(e => {
+    const i = e.dataset.idx;
+    const wgt = parseFloat(document.getElementById('r'+i+'_wgt')?.value) || 0;
+    const wgtType = document.getElementById('r'+i+'_wgtType')?.value || 'KG';
+    let kgs = 0, lbs = 0;
+    if (wgtType === 'KG') { kgs = wgt; lbs = wgt / 0.45359237; }
+    else { lbs = wgt; kgs = wgt * 0.45359237; }
+    const typeEl = document.getElementById('r'+i+'_type');
+    const typeVal = typeEl ? typeEl.value.toUpperCase().trim() : '';
+    const flatRate = getFlatRate(typeVal);
+    const rmEl = document.getElementById('r'+i+'_rm');
+    const rm = rmEl ? parseFloat(rmEl.textContent.replace('$','')) || 0 : 0;
+    // For flat rate types, weight is irrelevant — zero out for cost/lb calc
+    let kgsAdj = kgs, lbsAdj = lbs;
+    if (flatRate !== null) { kgsAdj = 0; lbsAdj = 0; }
+    const dkn = document.getElementById('r'+i+'_dkn')?.value || '';
+    const aal = document.getElementById('r'+i+'_aal')?.value || '';
+    const dal = document.getElementById('r'+i+'_dal')?.value || '';
+    const akn = document.getElementById('r'+i+'_akn')?.value || '';
+    const subs = getSubMawbs(i);
+    const subPcs = subs.reduce((a,s)=>a+s.pcs,0);
+    const subKgs = subs.reduce((a,s)=>a+s.kgs,0);
+    const subLbs = subs.reduce((a,s)=>a+s.lbs,0);
+    const subRM  = subs.reduce((a,s)=>a+s.rm,0);
+    const subIsFlatRate = subs.filter(s=>s.isFlatRate);
+    const subWgtLbs = subs.filter(s=>!s.isFlatRate).reduce((a,s)=>a+s.lbs,0);
+    const subWgtKgs = subs.filter(s=>!s.isFlatRate).reduce((a,s)=>a+s.kgs,0);
+    runs.push({
+      dkn, aal, dal, akn,
+      alTransitMins: timeDiffMinutes(aal, dal),
+      fullRunMins: timeDiffMinutes(dkn, akn),
+      knToAlMins: timeDiffMinutes(dkn, dal),
+      airline: document.getElementById('r'+i+'_airline')?.value || '',
+      awb: document.getElementById('r'+i+'_awb')?.value || '',
+      knRef: document.getElementById('r'+i+'_knref')?.value || '',
+      impExp: document.getElementById('r'+i+'_impexp')?.value || '',
+      pcs: (parseInt(document.getElementById('r'+i+'_pcs')?.value) || 0) + subPcs,
+      type: typeVal,
+      wgt, wgtType,
+      kgs: kgs + subKgs,
+      lbs: lbs + subLbs,
+      kgsForCalc: kgsAdj + subWgtKgs,
+      lbsForCalc: lbsAdj + subWgtLbs,
+      isFlatRate: flatRate !== null,
+      rm: rm + subRM,
+      costLb: (lbs + subLbs) > 0 && flatRate === null ? (rm + subRM) / (lbs + subLbs) : 0,
+      note: document.getElementById('r'+i+'_note')?.value || '',
+      fees: getShipmentFees(i),
+      totalFees: getShipmentFees(i).reduce((a,f)=>a+f.amount,0),
+      subMawbs: subs
+    });
+  });
+  return runs;
+}
+
+function calcTotals() {
+  const runs = getRunData();
+  const startTime = document.getElementById('f_startTime').value;
+  const endTime = document.getElementById('f_endTime').value;
+  const rate = currentDriver ? currentDriver.rate : 75;
+
+  // Per-run cost/lb display
+  runs.forEach((r, i) => {
+    const clEl = document.getElementById('r'+i+'_costLb');
+    if (clEl) clEl.textContent = r.lbs > 0 ? '$' + r.costLb.toFixed(4) : '—';
+    const rcEl = document.getElementById('rc_'+i);
+    if (rcEl) rcEl.innerHTML = '$' + r.rm.toFixed(2) + ' <span>/ run</span>';
+  });
+
+  // Summary bar
+  const totalRuns = runs.length;
+  const totalPcs = runs.reduce((a,r) => a + r.pcs, 0);
+  const totalLbs = runs.reduce((a,r) => a + r.lbs, 0);
+  const totalKgs = runs.reduce((a,r) => a + r.kgs, 0);
+  const wgtBasedLbs = runs.filter(r=>!r.isFlatRate).reduce((a,r)=>a+r.lbs,0);
+  const wgtBasedKgs = runs.filter(r=>!r.isFlatRate).reduce((a,r)=>a+r.kgs,0);
+  const totalRM = runs.reduce((a,r) => a + r.rm, 0);
+  const impLbs = runs.filter(r=>r.impExp==='IMP').reduce((a,r)=>a+r.lbs,0);
+  const expLbs = runs.filter(r=>r.impExp==='EXP').reduce((a,r)=>a+r.lbs,0);
+  // transit mins computed below
+  const totalFullRunMins = runs.reduce((a,r) => a + (r.fullRunMins||0), 0);
+  const totalAlMins2 = runs.reduce((a,r) => a + (r.alTransitMins||0), 0);
+
+  const totalWithSubs = runs.reduce((a,r) => a + 1 + (r.subMawbs ? r.subMawbs.length : 0), 0);
+  document.getElementById('sb_runs').textContent = totalWithSubs;
+  document.getElementById('sb_pcs').textContent = totalPcs;
+  document.getElementById('sb_lbs').textContent = totalLbs.toFixed(0);
+  document.getElementById('sb_rm').textContent = '$' + totalRM.toFixed(2);
+
+  // Hours
+  const totalMins = timeDiffMinutes(startTime, endTime);
+  const totalHours = totalMins / 60;
+  const hourlyCost = totalHours * rate;
+  const savings = totalRM - hourlyCost;
+
+  document.getElementById('t_hours').textContent = totalHours.toFixed(2);
+  document.getElementById('t_hourlyCost').textContent = '$' + hourlyCost.toFixed(2);
+  document.getElementById('t_kgs').textContent = totalKgs.toFixed(2);
+  document.getElementById('t_lbs').textContent = totalLbs.toFixed(2);
+  document.getElementById('t_kn_transit').textContent = minsToHHMM(totalFullRunMins);
+  document.getElementById('t_al_transit').textContent = minsToHHMM(totalAlMins2);
+  const costLbVal = wgtBasedLbs > 0 ? '$' + (hourlyCost / wgtBasedLbs).toFixed(4) : '—';
+  const costKgVal = wgtBasedKgs > 0 ? '$' + (hourlyCost / wgtBasedKgs).toFixed(4) : '—';
+  document.getElementById('t_costLb').textContent = wgtBasedLbs > 0 ? costLbVal : (totalLbs > 0 ? '(flat rate)' : '—');
+  document.getElementById('t_costKg').textContent = wgtBasedKgs > 0 ? costKgVal : (totalKgs > 0 ? '(flat rate)' : '—');
+  // Update total charges (hourly + all shipment fees)
+  const totalShipFees = runs.reduce((a,r)=>a+(r.totalFees||0),0);
+  const addedFeesEl = document.getElementById('t_addedFees');
+  if (addedFeesEl) addedFeesEl.textContent = '$' + totalShipFees.toFixed(2);
+  const totalChargesEl = document.getElementById('t_totalCharges');
+  if (totalChargesEl) totalChargesEl.textContent = '$' + (hourlyCost + totalShipFees).toFixed(2);
+  // Auto-save draft
+  if (typeof draftSaveTimer !== 'undefined') clearTimeout(draftSaveTimer);
+  draftSaveTimer = setTimeout(saveDraft, 800);
+  document.getElementById('t_impLbs').textContent = impLbs.toFixed(0);
+  document.getElementById('t_expLbs').textContent = expLbs.toFixed(0);
+  const sbCostLb = document.getElementById('sb_costlb');
+  if (sbCostLb) sbCostLb.textContent = wgtBasedLbs > 0 ? '$' + (hourlyCost / wgtBasedLbs).toFixed(4) : '—';
+}
+
+// ─── SUBMIT ───────────────────────────────────────────────────────────────────
+function submitManifest() {
+  const driver = currentDriver;
+  if (!driver) { notify('Not signed in.'); return; }
+  const date = document.getElementById('f_date').value;
+  const startTime = document.getElementById('f_startTime').value;
+  const endTime = document.getElementById('f_endTime').value;
+  if (!date) { notify('Please enter a date.'); return; }
+  if (!startTime || !endTime) { notify('Please enter start and end times.'); return; }
+
+  const runs = getRunData();
+  if (runs.length === 0) { notify('Add at least one run.'); return; }
+
+  const totalMins = timeDiffMinutes(startTime, endTime);
+  const totalHours = totalMins / 60;
+  const hourlyCost = totalHours * driver.rate;
+  const totalRM = runs.reduce((a,r) => a + r.rm, 0);
+  const totalLbs = runs.reduce((a,r) => a + r.lbs, 0);
+  const totalKgs = runs.reduce((a,r) => a + r.kgs, 0);
+  const wgtBasedLbs = runs.filter(r=>!r.isFlatRate).reduce((a,r)=>a+r.lbs,0);
+  const wgtBasedKgs = runs.filter(r=>!r.isFlatRate).reduce((a,r)=>a+r.kgs,0);
+  const totalPcs = runs.reduce((a,r) => a + r.pcs, 0);
+  const impLbs = runs.filter(r=>r.impExp==='IMP').reduce((a,r)=>a+r.lbs,0);
+  const expLbs = runs.filter(r=>r.impExp==='EXP').reduce((a,r)=>a+r.lbs,0);
+  // transit mins computed below
+  const totalFullRunMins = runs.reduce((a,r) => a + (r.fullRunMins||0), 0);
+  const totalAlMins2 = runs.reduce((a,r) => a + (r.alTransitMins||0), 0);
+  const hasNote = !!document.getElementById('f_notes').value.trim() || runs.some(r => r.note);
+
+  const manifest = {
+    id: Date.now(),
+    driver: driver.name,
+    driverNum: driver.driverNum,
+    unit: driver.unit,
+    rate: driver.rate,
+    date,
+    startTime, endTime,
+    totalHours: totalHours.toFixed(2),
+    hourlyCost: hourlyCost.toFixed(2),
+    totalRM: totalRM.toFixed(2),
+    totalLbs: totalLbs.toFixed(2),
+    totalKgs: totalKgs.toFixed(2),
+    totalPcs,
+    impLbs: impLbs.toFixed(2),
+    expLbs: expLbs.toFixed(2),
+    alTransitMins: runs.reduce((a,r)=>a+(r.alTransitMins||0),0),
+    fullRunMins: runs.reduce((a,r)=>a+(r.fullRunMins||0),0),
+    savings: (totalRM - hourlyCost).toFixed(2),
+    costPerLb: wgtBasedLbs > 0 ? (hourlyCost / wgtBasedLbs).toFixed(4) : '0',
+    costPerKg: wgtBasedKgs > 0 ? (hourlyCost / wgtBasedKgs).toFixed(4) : '0',
+    runs,
+    notes: document.getElementById('f_notes').value.trim(),
+    hasNote,
+    subDriver: document.getElementById('f_subCheck').checked ? {
+      name: document.getElementById('f_subName').value.trim(),
+      number: document.getElementById('f_subNum').value.trim()
+    } : null,
+    totalAddedFees: runs.reduce((a,r)=>a+(r.totalFees||0),0).toFixed(2),
+    totalCharges: (hourlyCost + runs.reduce((a,r)=>a+(r.totalFees||0),0)).toFixed(2),
+    status: 'pending',
+    submitted: new Date().toISOString()
+  };
+
+  const manifests = getManifests();
+  manifests.push(manifest);
+  saveManifests(manifests);
+  clearDraft();
+  notify('✅ Manifest submitted!');
+  showScreen('home');
+}
+
+// ─── MANAGER ──────────────────────────────────────────────────────────────────
+function getWeekBounds(offset) {
+  const now = new Date();
+  const day = now.getDay(); // 0=Sun
+  const sun = new Date(now);
+  sun.setDate(now.getDate() - day + (offset * 7));
+  sun.setHours(0,0,0,0);
+  const sat = new Date(sun);
+  sat.setDate(sun.getDate() + 6);
+  sat.setHours(23,59,59,999);
+  return { sun, sat };
+}
+
+function weekLabel(sun, sat) {
+  const fmt = d => (d.getMonth()+1)+'/'+d.getDate()+'/'+d.getFullYear();
+  return fmt(sun) + ' – ' + fmt(sat);
+}
+
+function changeWeek(dir) { weekOffset += dir; renderManager(); }
+
+function renderManager() {
+  const { sun, sat } = getWeekBounds(weekOffset);
+  document.getElementById('weekLabel').textContent = weekLabel(sun, sat);
+
+  const manifests = getManifests();
+  const drivers = getDrivers();
+  const filterDriver = document.getElementById('filterDriver').value;
+  const filterStatus = document.getElementById('filterStatus').value;
+  const filterDay = document.getElementById('filterDay').value;
+
+  // Populate driver filter
+  const dFil = document.getElementById('filterDriver');
+  const curFil = dFil.value;
+  dFil.innerHTML = '<option value="">All Drivers</option>';
+  drivers.forEach(d => {
+    const o = document.createElement('option');
+    o.value = d.name; o.textContent = d.name;
+    if (d.name === curFil) o.selected = true;
+    dFil.appendChild(o);
+  });
+
+  // Filter manifests for this week
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  let filtered = manifests.filter(m => {
+    const d = new Date(m.date + 'T12:00:00');
+    return d >= sun && d <= sat;
+  });
+  if (filterDriver) filtered = filtered.filter(m => m.driver === filterDriver);
+  if (filterStatus) filtered = filtered.filter(m => m.status === filterStatus);
+  if (filterDay) filtered = filtered.filter(m => days[new Date(m.date+'T12:00:00').getDay()] === filterDay);
+
+  // Stats
+  const allWeek = manifests.filter(m => { const d = new Date(m.date+'T12:00:00'); return d >= sun && d <= sat; });
+  document.getElementById('ms_manifests').textContent = allWeek.length;
+  document.getElementById('ms_drivers').textContent = [...new Set(allWeek.map(m=>m.driver))].length;
+  document.getElementById('ms_lbs').textContent = allWeek.reduce((a,m)=>a+parseFloat(m.totalLbs||0),0).toFixed(0);
+  const weekTotalLbs = allWeek.reduce((a,m)=>a+parseFloat(m.totalLbs||0),0);
+  const weekTotalHrly = allWeek.reduce((a,m)=>a+parseFloat(m.totalCharges||m.hourlyCost||0),0);
+  document.getElementById('ms_cost').textContent = weekTotalLbs > 0 ? '$' + (weekTotalHrly / weekTotalLbs).toFixed(4) : '—';
+
+  // Group by driver
+  const byDriver = {};
+  filtered.forEach(m => {
+    if (!byDriver[m.driver]) byDriver[m.driver] = [];
+    byDriver[m.driver].push(m);
+  });
+
+  const list = document.getElementById('mgrList');
+  if (Object.keys(byDriver).length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-family:Barlow Condensed,sans-serif;font-size:18px;">No manifests this week</div>';
+    return;
+  }
+
+  list.innerHTML = '';
+  Object.entries(byDriver).forEach(([driverName, dMans]) => {
+    const group = document.createElement('div');
+    group.className = 'driver-group';
+    const totLbs = dMans.reduce((a,m)=>a+parseFloat(m.totalLbs||0),0);
+    const totRM = dMans.reduce((a,m)=>a+parseFloat(m.totalRM||0),0);
+    const totHrs = dMans.reduce((a,m)=>a+parseFloat(m.totalHours||0),0);
+    const totCost = dMans.reduce((a,m)=>a+parseFloat(m.totalCharges||m.hourlyCost||0),0);
+    const initials = driverName.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+    group.innerHTML = `<div class="dg-header" onclick="toggleDriverGroup(this)">
+      <div class="avatar">${initials}</div>
+      <div style="flex:1"><div style="font-size:15px;font-weight:600;">${driverName}</div>
+        <div style="font-size:12px;color:var(--muted);">${dMans.length} manifest${dMans.length!==1?'s':''} · ${totHrs.toFixed(1)} hrs · ${totLbs.toFixed(0)} lbs</div>
+      </div>
+      <div style="text-align:right;margin-left:12px;">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:800;color:var(--accent);line-height:1;">$${totCost.toFixed(2)}</div>
+        <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">charges</div>
+      </div>
+      <div style="color:var(--muted);font-size:20px;margin-left:8px;"><span class="dg-arrow">▼</span></div>
+    </div>
+    <div class="dg-body" style="display:none;">${dMans.sort((a,b)=>new Date(a.date)-new Date(b.date)).map(m=>renderManifestCard(m)).join('')}</div>`;
+    list.appendChild(group);
+  });
+}
+
+function toggleDriverGroup(el) {
+  const body = el.nextElementSibling;
+  const arrow = el.querySelector('.dg-arrow');
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : 'block';
+  if (arrow) arrow.textContent = open ? '▼' : '▲';
+}
+
+function renderManifestCard(m) {
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const d = new Date(m.date+'T12:00:00');
+  const dayName = days[d.getDay()];
+  const fmt = d => (d.getMonth()+1)+'/'+d.getDate();
+  const hasFlag = m.hasNote || m.runs?.some(r=>r.note);
+
+  // Wait time flags
+  const minsToHM = function(mins) {
+    const h = Math.floor(mins/60), mn = mins%60;
+    return h + 'h' + (mn>0?mn+'m':'');
+  };
+  const tdiff = function(t1, t2) {
+    // Same-day only — never wrap overnight. Returns -1 if times go backward.
+    if (!t1 || !t2) return 0;
+    const p1 = t1.split(':').map(Number), p2 = t2.split(':').map(Number);
+    return (p2[0]*60+p2[1]) - (p1[0]*60+p1[1]);
+  };
+  // A/L wait: Arrive A/L → Depart A/L >= 3 hrs (180 mins), same-day only
+  const alWaits = (m.runs||[]).filter(r => {
+    const d = tdiff(r.aal, r.dal);
+    return d >= 180;
+  });
+  // K+N gap: Arrive K+N (run N) → Depart K+N (run N+1) >= 2 hrs (120 mins)
+  // Skip if same akn time (multiple airline stops on one trip)
+  // Skip if times go backward (overnight — not valid for single-day manifests)
+  const runs = m.runs || [];
+  const knGaps = [];
+  for (let gi = 0; gi < runs.length - 1; gi++) {
+    const rA = runs[gi], rB = runs[gi+1];
+    if (rA.akn && rB.akn && rA.akn === rB.akn) continue; // same arrival = multi-stop, not a gap
+    const gap = tdiff(rA.akn, rB.dkn);
+    if (gap >= 120) knGaps.push({ gap, runNum: gi+1, airline: rA.airline });
+  }
+  const alStyle = 'display:inline-flex;align-items:center;background:#fef3c7;color:#92400e;border:1px solid #fcd34d;border-radius:4px;font-size:10px;font-weight:700;padding:2px 7px;margin-left:5px;cursor:pointer;';
+  const knStyle = 'display:inline-flex;align-items:center;background:#fce7f3;color:#9d174d;border:1px solid #f9a8d4;border-radius:4px;font-size:10px;font-weight:700;padding:2px 7px;margin-left:5px;cursor:pointer;';
+  const alTags = alWaits.map(function(r) {
+    const desc = 'A/L wait' + (r.airline ? ' - ' + r.airline : '');
+    const label = String.fromCodePoint(0x23F3) + ' A/L wait ' + minsToHM(tdiff(r.aal, r.dal)) + (r.airline ? ' - '+r.airline : '') + ' +';
+    return '<span style="' + alStyle + '" onclick="addWaitFee(' + m.id + ',this.getAttribute(&quot;data-d&quot;))" data-d="' + desc.replace(/"/g,'&quot;') + '">' + label + '</span>';
+  }).join('');
+  const knTags = knGaps.map(function(g) {
+    const desc = 'K+N gap after run ' + g.runNum;
+    const label = String.fromCodePoint(0x23F3) + ' K+N gap ' + minsToHM(g.gap) + ' after run ' + g.runNum + ' +';
+    return '<span style="' + knStyle + '" onclick="addWaitFee(' + m.id + ',this.getAttribute(&quot;data-d&quot;))" data-d="' + desc + '">' + label + '</span>';
+  }).join('');
+  const waitTags = alTags + knTags;
+  const subDriverBadge = m.subDriver && m.subDriver.name ? `<div style="margin:0 14px 8px;padding:8px 12px;border-radius:6px;background:var(--warn-light);border:1px solid #fcd34d;font-size:12px;color:var(--warn);display:flex;align-items:center;gap:8px;"><span style="font-size:16px;">🔄</span><span><strong>${m.subDriver.name}</strong>${m.subDriver.number?' (#'+m.subDriver.number+')':''} subbed on this run</span></div>` : '';
+  const allFees = (m.runs||[]).flatMap(r=>r.fees||[]);
+  const feesPills = [];
+  (m.runs||[]).forEach(function(r, ri) {
+    (r.fees||[]).forEach(function(f, fi) {
+      feesPills.push('<span style="display:inline-flex;align-items:center;gap:5px;background:white;border:1px solid #c5d3f0;border-radius:4px;padding:2px 8px;margin:2px;font-size:12px;"><strong>$' + parseFloat(f.amount).toFixed(2) + '</strong>' + (f.description ? ' — ' + f.description : '') + '<span onclick="removeFeeFromManifest(' + m.id + ',' + ri + ',' + fi + ')" style="margin-left:6px;cursor:pointer;color:#dc2626;font-size:15px;font-weight:900;line-height:1;" title="Remove fee">&times;</span></span>');
+    });
+  });
+  const feesDisplay = feesPills.length > 0 ? '<div style="margin:0 14px 8px;padding:8px 12px;border-radius:6px;background:var(--accent-light);border:1px solid #c5d3f0;font-size:12px;color:var(--accent);">&#x1F4B0; Added fees: ' + feesPills.join('') + ' &nbsp;|&nbsp; Total: <strong>$' + parseFloat(m.totalAddedFees||0).toFixed(2) + '</strong></div>' : '';
+  const runsTable = m.runs && m.runs.length > 0 ? (function(){
+    let rows = '';
+    m.runs.forEach(function(r){
+      const feesStr = (r.fees||[]).length>0?'<span style="color:var(--warn)">$'+(r.fees||[]).reduce((a,f)=>a+f.amount,0).toFixed(2)+'</span>':'—'; rows += '<tr><td>'+(r.airline||'&mdash;')+'</td><td>'+(r.dkn||'&mdash;')+'</td><td>'+(r.aal||'&mdash;')+'</td><td>'+(r.dal||'&mdash;')+'</td><td>'+(r.akn||'&mdash;')+'</td><td>'+(r.awb||'&mdash;')+'</td><td>'+(r.knRef||'&mdash;')+'</td><td>'+(r.impExp||'&mdash;')+'</td><td>'+(r.pcs||0)+'</td><td>'+parseFloat(r.lbs||0).toFixed(0)+'</td><td>'+parseFloat(r.kgs||0).toFixed(0)+'</td><td>$'+parseFloat(r.rm||0).toFixed(2)+'</td><td>'+(r.type||'&mdash;')+'</td><td>'+feesStr+'</td></tr>';
+      if(r.note) rows += '<tr><td colspan="13" style="background:#fffbeb;color:#d97706;font-size:11px;">&#128221; '+r.note+'</td></tr>';
+      (r.subMawbs||[]).forEach(function(s){
+        const sFeesStr = (s.fees||[]).length>0?'<span style="color:var(--warn)">$'+(s.fees||[]).reduce((a,f)=>a+f.amount,0).toFixed(2)+'</span>':'—';
+        rows += '<tr><td>'+(s.airline||'&mdash;')+'</td><td>'+(r.dkn||'&mdash;')+'</td><td>'+(r.aal||'&mdash;')+'</td><td>'+(r.dal||'&mdash;')+'</td><td>'+(r.akn||'&mdash;')+'</td><td>'+(s.awb||'&mdash;')+'</td><td>'+(s.knRef||'&mdash;')+'</td><td>'+(s.impExp||'&mdash;')+'</td><td>'+(s.pcs||0)+'</td><td>'+parseFloat(s.lbs||0).toFixed(0)+'</td><td>'+parseFloat(s.kgs||0).toFixed(0)+'</td><td>$'+parseFloat(s.rm||0).toFixed(2)+'</td><td>'+(s.type||'&mdash;')+'</td><td>'+sFeesStr+'</td></tr>';
+      });
+    });
+    return '<div class="expand-section"><div class="expand-sec-head">Shipments ('+m.runs.length+')</div><div style="overflow-x:auto;"><table class="det-tbl"><tr><th>Airline</th><th>Dep K+N</th><th>Arr A/L</th><th>Dep A/L</th><th>Arr K+N</th><th>AWB</th><th>K+N Ref</th><th>I/E</th><th>PCS</th><th>LBS</th><th>KGS</th><th>R&M</th><th>Type</th></tr>'+rows+'</table></div></div>';
+  })() : '';
+  return `<div class="mcard" id="mc_${m.id}">
+    <div class="mcard-head">
+      <div class="mcard-info">
+        <div class="mcard-driver">${m.driver} <span style="color:var(--muted);font-size:11px;">#${m.driverNum||''}</span></div>
+        <div class="mcard-date" style="display:flex;align-items:center;flex-wrap:wrap;gap:2px;">${dayName} ${fmt(d)} · ${m.startTime||''}–${m.endTime||''}${waitTags}</div>
+        <div class="mcard-meta">${getUnitLabel(m.driver)} · $${m.rate||75}/hr</div>
+      </div>
+      <span class="mbadge ${m.status==='reviewed'?'br':'bp'}">${m.status==='reviewed'?'✓ Reviewed':'Pending'}</span>
+    </div>
+    ${hasFlag?`<div class="flag-bar">📝 Contains notes/flags</div>`:''}
+    ${subDriverBadge}
+    ${feesDisplay}
+    <div class="mcard-stats">
+      <div class="cs"><div class="cs-val">${m.totalHours}h</div><div class="cs-lbl">Hours</div></div>
+      <div class="cs"><div class="cs-val">${parseFloat(m.totalPcs||0)}</div><div class="cs-lbl">PCS</div></div>
+      <div class="cs"><div class="cs-val">${parseFloat(m.totalLbs||0).toFixed(0)}</div><div class="cs-lbl">LBS</div></div>
+      <div class="cs"><div class="cs-val">${parseFloat(m.totalKgs||0).toFixed(0)}</div><div class="cs-lbl">KGS</div></div>
+      <div class="cs"><div class="cs-val">${parseFloat(m.costPerLb||0)>0?'$'+parseFloat(m.costPerLb).toFixed(4):'—'}</div><div class="cs-lbl">$/LB</div></div>
+      <div class="cs"><div class="cs-val" style="color:var(--accent);">$${parseFloat(m.totalCharges||m.hourlyCost||0).toFixed(2)}</div><div class="cs-lbl">Total Charges</div></div>
+    </div>
+    ${runsTable}
+    <div class="expand-actions">
+      <button class="ea-btn ea-ok" onclick="markReviewed(${m.id})">${m.status==='reviewed'?'✓ Reviewed':'Mark Reviewed'}</button>
+      <button class="ea-btn ea-edit" onclick="openEditManifest(${m.id})">✏️ Edit</button>
+      <button class="ea-btn ea-del" onclick="deleteManifest(${m.id})">Delete</button>
+    </div>
+  </div>`;
+}
+
+function markReviewed(id) {
+  const manifests = getManifests();
+  const m = manifests.find(m=>m.id===id);
+  if (!m) return;
+  m.status = m.status === 'reviewed' ? 'pending' : 'reviewed';
+  saveManifests(manifests);
+  notify(m.status === 'reviewed' ? '✅ Marked reviewed' : 'Marked pending');
+  // Update just the badge and button in place — no full re-render so drawer stays open
+  const card = document.getElementById('mc_' + id);
+  if (card) {
+    const badge = card.querySelector('.mbadge');
+    if (badge) {
+      badge.textContent = m.status === 'reviewed' ? '✓ Reviewed' : 'Pending';
+      badge.className = 'mbadge ' + (m.status === 'reviewed' ? 'br' : 'bp');
+    }
+    const btn = card.querySelector('.ea-ok');
+    if (btn) btn.textContent = m.status === 'reviewed' ? '✓ Reviewed' : 'Mark Reviewed';
+  }
+  // Also refresh the week stats at the top
+  const allWeek = getManifests().filter(m => {
+    const {sun, sat} = getWeekBounds(weekOffset);
+    const d = new Date(m.date+'T12:00:00');
+    return d >= sun && d <= sat;
+  });
+  document.getElementById('ms_manifests').textContent = allWeek.length;
+  document.getElementById('ms_drivers').textContent = [...new Set(allWeek.map(m=>m.driver))].length;
+  document.getElementById('ms_lbs').textContent = allWeek.reduce((a,m)=>a+parseFloat(m.totalLbs||0),0).toFixed(0);
+  const weekTotalLbs = allWeek.reduce((a,m)=>a+parseFloat(m.totalLbs||0),0);
+  const weekTotalHrly = allWeek.reduce((a,m)=>a+parseFloat(m.totalCharges||m.hourlyCost||0),0);
+  document.getElementById('ms_cost').textContent = weekTotalLbs > 0 ? '$' + (weekTotalHrly / weekTotalLbs).toFixed(4) : '—';
+}
+
+let editingManifestId = null;
+
+function openEditManifest(id) {
+  const manifests = getManifests();
+  const m = manifests.find(m => m.id === id);
+  if (!m) return;
+  editingManifestId = id;
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const d = new Date(m.date + 'T12:00:00');
+  document.getElementById('editManifestMeta').textContent = m.driver + ' — ' + days[d.getDay()] + ' ' + m.date;
+  document.getElementById('em_date').value = m.date;
+  document.getElementById('em_driver').value = m.driver;
+  document.getElementById('em_startTime').value = m.startTime || '';
+  document.getElementById('em_endTime').value = m.endTime || '';
+  document.getElementById('em_subName').value = m.subDriver ? (m.subDriver.name || '') : '';
+  document.getElementById('em_subNum').value = m.subDriver ? (m.subDriver.number || '') : '';
+  document.getElementById('em_notes').value = m.notes || '';
+
+  // Build shipment edit rows
+  const rc = document.getElementById('em_runsContainer');
+  rc.innerHTML = '';
+  (m.runs || []).forEach(function(r, i) {
+    const sec = document.createElement('div');
+    sec.style.cssText = 'border:1.5px solid var(--border);border-radius:8px;margin-bottom:10px;overflow:hidden;';
+    sec.innerHTML =
+      '<div style="background:var(--accent);color:white;padding:8px 12px;font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;">Shipment ' + (i+1) + (r.airline?' — '+r.airline:'') + '</div>' +
+      '<div style="padding:12px;">' +
+        // Times row
+        '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px;">' +
+          '<div class="field"><label>Depart K+N</label><input type="time" id="em_r'+i+'_dkn" value="'+(r.dkn||'')+'"></div>' +
+          '<div class="field"><label>Arrive A/L</label><input type="time" id="em_r'+i+'_aal" value="'+(r.aal||'')+'"></div>' +
+          '<div class="field"><label>Depart A/L</label><input type="time" id="em_r'+i+'_dal" value="'+(r.dal||'')+'"></div>' +
+          '<div class="field"><label>Arrive K+N</label><input type="time" id="em_r'+i+'_akn" value="'+(r.akn||'')+'"></div>' +
+        '</div>' +
+        // MAWB / Airline / Ref
+        '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;">' +
+          '<div class="field"><label>MAWB #</label><input type="text" id="em_r'+i+'_awb" value="'+(r.awb||'')+'" inputmode="numeric" placeholder="MAWB"></div>' +
+          '<div class="field"><label>Airline</label><input type="text" id="em_r'+i+'_airline" value="'+(r.airline||'')+'" placeholder="Airline"></div>' +
+          '<div class="field"><label>K+N Ref</label><input type="text" id="em_r'+i+'_knref" value="'+(r.knRef||'')+'" placeholder="K+N Ref"></div>' +
+        '</div>' +
+        // IMP/EXP, PCS, Weight, Unit
+        '<div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">' +
+          '<div class="field" style="flex:0 0 90px;"><label>IMP/EXP</label><select id="em_r'+i+'_impexp" style="height:46px;padding:0 6px;border:1.5px solid var(--border);border-radius:6px;font-size:14px;width:100%;"><option value="">—</option><option value="IMP"'+(r.impExp==='IMP'?' selected':'')+'>IMP</option><option value="EXP"'+(r.impExp==='EXP'?' selected':'')+'>EXP</option></select></div>' +
+          '<div class="field" style="flex:0 0 70px;"><label>PCS</label><input type="number" id="em_r'+i+'_pcs" value="'+(r.pcs||0)+'" inputmode="numeric" style="height:46px;padding:0 8px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%;"></div>' +
+          '<div class="field" style="flex:1;min-width:80px;"><label>Weight</label><input type="number" id="em_r'+i+'_wgt" value="'+(r.wgt||0)+'" step="0.01" inputmode="decimal" style="height:46px;padding:0 8px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%;"></div>' +
+          '<div class="field" style="flex:0 0 72px;"><label>Unit</label><select id="em_r'+i+'_wgtType" style="height:46px;padding:0 6px;border:1.5px solid var(--border);border-radius:6px;font-size:14px;width:100%;"><option value="KG"'+(r.wgtType==='KG'?' selected':'')+'>KG</option><option value="LBS"'+(r.wgtType==='LBS'?' selected':'')+'>LBS</option></select></div>' +
+        '</div>' +
+        // Type, R&M note, fees
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">' +
+          '<div class="field"><label>Type</label><input type="text" id="em_r'+i+'_type" value="'+(r.type||'')+'" maxlength="3" style="text-transform:uppercase;letter-spacing:2px;font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:700;height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;width:100%;"></div>' +
+          '<div class="field"><label>Note</label><input type="text" id="em_r'+i+'_note" value="'+(r.note||'')+'" placeholder="Optional note" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%;"></div>' +
+        '</div>' +
+        // Added fees for this shipment
+        (r.fees && r.fees.length > 0 ? '<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px;">Added Fees</div>' +
+          r.fees.map(function(f, fi) {
+            return '<div style="display:flex;gap:8px;margin-bottom:6px;">' +
+              '<input type="number" id="em_r'+i+'_fee'+fi+'_amt" value="'+(f.amount||0)+'" step="0.01" inputmode="decimal" placeholder="$0.00" style="flex:0 0 110px;height:42px;padding:0 10px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;">'  +
+              '<input type="text" id="em_r'+i+'_fee'+fi+'_desc" value="'+(f.description||'')+'" placeholder="Fee description" style="flex:1;height:42px;padding:0 10px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;">' +
+            '</div>';
+          }).join('') : '') +
+      '</div>';
+    rc.appendChild(sec);
+  });
+
+  document.getElementById('editManifestOv').classList.add('open');
+}
+
+function closeEditManifest() {
+  document.getElementById('editManifestOv').classList.remove('open');
+  editingManifestId = null;
+}
+
+function saveEditManifest() {
+  if (!editingManifestId) return;
+  const manifests = getManifests();
+  const m = manifests.find(m => m.id === editingManifestId);
+  if (!m) return;
+
+  const newDate = document.getElementById('em_date').value;
+  const newDriver = document.getElementById('em_driver').value.trim();
+  const newStart = document.getElementById('em_startTime').value;
+  const newEnd = document.getElementById('em_endTime').value;
+  const newSubName = document.getElementById('em_subName').value.trim();
+  const newSubNum = document.getElementById('em_subNum').value.trim();
+  const newNotes = document.getElementById('em_notes').value.trim();
+
+  if (!newDate || !newStart || !newEnd) { notify('Date and times are required.'); return; }
+
+  // Recalculate hours and cost
+  const tdMins = (function() {
+    const [h1,m1] = newStart.split(':').map(Number);
+    const [h2,m2] = newEnd.split(':').map(Number);
+    let diff = (h2*60+m2) - (h1*60+m1);
+    if (diff < 0) diff += 1440;
+    return diff;
+  })();
+  const totalHours = tdMins / 60;
+  const hourlyCost = totalHours * (m.rate || 75);
+
+  // Update each run from edit fields
+  const updatedRuns = (m.runs || []).map(function(r, i) {
+    const dkn  = document.getElementById('em_r'+i+'_dkn')?.value || r.dkn || '';
+    const aal  = document.getElementById('em_r'+i+'_aal')?.value || r.aal || '';
+    const dal  = document.getElementById('em_r'+i+'_dal')?.value || r.dal || '';
+    const akn  = document.getElementById('em_r'+i+'_akn')?.value || r.akn || '';
+    const wgt  = parseFloat(document.getElementById('em_r'+i+'_wgt')?.value) || r.wgt || 0;
+    const wgtType = document.getElementById('em_r'+i+'_wgtType')?.value || r.wgtType || 'KG';
+    let kgs = 0, lbs = 0;
+    if (wgtType === 'KG') { kgs = wgt; lbs = wgt / 0.45359237; }
+    else { lbs = wgt; kgs = wgt * 0.45359237; }
+    const type = (document.getElementById('em_r'+i+'_type')?.value || r.type || '').toUpperCase().trim();
+    const flatRate = getFlatRate(type);
+    const rmVal = flatRate !== null ? flatRate : calcRM(lbs);
+    // Recalc transit mins
+    const tdiff = function(t1, t2) {
+      if (!t1 || !t2) return 0;
+      const [h1,m1] = t1.split(':').map(Number);
+      const [h2,m2] = t2.split(':').map(Number);
+      let d = (h2*60+m2)-(h1*60+m1);
+      if (d < 0) d += 1440;
+      return d;
+    };
+    // Update fees if they existed
+    const updatedFees = (r.fees || []).map(function(f, fi) {
+      return {
+        amount: parseFloat(document.getElementById('em_r'+i+'_fee'+fi+'_amt')?.value) || f.amount || 0,
+        description: document.getElementById('em_r'+i+'_fee'+fi+'_desc')?.value || f.description || ''
+      };
+    });
+    const totalFees = updatedFees.reduce(function(a,f){return a+f.amount;}, 0);
+    return Object.assign({}, r, {
+      dkn, aal, dal, akn,
+      alTransitMins: tdiff(aal, dal),
+      fullRunMins: tdiff(dkn, akn),
+      knToAlMins: tdiff(dkn, dal),
+      airline: document.getElementById('em_r'+i+'_airline')?.value || r.airline || '',
+      awb: document.getElementById('em_r'+i+'_awb')?.value || r.awb || '',
+      knRef: document.getElementById('em_r'+i+'_knref')?.value || r.knRef || '',
+      impExp: document.getElementById('em_r'+i+'_impexp')?.value || r.impExp || '',
+      pcs: parseInt(document.getElementById('em_r'+i+'_pcs')?.value) || r.pcs || 0,
+      type, wgt, wgtType, kgs, lbs,
+      isFlatRate: flatRate !== null,
+      rm: rmVal,
+      note: document.getElementById('em_r'+i+'_note')?.value || r.note || '',
+      fees: updatedFees,
+      totalFees
+    });
+  });
+
+  const totalLbs = updatedRuns.reduce(function(a,r){return a+r.lbs;},0);
+  const totalKgs = updatedRuns.reduce(function(a,r){return a+r.kgs;},0);
+  const wgtBasedLbs = updatedRuns.filter(function(r){return !r.isFlatRate;}).reduce(function(a,r){return a+r.lbs;},0);
+  const wgtBasedKgs = updatedRuns.filter(function(r){return !r.isFlatRate;}).reduce(function(a,r){return a+r.kgs;},0);
+  const totalPcs = updatedRuns.reduce(function(a,r){return a+r.pcs;},0);
+  const impLbs = updatedRuns.filter(function(r){return r.impExp==='IMP';}).reduce(function(a,r){return a+r.lbs;},0);
+  const expLbs = updatedRuns.filter(function(r){return r.impExp==='EXP';}).reduce(function(a,r){return a+r.lbs;},0);
+  const totalAddedFees = updatedRuns.reduce(function(a,r){return a+(r.totalFees||0);},0);
+
+  m.date = newDate;
+  m.driver = newDriver || m.driver;
+  m.startTime = newStart;
+  m.endTime = newEnd;
+  m.totalHours = totalHours.toFixed(2);
+  m.hourlyCost = hourlyCost.toFixed(2);
+  m.totalAddedFees = totalAddedFees.toFixed(2);
+  m.totalCharges = (hourlyCost + totalAddedFees).toFixed(2);
+  m.totalLbs = totalLbs.toFixed(2);
+  m.totalKgs = totalKgs.toFixed(2);
+  m.totalPcs = totalPcs;
+  m.impLbs = impLbs.toFixed(2);
+  m.expLbs = expLbs.toFixed(2);
+  m.costPerLb = wgtBasedLbs > 0 ? (hourlyCost / wgtBasedLbs).toFixed(4) : '0';
+  m.costPerKg = wgtBasedKgs > 0 ? (hourlyCost / wgtBasedKgs).toFixed(4) : '0';
+  m.alTransitMins = updatedRuns.reduce(function(a,r){return a+(r.alTransitMins||0);},0);
+  m.fullRunMins = updatedRuns.reduce(function(a,r){return a+(r.fullRunMins||0);},0);
+  m.notes = newNotes;
+  m.hasNote = !!newNotes || updatedRuns.some(function(r){return r.note;});
+  m.subDriver = newSubName ? { name: newSubName, number: newSubNum } : null;
+  m.runs = updatedRuns;
+
+  saveManifests(manifests);
+  closeEditManifest();
+  notify('✅ Manifest updated');
+  renderManager();
+}
+
+const WAIT_RATE = 90; // $90 per hour waiting time
+
+let waitFeeManifestId = null;
+let waitFeeDescription = '';
+
+function addWaitFee(manifestId, description) {
+  waitFeeManifestId = manifestId;
+  waitFeeDescription = description;
+  document.getElementById('waitFeeDesc').textContent = description + ' · $' + WAIT_RATE + '/hr';
+  document.getElementById('waitFeeHours').value = '';
+  document.getElementById('waitFeeHoursPreview').textContent = '0';
+  document.getElementById('waitFeeTotal').textContent = '$0.00';
+  document.getElementById('waitFeeOv').classList.add('open');
+  setTimeout(function(){ document.getElementById('waitFeeHours').focus(); }, 200);
+}
+
+function closeWaitFeeModal() {
+  document.getElementById('waitFeeOv').classList.remove('open');
+  waitFeeManifestId = null;
+}
+
+function confirmWaitFee() {
+  const hours = parseFloat(document.getElementById('waitFeeHours').value);
+  if (isNaN(hours) || hours <= 0) { notify('Please enter a valid number of hours.'); return; }
+  const amount = hours * WAIT_RATE;
+
+  const manifests = getManifests();
+  const m = manifests.find(m => m.id === waitFeeManifestId);
+  if (!m) return;
+  if (!m.runs || m.runs.length === 0) { notify('No shipments found.'); return; }
+  if (!m.runs[0].fees) m.runs[0].fees = [];
+  m.runs[0].fees.push({
+    amount: amount,
+    description: 'Waiting time — ' + waitFeeDescription + ' (' + hours + 'hr' + (hours !== 1 ? 's' : '') + ' @ $' + WAIT_RATE + '/hr)'
+  });
+  m.runs[0].totalFees = m.runs[0].fees.reduce((a,f) => a + f.amount, 0);
+  const totalAddedFees = m.runs.reduce((a,r) => a + (r.totalFees||0), 0);
+  m.totalAddedFees = totalAddedFees.toFixed(2);
+  m.totalCharges = (parseFloat(m.hourlyCost||0) + totalAddedFees).toFixed(2);
+
+  saveManifests(manifests);
+  closeWaitFeeModal();
+  notify('✅ Added $' + amount.toFixed(2) + ' waiting time fee');
+  renderManager();
+}
+
+function removeFeeFromManifest(manifestId, runIdx, feeIdx) {
+  if (!confirm('Remove this fee?')) return;
+  const manifests = getManifests();
+  const m = manifests.find(m => m.id === manifestId);
+  if (!m || !m.runs || !m.runs[runIdx]) return;
+  m.runs[runIdx].fees.splice(feeIdx, 1);
+  m.runs[runIdx].totalFees = (m.runs[runIdx].fees||[]).reduce(function(a,f){return a+f.amount;},0);
+  const totalAddedFees = m.runs.reduce(function(a,r){return a+(r.totalFees||0);},0);
+  m.totalAddedFees = totalAddedFees.toFixed(2);
+  m.totalCharges = (parseFloat(m.hourlyCost||0) + totalAddedFees).toFixed(2);
+  saveManifests(manifests);
+  notify('Fee removed.');
+  renderManager();
+}
+
+function deleteManifest(id) {
+  if (!confirm('Delete this manifest? This cannot be undone.')) return;
+  const manifests = getManifests().filter(m=>m.id!==id);
+  saveManifests(manifests);
+  notify('Deleted.');
+  renderManager();
+}
+
+// ─── SUMMARY ──────────────────────────────────────────────────────────────────
+function changeSumWeek(dir) { sumWeekOffset += dir; renderSummary(); }
+
+function renderSummary() {
+  const { label, html } = buildWeeklySummaryHTML(sumWeekOffset);
+  document.getElementById('sumWeekLabel').textContent = label;
+  document.getElementById('summaryContent').innerHTML = html;
+}
+
+// Shared by the Manager Weekly Summary screen AND the read-only Customer View,
+// so both always show identical numbers from one code path.
+function buildWeeklySummaryHTML(offset) {
+  const { sun, sat } = getWeekBounds(offset);
+  const label = weekLabel(sun, sat);
+
+  const manifests = getManifests().filter(m => {
+    const d = new Date(m.date+'T12:00:00');
+    return d >= sun && d <= sat;
+  });
+
+  const drivers = getDrivers();
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+  if (manifests.length === 0) {
+    return { label, html: '<div style="text-align:center;padding:40px;color:var(--muted);font-family:Barlow Condensed,sans-serif;font-size:18px;">No data for this week</div>' };
+  }
+
+  // Get all unique drivers who worked this week
+  const activeDrivers = [...new Set(manifests.map(m=>m.driver))].sort();
+
+  // Build per-driver tables
+  let html = '';
+
+  activeDrivers.forEach(driverName => {
+    const dMans = manifests.filter(m=>m.driver===driverName);
+    const driverInfo = drivers.find(d=>d.name===driverName) || {rate:75};
+
+    // Group by day
+    const byDay = {};
+    dMans.forEach(m => {
+      const dayName = days[new Date(m.date+'T12:00:00').getDay()];
+      if (!byDay[dayName]) byDay[dayName] = [];
+      byDay[dayName].push(m);
+    });
+
+    let ttlPcs=0, ttlKgs=0, ttlLbs=0, ttlCost=0, ttlHrs=0, ttlRM=0, ttlImp=0, ttlExp=0;
+    let rows = '';
+
+    days.forEach(day => {
+      if (!byDay[day]) return;
+      byDay[day].forEach(m => {
+        const pcs = parseInt(m.totalPcs)||0;
+        const kgs = parseFloat(m.totalKgs)||0;
+        const lbs = parseFloat(m.totalLbs)||0;
+        const hrCost = parseFloat(m.totalCharges||m.hourlyCost)||0;
+        const hrs = parseFloat(m.totalHours)||0;
+        const rm = parseFloat(m.totalRM)||0;
+        const imp = parseFloat(m.impLbs)||0;
+        const exp = parseFloat(m.expLbs)||0;
+        const perLb = lbs > 0 ? (rm/lbs) : 0;
+        ttlPcs+=pcs; ttlKgs+=kgs; ttlLbs+=lbs; ttlCost+=hrCost; ttlHrs+=hrs; ttlRM+=rm; ttlImp+=imp; ttlExp+=exp;
+        rows += `<tr class="data-row">
+          <td>${day}</td>
+          <td>${m.startTime||''}–${m.endTime||''}</td>
+          <td>${pcs}</td>
+          <td>${kgs.toFixed(1)}</td>
+          <td>${lbs.toFixed(1)}</td>
+          <td>${hrs.toFixed(2)}</td>
+          <td>$${hrCost.toFixed(2)}</td>
+          <td>${lbs>0?'$'+(hrCost/lbs).toFixed(4):'—'}</td>
+          <td>${kgs>0?'$'+(hrCost/kgs).toFixed(4):'—'}</td>
+          <td>${imp.toFixed(0)}</td>
+          <td>${exp.toFixed(0)}</td>
+        </tr>`;
+      });
+    });
+
+    const avgPerLb = ttlLbs > 0 ? (ttlCost / ttlLbs) : 0;
+    const avgPerKg = ttlKgs > 0 ? (ttlCost / ttlKgs) : 0;
+    const savings = ttlRM - ttlCost;
+    const initials = driverName.split(' ').map(w=>w[0]).join('').substring(0,2).toUpperCase();
+
+    html += `<div class="sum-report" id="srpt_${driverName.replace(/\s/g,'_')}">
+      <div class="sum-report-head" style="display:flex;align-items:center;gap:14px;">
+        <div style="width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:700;flex-shrink:0;">${initials}</div>
+        <div>
+          <div class="srh-title">${driverName}</div>
+          <div class="srh-week">${dMans.length} manifest${dMans.length!==1?'s':''} · $${driverInfo.rate}/hr · ${weekLabel(sun,sat)}</div>
+        </div>
+      </div>
+      <div class="sum-scroll">
+        <table class="sum-tbl">
+          <thead><tr>
+            <th>Day</th><th>Times</th><th>PCS</th><th>KGS</th><th>LBS</th>
+            <th>Hours</th><th>Daily Cost</th>
+            <th>$/LB</th><th>$/KG</th><th>Imp LBS</th><th>Exp LBS</th>
+          </tr></thead>
+          <tbody>${rows}
+          <tr class="total-row">
+            <td>TOTAL</td><td>—</td>
+            <td>${ttlPcs}</td>
+            <td>${ttlKgs.toFixed(1)}</td>
+            <td>${ttlLbs.toFixed(1)}</td>
+            <td>${ttlHrs.toFixed(2)}</td>
+            <td class="chg-cell">$${ttlCost.toFixed(2)}</td>
+            <td>${ttlLbs>0?'$'+(ttlCost/ttlLbs).toFixed(4):'—'}</td>
+            <td>${ttlKgs>0?'$'+(ttlCost/ttlKgs).toFixed(4):'—'}</td>
+            <td>${ttlImp.toFixed(0)}</td>
+            <td>${ttlExp.toFixed(0)}</td>
+          </tr></tbody>
+        </table>
+      </div>
+      <!-- Per-driver stats -->
+      <div style="padding:14px;background:var(--surface2);border-top:1.5px solid var(--border);display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+        <div class="ie-card"><div class="ie-lbl">Avg $/LB</div><div class="ie-val">${ttlLbs>0?'$'+avgPerLb.toFixed(4):'—'}</div></div>
+        <div class="ie-card"><div class="ie-lbl">Avg $/KG</div><div class="ie-val">${ttlKgs>0?'$'+avgPerKg.toFixed(4):'—'}</div></div>
+        <div class="ie-card"><div class="ie-lbl">Total Hours</div><div class="ie-val">${ttlHrs.toFixed(2)}</div></div>
+      </div>
+    </div><br>`;
+  });
+
+  // ── FLEET SUMMARY ──
+  const totalLbs = manifests.reduce((a,m)=>a+parseFloat(m.totalLbs||0),0);
+  const totalKgs = manifests.reduce((a,m)=>a+parseFloat(m.totalKgs||0),0);
+  const totalRM = manifests.reduce((a,m)=>a+parseFloat(m.totalRM||0),0);
+  const totalHrly = manifests.reduce((a,m)=>a+parseFloat(m.totalCharges||m.hourlyCost||0),0);
+  const totalImp = manifests.reduce((a,m)=>a+parseFloat(m.impLbs||0),0);
+  const totalExp = manifests.reduce((a,m)=>a+parseFloat(m.expLbs||0),0);
+
+  html += `<div class="sum-stats-box">
+    <div class="ss-title">Fleet Weekly Summary — ${weekLabel(sun,sat)}</div>
+    <div class="ss-grid">
+      <div class="ss-card"><div class="ss-lbl">Total Weight LBS</div><div class="ss-val">${totalLbs.toFixed(0)}</div><div class="ss-sub">${totalKgs.toFixed(0)} KGS</div></div>
+      <div class="ss-card"><div class="ss-lbl">Total Daily Cost</div><div class="ss-val">$${totalHrly.toFixed(2)}</div></div>
+      <div class="ss-card"><div class="ss-lbl">Avg $/LB — All Drivers</div><div class="ss-val">${totalLbs>0?"\$"+(totalHrly/totalLbs).toFixed(4):"—"}</div></div>
+      <div class="ss-card"><div class="ss-lbl">Avg $/KG — All Drivers</div><div class="ss-val">${totalKgs>0?"\$"+(totalHrly/totalKgs).toFixed(4):"—"}</div></div>
+    </div>
+  </div>
+    </div>
+  </div>
+  <div class="import-export-box">
+    <div class="ie-title">Import / Export Breakdown</div>
+    <div class="ie-grid">
+      <div class="ie-card"><div class="ie-lbl">Import LBS</div><div class="ie-val">${totalImp.toFixed(0)}</div></div>
+      <div class="ie-card"><div class="ie-lbl">Export LBS</div><div class="ie-val">${totalExp.toFixed(0)}</div></div>
+      <div class="ie-card"><div class="ie-lbl">Total LBS</div><div class="ie-val">${totalLbs.toFixed(0)}</div></div>
+    </div>
+  </div>`;
+
+  return { label, html };
+}
+
+// ─── CSV DOWNLOAD ─────────────────────────────────────────────────────────────
+function downloadCSV() {
+  const { sun, sat } = getWeekBounds(sumWeekOffset);
+  const manifests = getManifests().filter(m => {
+    const d = new Date(m.date+'T12:00:00');
+    return d >= sun && d <= sat;
+  });
+  if (!manifests.length) { notify('No data to export.'); return; }
+
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  let csv = 'Driver,Date,Day,Start,End,Hours,Daily Cost,PCS,LBS,KGS,$/LB,$/KG,Imp LBS,Exp LBS\n';
+  manifests.forEach(m => {
+    const d = new Date(m.date+'T12:00:00');
+    const day = days[d.getDay()];
+    csv += [m.driver, m.date, day, m.startTime, m.endTime,
+      m.totalHours, m.hourlyCost, m.totalPcs, m.totalLbs, m.totalKgs,
+      m.costPerLb, m.costPerKg, m.impLbs, m.expLbs].join(',') + '\n';
+  });
+
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'KN_Manifests_' + sun.toISOString().split('T')[0] + '.csv';
+  a.click();
+  notify('⬇ CSV downloaded');
+}
+
+// ─── PRINT ────────────────────────────────────────────────────────────────────
+function printSummary() {
+  const { sun, sat } = getWeekBounds(sumWeekOffset);
+  const wkLabel = weekLabel(sun, sat);
+  const printDate = new Date().toLocaleDateString('en-US', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+  const weekEnd = sat.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
+  const allManifests = getManifests().filter(m => {
+    const d = new Date(m.date + 'T12:00:00');
+    return d >= sun && d <= sat;
+  });
+
+  if (!allManifests.length) { notify('No data to print.'); return; }
+
+  const allDrivers = getDrivers();
+
+  // Build one row per driver (all drivers, zero rows for those who didn't work)
+  // Number each unit sequentially by type
+  const unitCounts = {};
+  const allDriversNumbered = allDrivers.map(function(drv) {
+    if (!unitCounts[drv.unit]) unitCounts[drv.unit] = 0;
+    unitCounts[drv.unit]++;
+    return Object.assign({}, drv, { unitLabel: drv.unit + ' ' + unitCounts[drv.unit] });
+  });
+
+  let driverRows = '';
+  allDriversNumbered.forEach(function(drv) {
+    const dMans = allManifests.filter(m => m.driver === drv.name);
+    const ttlPcs  = dMans.reduce((a,m) => a + (parseInt(m.totalPcs)||0), 0);
+    const ttlKgs  = dMans.reduce((a,m) => a + parseFloat(m.totalKgs||0), 0);
+    const ttlLbs  = dMans.reduce((a,m) => a + parseFloat(m.totalLbs||0), 0);
+    const ttlHrs  = dMans.reduce((a,m) => a + parseFloat(m.totalHours||0), 0);
+    const ttlCost = dMans.reduce((a,m) => a + parseFloat(m.totalCharges||m.hourlyCost||0), 0);
+    const ttlImp  = dMans.reduce((a,m) => a + parseFloat(m.impLbs||0), 0);
+    const ttlExp  = dMans.reduce((a,m) => a + parseFloat(m.expLbs||0), 0);
+    const isEmpty = dMans.length === 0;
+    const cls = isEmpty ? 'zero-row' : 'data-row';
+    driverRows += '<tr class="' + cls + '">' +
+      '<td>' + drv.unitLabel + '</td>' +
+      '<td>' + (drv.name || '<em style="color:#aaa;">Unassigned</em>') + (function(){ const subs = dMans.filter(m=>m.subDriver&&m.subDriver.name); return subs.length>0?' <span style="font-size:10px;color:#d97706;font-weight:700;">(sub: '+[...new Set(subs.map(m=>m.subDriver.name))].join(', ')+')</span>':''; })() + '</td>' +
+      '<td>' + ttlPcs + '</td>' +
+      '<td>' + ttlLbs.toFixed(1) + '</td>' +
+      '<td>' + ttlKgs.toFixed(1) + '</td>' +
+      '<td>' + ttlImp.toFixed(0) + '</td>' +
+      '<td>' + ttlExp.toFixed(0) + '</td>' +
+      '<td>' + ttlHrs.toFixed(2) + '</td>' +
+      '<td class="chg-cell">' + (isEmpty ? '$0.00' : '$' + ttlCost.toFixed(2)) + '</td>' +
+      '<td>' + (ttlLbs > 0 ? '$' + (ttlCost/ttlLbs).toFixed(4) : '—') + '</td>' +
+    '</tr>';
+  });
+
+  // Fleet totals
+  const fleetPcs  = allManifests.reduce((a,m) => a + (parseInt(m.totalPcs)||0), 0);
+  const fleetKgs  = allManifests.reduce((a,m) => a + parseFloat(m.totalKgs||0), 0);
+  const fleetLbs  = allManifests.reduce((a,m) => a + parseFloat(m.totalLbs||0), 0);
+  const fleetHrs  = allManifests.reduce((a,m) => a + parseFloat(m.totalHours||0), 0);
+  const fleetCost = allManifests.reduce((a,m) => a + parseFloat(m.totalCharges||m.hourlyCost||0), 0);
+  const fleetImp  = allManifests.reduce((a,m) => a + parseFloat(m.impLbs||0), 0);
+  const fleetExp  = allManifests.reduce((a,m) => a + parseFloat(m.expLbs||0), 0);
+  const fleetCostLb = fleetLbs > 0 ? fleetCost / fleetLbs : 0;
+  const fleetCostKg = fleetKgs > 0 ? fleetCost / fleetKgs : 0;
+  const activeDays = new Set(allManifests.map(m => m.date)).size;
+  const avgHrsPerManifest = allManifests.length > 0 ? fleetHrs / allManifests.length : 0;
+
+  const w = window.open('', '_blank', 'width=1100,height=800');
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8">' +
+    '<title>K+N Weekly Summary</title>' +
+    '<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">' +
+    '<style>' +
+    'html,body{margin:0;padding:0;width:100%;height:100%;}' +
+    'body{font-family:"Barlow Condensed",Arial,sans-serif;color:#1a1d26;background:white;font-size:1.55vw;display:flex;flex-direction:column;min-height:100vh;box-sizing:border-box;padding:1.5vw;}' +
+    '.sum-report{border:1px solid #dde1e8;border-radius:4px;overflow:hidden;flex:1;display:flex;flex-direction:column;}' +
+    '.sum-report-head{background:#1a4fa0;color:white;padding:1vw 1.2vw;display:flex;justify-content:space-between;align-items:flex-end;flex-shrink:0;-webkit-print-color-adjust:exact;print-color-adjust:exact;}' +
+    '.srh-title{font-size:2vw;font-weight:800;letter-spacing:.5px;}' +
+    '.srh-week{font-size:1.1vw;color:rgba(255,255,255,.75);margin-top:1px;}' +
+    '.srh-right{text-align:right;font-size:1.1vw;color:rgba(255,255,255,.65);line-height:1.5;}' +
+    'table{width:100%;border-collapse:collapse;flex:1;}' +
+    'th{background:#0f2548;color:rgba(255,255,255,.8);padding:.5vw .6vw;text-align:right;font-size:1.05vw;font-weight:700;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap;-webkit-print-color-adjust:exact;print-color-adjust:exact;}' +
+    'th:first-child,th:nth-child(2){text-align:left;}' +
+    'td{padding:.4vw .6vw;text-align:right;border-bottom:1px solid #e8eaed;font-size:1.3vw;}' +
+    'td:first-child{text-align:left;font-weight:700;color:#4b5266;}' +
+    'td:nth-child(2){text-align:left;}' +
+    '.data-row td{background:white;}' +
+    '.zero-row td{background:#f7f8fa;color:#bbb;}' +
+    '.total-row td{background:#0f2548;color:white;font-weight:700;-webkit-print-color-adjust:exact;print-color-adjust:exact;}' +
+    '.chg-cell{color:#1a4fa0;font-weight:700;}' +
+    '.total-row .chg-cell{color:#f5a623;}' +
+    '.sum-stats{border-top:2px solid #1a4fa0;padding:.6vw 1vw;display:flex;flex-direction:column;flex-shrink:0;background:#f7f9ff;}' +
+    '.ss-row{display:flex;justify-content:space-between;align-items:center;padding:.45vw .8vw;border-bottom:1px solid #dde1e8;font-size:1.4vw;font-weight:600;}' +
+    '.ss-row:last-child{border-bottom:none;}' +
+    '.ss-val{font-size:1.9vw;font-weight:800;color:#1a4fa0;}' +
+    '@media print{' +
+    '@page{size:landscape;margin:.3in;}' +
+    'html,body{width:100%;height:100%;font-size:1.6vw;}' +
+    'th{font-size:1.0vw;padding:.35vw .45vw;}' +
+    'td{font-size:1.25vw;padding:.3vw .45vw;}' +
+    '.srh-title{font-size:1.9vw;}' +
+    '.srh-week,.srh-right{font-size:1.0vw;}' +
+    '.ss-row{font-size:1.35vw;font-weight:600;}.ss-val{font-size:1.8vw;font-weight:800;}' +
+    '.sum-report-head,.total-row td,.zero-row td,.data-row td{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}' +
+    '</style></head><body>' +
+    '<div class="sum-report">' +
+      '<div class="sum-report-head">' +
+        '<div class="srh-left">' +
+          '<div class="srh-title">K+N &mdash; House Driver Manifest</div>' +
+          '<div class="srh-week">K+N Dedicated Fleet &nbsp;·&nbsp; Week Ending ' + weekEnd + '</div>' +
+        '</div>' +
+        '<div class="srh-right">' + wkLabel + '<br>Printed: ' + printDate + '</div>' +
+      '</div>' +
+      '<table>' +
+        '<thead><tr>' +
+          '<th>Unit</th><th>Driver</th>' +
+          '<th>TTL PCS</th><th>TTL LBS</th><th>TTL KGS</th>' +
+          '<th>IMP LBS</th><th>EXP LBS</th>' +
+          '<th>TTL Hours</th><th>Charges</th><th>$/LB</th>' +
+        '</tr></thead>' +
+        '<tbody>' +
+          driverRows +
+          '<tr class="total-row">' +
+            '<td>TOTAL</td><td></td>' +
+            '<td>' + fleetPcs + '</td>' +
+            '<td>' + fleetLbs.toFixed(1) + '</td>' +
+            '<td>' + fleetKgs.toFixed(1) + '</td>' +
+            '<td>' + fleetImp.toFixed(0) + '</td>' +
+            '<td>' + fleetExp.toFixed(0) + '</td>' +
+            '<td>' + fleetHrs.toFixed(2) + '</td>' +
+            '<td class="chg-cell">$' + fleetCost.toFixed(2) + '</td>' +
+            '<td>' + (fleetCostLb > 0 ? '$' + fleetCostLb.toFixed(4) : '—') + '</td>' +
+          '</tr>' +
+        '</tbody>' +
+      '</table>' +
+      '<div class="sum-stats">' +
+        '<div class="ss-row"><span>Average Cost Per Pound</span><span class="ss-val">' + (fleetCostLb > 0 ? '$' + fleetCostLb.toFixed(4) : '—') + '</span></div>' +
+        '<div class="ss-row"><span>Average Cost Per KG</span><span class="ss-val">' + (fleetCostKg > 0 ? '$' + fleetCostKg.toFixed(4) : '—') + '</span></div>' +
+        '<div class="ss-row"><span>Average Hours Per Run</span><span class="ss-val">' + avgHrsPerManifest.toFixed(2) + '</span></div>' +
+        '<div class="ss-row"><span>Total Import LBS</span><span class="ss-val">' + fleetImp.toFixed(0) + '</span></div>' +
+        '<div class="ss-row"><span>Total Export LBS</span><span class="ss-val">' + fleetExp.toFixed(0) + '</span></div>' +
+        '<div class="ss-row" style="border-top:2px solid #1a4fa0;margin-top:2px;"><span style="font-weight:800;">Total Charges — Week</span><span class="ss-val" style="color:#f5a623;font-size:2.4vw;">$' + fleetCost.toFixed(2) + '</span></div>' +
+      '</div>' +
+    '</div>' +
+    '<script>window.onload=function(){window.print();window.onafterprint=function(){window.close();};};<\/script>' +
+    '</body></html>');
+  w.document.close();
+}
+
+// ─── ROSTER ───────────────────────────────────────────────────────────────────
+function updateUnitRate(unitType, val) {
+  const rate = parseFloat(val);
+  if (isNaN(rate) || rate <= 0) { notify('Invalid rate.'); return; }
+  const rates = getUnitRates();
+  rates[unitType] = rate;
+  saveUnitRates(rates);
+  // Update all drivers of that type with new rate
+  const drivers = getDrivers();
+  drivers.forEach(function(d) { if (d.unit === unitType) d.rate = rate; });
+  saveDrivers(drivers);
+  notify('✅ Rate updated to $' + rate + '/hr for ' + unitType);
+}
+
+function printRoster() {
+  const drivers = getDrivers();
+  const unitCounts = {};
+  const rows = drivers.map(function(d) {
+    if (!unitCounts[d.unit]) unitCounts[d.unit] = 0;
+    unitCounts[d.unit]++;
+    const unitLabel = d.unit + ' ' + unitCounts[d.unit];
+    const name = d.name || '<em style="color:#aaa;">Unassigned</em>';
+    const num = d.driverNum || '—';
+    const rate = '$' + (getRateForUnit(d.unit)) + '/hr';
+    return '<tr><td>' + name + '</td><td>' + num + '</td><td>' + unitLabel + '</td><td>' + rate + '</td></tr>';
+  }).join('');
+
+  const w = window.open('', '_blank', 'width=700,height=900');
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>K+N Driver Roster</title>' +
+    '<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">' +
+    '<style>' +
+    'body{font-family:Barlow,Arial,sans-serif;margin:0;padding:20px;color:#1a1d26;}' +
+    'h1{font-family:"Barlow Condensed",sans-serif;font-size:26px;font-weight:800;color:#1a4fa0;margin:0 0 2px;}' +
+    '.sub{font-size:12px;color:#888;margin-bottom:18px;}' +
+    'table{width:100%;border-collapse:collapse;}' +
+    'th{background:#0f2548;color:rgba(255,255,255,.8);padding:9px 12px;text-align:left;font-family:"Barlow Condensed",sans-serif;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}' +
+    'td{padding:9px 12px;border-bottom:1px solid #e8eaed;font-family:"Barlow Condensed",sans-serif;font-size:14px;}' +
+    'tr:nth-child(even) td{background:#f7f8fa;}' +
+    'tr:last-child td{border-bottom:2px solid #1a4fa0;}' +
+    '.total{padding:10px 12px;text-align:right;font-size:13px;color:#888;margin-top:6px;}' +
+    '@media print{@page{size:portrait;margin:.4in;}body{padding:0;}}' +
+    '</style></head><body>' +
+    '<h1>K+N — House Driver Roster</h1>' +
+    '<div class="sub">Printed: ' + new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'}) + '</div>' +
+    '<table><thead><tr><th>Driver Name</th><th>Driver #</th><th>Unit</th><th>Rate</th></tr></thead>' +
+    '<tbody>' + rows + '</tbody></table>' +
+    '<div class="total">' + drivers.length + ' drivers total</div>' +
+    '<script>window.onload=function(){window.print();window.onafterprint=function(){window.close();}};<\/script>' +
+    '</body></html>');
+  w.document.close();
+}
+
+function renderRoster() {
+  const drivers = getDrivers();
+  const managers = getManagers();
+  const body = document.getElementById('rosterBody');
+  body.innerHTML = '';
+
+  // Drivers section
+  const dLabel = document.createElement('div');
+  dLabel.className = 'sect-label';
+  dLabel.textContent = 'Drivers — ' + drivers.length + ' total';
+  body.appendChild(dLabel);
+
+  drivers.forEach((d, i) => {
+    const card = document.createElement('div');
+    card.className = 'roster-card';
+    card.innerHTML = `<div class="rc-info">
+        <div class="rc-name">${d.name||'<em style="color:var(--muted);font-weight:400;">Unassigned</em>'}</div>
+        <div class="rc-meta">${d.unit}${d.driverNum?' &nbsp;·&nbsp; #'+d.driverNum:''}</div>
+      </div>
+      <div class="rc-rate">$${d.rate}/hr</div>
+      <div class="rc-btns">
+        <button class="rc-btn edit" onclick="openDriverModal(${i})">Edit</button>
+        <button class="rc-btn del" onclick="removeDriver(${i})">✕</button>
+      </div>`;
+    body.appendChild(card);
+  });
+
+  const addBtn = document.createElement('button');
+  addBtn.className = 'add-driver-btn';
+  addBtn.innerHTML = '＋ Add Driver';
+  addBtn.onclick = () => openDriverModal(-1);
+  body.appendChild(addBtn);
+
+  // Managers section
+  // Unit rates section
+  const rLabel = document.createElement('div');
+  rLabel.className = 'sect-label';
+  rLabel.textContent = 'Rates by Unit Type';
+  body.appendChild(rLabel);
+  const rates = getUnitRates();
+  ['Straight Truck','Tractor'].forEach(function(unitType) {
+    const rcard = document.createElement('div');
+    rcard.className = 'roster-card';
+    rcard.innerHTML = '<div class="rc-info"><div class="rc-name">' + unitType + '</div><div class="rc-meta">Rate per hour</div></div>' +
+      '<div style="display:flex;align-items:center;gap:8px;">' +
+      '<span style="font-size:15px;font-weight:600;color:var(--muted);">$</span>' +
+      '<input type="number" value="' + (rates[unitType]||75) + '" step="0.01" inputmode="decimal" ' +
+      'style="width:80px;height:38px;padding:0 8px;border:1.5px solid var(--border);border-radius:6px;font-family:Arial,sans-serif;font-size:20px;font-weight:700;color:var(--accent);" ' +
+      'data-unit="' + unitType + '" onchange="updateUnitRate(this.dataset.unit,this.value)">' +
+      '<span style="font-size:13px;color:var(--muted);">/hr</span></div>';
+    body.appendChild(rcard);
+  });
+
+  // Customer View access code section
+  const cLabel = document.createElement('div');
+  cLabel.className = 'sect-label';
+  cLabel.textContent = 'Customer View Access Code';
+  body.appendChild(cLabel);
+  const cCard = document.createElement('div');
+  cCard.className = 'roster-card';
+  cCard.innerHTML = '<div class="rc-info"><div class="rc-name">Access Code</div>' +
+    '<div class="rc-meta">Give this code to customers for the read-only shipment summary</div></div>' +
+    '<div style="display:flex;align-items:center;gap:8px;">' +
+    '<input type="text" id="custCodeInput" value="' + getCustomerCode() + '" style="width:120px;height:38px;padding:0 8px;border:1.5px solid var(--border);border-radius:6px;font-family:Arial,sans-serif;font-size:16px;font-weight:700;color:var(--accent);text-transform:uppercase;">' +
+    '<button class="rc-btn edit" onclick="saveCustomerCode(document.getElementById(\'custCodeInput\').value.trim().toUpperCase());renderRoster();notify(\'✓ Access code updated\')">Save</button></div>';
+  body.appendChild(cCard);
+
+  const mLabel = document.createElement('div');
+  mLabel.className = 'sect-label';
+  mLabel.textContent = 'Manager Access';
+  body.appendChild(mLabel);
+
+  managers.forEach((m, i) => {
+    const card = document.createElement('div');
+    card.className = 'roster-card';
+    card.innerHTML = `<div class="rc-info">
+        <div class="rc-name">${m.name}</div>
+        <div class="rc-meta">Badge: ${m.badge}</div>
+      </div>
+      <div class="rc-btns">
+        <button class="rc-btn del" onclick="removeManager(${i})">✕</button>
+      </div>`;
+    body.appendChild(card);
+  });
+
+  const addMgrBtn = document.createElement('button');
+  addMgrBtn.className = 'add-driver-btn';
+  addMgrBtn.innerHTML = '＋ Add Manager';
+  addMgrBtn.onclick = openManagerModal;
+  body.appendChild(addMgrBtn);
+
+  populateLoginDropdown();
+}
+
+function updateDmRatePreview() {
+  const unit = document.getElementById('dm_unit').value;
+  const rate = getRateForUnit(unit);
+  document.getElementById('dm_ratePreview').textContent = '$' + rate + '/hr';
+}
+
+function openDriverModal(idx) {
+  editDriverIdx = idx;
+  const modal = document.getElementById('driverModal');
+  document.getElementById('driverModalTitle').textContent = idx === -1 ? 'Add Driver' : 'Edit Driver';
+  if (idx >= 0) {
+    const d = getDrivers()[idx];
+    document.getElementById('dm_name').value = d.name;
+    document.getElementById('dm_driverNum').value = d.driverNum || '';
+    document.getElementById('dm_unit').value = d.unit;
+  } else {
+    document.getElementById('dm_name').value = '';
+    document.getElementById('dm_driverNum').value = '';
+    document.getElementById('dm_unit').value = 'Tractor';
+  }
+  updateDmRatePreview();
+  modal.classList.add('open');
+}
+function closeDriverModal() { document.getElementById('driverModal').classList.remove('open'); }
+
+function saveDriver() {
+  const name = document.getElementById('dm_name').value.trim();
+  const driverNum = document.getElementById('dm_driverNum').value.trim();
+  const unit = document.getElementById('dm_unit').value;
+  const rate = getRateForUnit(unit);
+  if (!name) { notify('Please enter a driver name.'); return; }
+  const drivers = getDrivers();
+  if (editDriverIdx === -1) {
+    drivers.push({name, driverNum, unit, rate});
+  } else {
+    drivers[editDriverIdx] = {name, driverNum, unit, rate};
+  }
+  saveDrivers(drivers);
+  closeDriverModal();
+  renderRoster();
+  notify(editDriverIdx === -1 ? '✅ Driver added' : '✅ Driver updated');
+}
+
+function removeDriver(idx) {
+  if (!confirm('Remove this driver?')) return;
+  const drivers = getDrivers();
+  drivers.splice(idx, 1);
+  saveDrivers(drivers);
+  renderRoster();
+  notify('Driver removed.');
+}
+
+function openManagerModal() {
+  const name = prompt('Manager name:');
+  if (!name) return;
+  const badge = prompt('Badge / employee number:');
+  if (!badge) return;
+  const managers = getManagers();
+  managers.push({name: name.trim(), badge: badge.trim()});
+  saveManagers(managers);
+  renderRoster();
+  notify('✅ Manager added');
+}
+
+function removeManager(idx) {
+  if (!confirm('Remove this manager?')) return;
+  const managers = getManagers();
+  managers.splice(idx, 1);
+  saveManagers(managers);
+  renderRoster();
+  notify('Manager removed.');
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+// Show a loading state while data loads from Supabase
+(async function() {
+  // Show loading overlay
+  const overlay = document.createElement('div');
+  overlay.id = 'loadingOverlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:#0a1e3d;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;';
+  overlay.innerHTML = '<div style="font-family:Barlow Condensed,sans-serif;font-size:72px;font-weight:800;color:white;letter-spacing:-2px;line-height:1;">K+N</div>' +
+    '<div style="font-family:Barlow Condensed,sans-serif;font-size:16px;color:rgba(255,255,255,.6);letter-spacing:4px;text-transform:uppercase;margin-top:8px;">House Driver Manifest</div>' +
+    '<div style="margin-top:32px;width:40px;height:40px;border:3px solid rgba(255,255,255,.2);border-top-color:white;border-radius:50%;animation:spin .8s linear infinite;"></div>' +
+    '<style>@keyframes spin{to{transform:rotate(360deg)}}</style>';
+  document.body.appendChild(overlay);
+
+  await initStore();
+
+  // Remove overlay
+  overlay.remove();
+
+  populateLoginDropdown();
+  showScreen('login');
+  document.getElementById('loginNum').addEventListener('keydown', function(e){ if(e.key === 'Enter') doDriverLogin(); });
+  document.getElementById('loginName').addEventListener('keydown', function(e){ if(e.key === 'Enter') doDriverLogin(); });
+})();
+</script>
+</body>
+</html>
