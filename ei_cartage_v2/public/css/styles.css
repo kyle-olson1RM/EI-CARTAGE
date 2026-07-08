@@ -264,7 +264,7 @@ html{overflow-x:hidden;max-width:100vw;}body{font-family:'Barlow',sans-serif;bac
 
 /* Blue styling for Pick Up section */
 .pu-fsub-head{background:#185FA5 !important;color:white;}
-.pu-done-btn{background:rgba(24,95,165,.12) !important;color:#185FA5 !important;}
+
 
 @media print {
   /* Hide everything except the summary report */
