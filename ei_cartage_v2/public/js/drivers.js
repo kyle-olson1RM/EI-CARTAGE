@@ -48,8 +48,46 @@ function saveDropLocations(){
 function buildDropLocationSelect(selectId){
   var locs=getDropLocations(),sel=document.getElementById(selectId);if(!sel)return;
   var cur=sel.value;
-  sel.innerHTML='<option value="">Select...</option><option value="'+locs.loc1+'">'+locs.loc1+'</option><option value="'+locs.loc2+'">'+locs.loc2+'</option>';
-  if(cur&&(cur===locs.loc1||cur===locs.loc2))sel.value=cur;
+  sel.innerHTML='<option value="">Select...</option><option value="'+locs.loc1+'">'+locs.loc1+'</option><option value="'+locs.loc2+'">'+locs.loc2+'</option><option value="__other__">Other (type in)&hellip;</option>';
+  if(cur&&(cur===locs.loc1||cur===locs.loc2||cur==='__other__'))sel.value=cur;
+}
+
+// Shared write-in support for every drop-location select (per-stop and the
+// batch Arrived-at-Expeditors popup). Pairs a <select id="X"> with a hidden
+// <input id="X_other"> that's revealed when "Other" is chosen.
+function _toggleOtherLoc(selectId){
+  var sel=document.getElementById(selectId);
+  var other=document.getElementById(selectId+'_other');
+  if(!sel||!other)return;
+  if(sel.value==='__other__'){
+    other.style.display='block';
+    setTimeout(function(){other.focus();},50);
+  }else{
+    other.style.display='none';
+  }
+}
+function _resolveDropLocation(selectId){
+  var sel=document.getElementById(selectId);
+  if(!sel)return'';
+  if(sel.value==='__other__'){
+    var other=document.getElementById(selectId+'_other');
+    return other?other.value.trim():'';
+  }
+  return sel.value||'';
+}
+function _setDropLocationValue(selectId,value){
+  var sel=document.getElementById(selectId);
+  var other=document.getElementById(selectId+'_other');
+  if(!sel)return;
+  if(!value){sel.value='';if(other){other.style.display='none';other.value='';}return;}
+  var locs=getDropLocations();
+  if(value===locs.loc1||value===locs.loc2){
+    sel.value=value;
+    if(other){other.style.display='none';other.value='';}
+  }else{
+    sel.value='__other__';
+    if(other){other.style.display='block';other.value=value;}
+  }
 }
 
 // ── DRIVER MANAGEMENT ─────────────────────────────────────────────────────────

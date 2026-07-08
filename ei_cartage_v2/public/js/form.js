@@ -45,16 +45,13 @@ function addSubDrop(stopId,type){
   if(type==='d'){
     div.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.5px">Additional Drop '+n+'</span><button data-sid="'+sid+'" data-stopid="'+stopId+'" data-type="'+type+'" onclick="removeSubDrop(parseInt(this.dataset.sid),parseInt(this.dataset.stopid),this.dataset.type)" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 6px;touch-action:manipulation">&#215;</button></div><div class="fg fg3"><div class="field"><label>Pro # / AWB # / Ref #</label><input type="text" id="sdref_'+sid+'" placeholder="Reference number" inputmode="tel" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div><div class="field"><label>Pieces</label><input type="number" id="sdpcs_'+sid+'" placeholder="0" inputmode="tel" oninput="updateTotals()" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div><div class="field"><label>Weight (lbs)</label><input type="number" id="sdwt_'+sid+'" placeholder="0" inputmode="decimal" oninput="updateTotals()" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div></div><div style="margin-top:6px;font-size:11px;color:var(--muted)">&#9432; Consignee, city &amp; times same as above</div>';
   }else{
-    div.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.5px">Additional Pick Up '+n+'</span><button data-sid="'+sid+'" data-stopid="'+stopId+'" data-type="'+type+'" onclick="removeSubDrop(parseInt(this.dataset.sid),parseInt(this.dataset.stopid),this.dataset.type)" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 6px;touch-action:manipulation">&#215;</button></div><div class="fg fg2" style="margin-bottom:8px"><div class="field"><label>Consignee</label><input type="text" id="sdcons_'+sid+'" placeholder="Consignee" autocapitalize="characters" oninput="this.value=this.value.toUpperCase()" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div><div class="field"><label>City</label><input type="text" id="sdcity_'+sid+'" placeholder="City" autocapitalize="characters" oninput="this.value=this.value.toUpperCase()" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div></div><div class="field"><label>Time In &rarr; Time Out</label><div class="time-pair"><input type="time" id="sdtin_'+sid+'"><span>&rarr;</span><input type="time" id="sdtout_'+sid+'"></div></div>';
+    div.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;color:#185FA5;text-transform:uppercase;letter-spacing:.5px">Additional Pick Up '+n+'</span><button data-sid="'+sid+'" data-stopid="'+stopId+'" data-type="'+type+'" onclick="removeSubDrop(parseInt(this.dataset.sid),parseInt(this.dataset.stopid),this.dataset.type)" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 6px;touch-action:manipulation">&#215;</button></div><div class="fg fg3"><div class="field"><label>Pro # / AWB # / Ref #</label><input type="text" id="sdref_'+sid+'" placeholder="Reference number" inputmode="tel" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div><div class="field"><label>Pieces</label><input type="number" id="sdpcs_'+sid+'" placeholder="0" inputmode="tel" oninput="updateTotals()" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div><div class="field"><label>Weight (lbs)</label><input type="number" id="sdwt_'+sid+'" placeholder="0" inputmode="decimal" oninput="updateTotals()" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div></div><div style="margin-top:6px;font-size:11px;color:var(--muted)">&#9432; Shipper &amp; times same as above</div>';
   }
   container.appendChild(div);
-  // Move the "Add Another Drop" button to below the new drop
-  if(type==='d'){
-    var addBtn=document.getElementById('adddrop_'+stopId);
-    if(addBtn){
-      // Move button to after the container
-      container.parentNode.insertBefore(addBtn, container.nextSibling);
-    }
+  // Move the "Add Another" button to below the new entry (both drops and pickups)
+  var addBtn=document.getElementById(type==='d'?('adddrop_'+stopId):('addpu_'+stopId));
+  if(addBtn){
+    container.parentNode.insertBefore(addBtn, container.nextSibling);
   }
   setTimeout(function(){div.scrollIntoView({behavior:'smooth',block:'center'});},100);
 }
@@ -66,8 +63,7 @@ function removeSubDrop(sid,stopId,type){
 function getSubDrops(stopId,type){
   var ids=type==='d'?(delSubDrops[stopId]||[]):(puSubDrops[stopId]||[]);
   return ids.map(function(sid){
-    if(type==='d')return{proNum:document.getElementById('sdref_'+sid)?.value||'',pieces:parseInt(document.getElementById('sdpcs_'+sid)?.value)||0,weight:parseFloat(document.getElementById('sdwt_'+sid)?.value)||0};
-    return{consignee:document.getElementById('sdcons_'+sid)?.value||'',city:document.getElementById('sdcity_'+sid)?.value||'',timeIn:document.getElementById('sdtin_'+sid)?.value||'',timeOut:document.getElementById('sdtout_'+sid)?.value||''};
+    return{proNum:document.getElementById('sdref_'+sid)?.value||'',pieces:parseInt(document.getElementById('sdpcs_'+sid)?.value)||0,weight:parseFloat(document.getElementById('sdwt_'+sid)?.value)||0};
   });
 }
 
@@ -105,7 +101,7 @@ function calcHours(){
 function updateTotals(){
   let dP=0,dW=0,pP=0,pW=0;
   delIds.forEach(id=>{dP+=parseInt(document.getElementById('dp_'+id)?.value)||0;dW+=parseFloat(document.getElementById('dw_'+id)?.value)||0;(delSubDrops[id]||[]).forEach(function(sid){dP+=parseInt(document.getElementById('sdpcs_'+sid)?.value)||0;dW+=parseFloat(document.getElementById('sdwt_'+sid)?.value)||0;});});
-  puIds.forEach(id=>{pP+=parseInt(document.getElementById('pp_'+id)?.value)||0;pW+=parseFloat(document.getElementById('pw_'+id)?.value)||0;});
+  puIds.forEach(id=>{pP+=parseInt(document.getElementById('pp_'+id)?.value)||0;pW+=parseFloat(document.getElementById('pw_'+id)?.value)||0;(puSubDrops[id]||[]).forEach(function(sid){pP+=parseInt(document.getElementById('sdpcs_'+sid)?.value)||0;pW+=parseFloat(document.getElementById('sdwt_'+sid)?.value)||0;});});
   // Count sub-drops for display
   var subDelCount=0,subPUCount=0;
   delIds.forEach(function(id){subDelCount+=(delSubDrops[id]||[]).length;});
@@ -189,7 +185,7 @@ function addPU(){
           <div class="time-pair"><input type="time" id="ptin_${id}"><span>&rarr;</span><input type="time" id="ptout_${id}"></div>
         </div>
         <div id="pusubs_${id}" style="margin-top:4px"></div>
-        <button class="add-note-btn" onclick="addSubDrop(${id},'p')" style="margin-top:8px;border-color:#185FA5;color:#185FA5;touch-action:manipulation">+ Add Another Pick Up</button>
+        <button class="add-note-btn" id="addpu_${id}" onclick="addSubDrop(${id},'p')" style="margin-top:8px;border-color:#185FA5;color:#185FA5;touch-action:manipulation">+ Add Another Pick Up</button>
         <button id="puCompleteBtn_${id}" onclick="markPickupComplete(${id})" style="width:100%;margin-top:10px;padding:11px;border-radius:6px;border:none;background:#185FA5;color:white;font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:700;cursor:pointer;touch-action:manipulation">&#10003; Pick Up Complete</button>
       </div>
     </div>
@@ -200,9 +196,10 @@ function addPU(){
       <div class="fsub-body">
         <div class="fg fg3">
           <div class="field"><label>Drop Location</label>
-            <select id="pdrop_${id}" onchange="saveDraft()">
+            <select id="pdrop_${id}" onchange="_toggleOtherLoc('pdrop_${id}');saveDraft()">
               <option value="">Select...</option>
             </select>
+            <input type="text" id="pdrop_${id}_other" placeholder="Type location" oninput="saveDraft()" style="display:none;margin-top:6px;height:40px;padding:0 10px;border:1.5px solid var(--border);border-radius:6px;font-size:14px;width:100%;box-sizing:border-box">
           </div>
           <div class="field"><label>Arrive (24hr)</label><input type="time" id="parr_${id}" onchange="_checkReturnPending(${id})"></div>
           <div class="field"><label>Depart (24hr)</label><input type="time" id="pdep2_${id}" onchange="saveDraft()"></div>
@@ -216,8 +213,11 @@ function addPU(){
       <textarea id="pnote_${id}" placeholder="Driver note..." rows="2" style="width:100%;border:1.5px solid var(--border);border-radius:6px;padding:8px 12px;font-family:Barlow,sans-serif;font-size:14px;box-sizing:border-box;resize:none"></textarea>
     </div>
 
-    <!-- DONE BUTTON -->
-    <button class="done-stop-btn pu-done-btn" onclick="_doneStop(${id})">&#10003; Done with this Stop</button>
+    <!-- ADD / DONE -->
+    <div class="stop-action-row">
+      <button class="add-btn" onclick="addPUStop()" style="background:rgba(24,95,165,.06);color:#185FA5;border-color:rgba(24,95,165,.3)">+ Add Pick Up</button>
+      <button class="done-stop-btn pu-done-btn" onclick="_doneStop(${id})">&#10003; Done with this Stop</button>
+    </div>
 
   </div>`;
   document.getElementById('puRows').appendChild(div);
@@ -265,7 +265,7 @@ function clearFormWithConfirm(){
 
 function gD(id){return{proNum:document.getElementById('dref_'+id)?.value||'',shipper:document.getElementById('dship_'+id)?.value||'',pieces:parseInt(document.getElementById('dp_'+id)?.value)||0,weight:parseFloat(document.getElementById('dw_'+id)?.value)||0,city:document.getElementById('dcity_'+id)?.value||'',consignee:document.getElementById('dcons_'+id)?.value||'',timeIn:document.getElementById('dtin_'+id)?.value||'',timeOut:document.getElementById('dtout_'+id)?.value||'',note:document.getElementById('dnote_'+id)?.value.trim()||'',subDrops:getSubDrops(id,'d')};}
 
-function gP(id){return{proNum:document.getElementById('pref_'+id)?.value||'',expRef:document.getElementById('pexpref_'+id)?.value||'',pieces:parseInt(document.getElementById('pp_'+id)?.value)||0,weight:parseFloat(document.getElementById('pw_'+id)?.value)||0,shipper:document.getElementById('pship_'+id)?.value||'',pickupIn:document.getElementById('ptin_'+id)?.value||'',pickupOut:document.getElementById('ptout_'+id)?.value||'',dropLocation:document.getElementById('pdrop_'+id)?.value||'',arriveExp:document.getElementById('parr_'+id)?.value||'',departExp:document.getElementById('pdep2_'+id)?.value||'',consignee:document.getElementById('pcons_'+id)?.value||'',deliverIn:document.getElementById('pdlin_'+id)?.value||'',deliverOut:document.getElementById('pdlout_'+id)?.value||'',note:document.getElementById('pnote_'+id)?.value.trim()||'',subPickups:getSubDrops(id,'p')};}
+function gP(id){return{proNum:document.getElementById('pref_'+id)?.value||'',expRef:document.getElementById('pexpref_'+id)?.value||'',pieces:parseInt(document.getElementById('pp_'+id)?.value)||0,weight:parseFloat(document.getElementById('pw_'+id)?.value)||0,shipper:document.getElementById('pship_'+id)?.value||'',pickupIn:document.getElementById('ptin_'+id)?.value||'',pickupOut:document.getElementById('ptout_'+id)?.value||'',dropLocation:_resolveDropLocation('pdrop_'+id),arriveExp:document.getElementById('parr_'+id)?.value||'',departExp:document.getElementById('pdep2_'+id)?.value||'',consignee:document.getElementById('pcons_'+id)?.value||'',deliverIn:document.getElementById('pdlin_'+id)?.value||'',deliverOut:document.getElementById('pdlout_'+id)?.value||'',note:document.getElementById('pnote_'+id)?.value.trim()||'',subPickups:getSubDrops(id,'p')};}
 
 function submitManifest(){
   // Basic validation before showing end of shift popup
@@ -544,7 +544,7 @@ function _updateStopsLbl(){
     retBtn.innerHTML='<button onclick="arrivedAtExp()" style="width:100%;padding:12px;border-radius:8px;border:1.5px solid #185FA5;background:rgba(24,95,165,.08);color:#185FA5;font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:700;cursor:pointer;touch-action:manipulation">&#128336; Arrived at Expeditors</button>';
   } else if(arrivedNotDep.length > 0){
     retBtn.style.display='block';
-    retBtn.innerHTML='<button onclick="showDepartExp()" style="width:100%;padding:12px;border-radius:8px;border:1.5px solid #185FA5;background:#185FA5;color:white;font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:700;cursor:pointer;touch-action:manipulation">&#128337; Departed Expeditors — Confirm Drop Location</button>';
+    retBtn.innerHTML='<button onclick="showDepartExp()" style="width:100%;padding:12px;border-radius:8px;border:1.5px solid #185FA5;background:#185FA5;color:white;font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:700;cursor:pointer;touch-action:manipulation">&#128337; Departed Expeditors — Confirm Time</button>';
   } else {
     retBtn.style.display='none';
   }
@@ -653,13 +653,23 @@ function _renderStopCard(type, id){
     }
   }
 
-  // Add "Done with this stop" button only for deliveries (pickups have it in template)
+  // Add "+ Add Delivery" / "Done with this stop" as a paired row only for deliveries
+  // (pickups have their own button pairing built into their template)
   if(type === 'd'){
+    var actionRow = document.createElement('div');
+    actionRow.className = 'stop-action-row';
+    var addBtn = document.createElement('button');
+    addBtn.className = 'add-btn';
+    addBtn.style.cssText = 'background:rgba(227,24,55,.06);color:#E31837;border-color:rgba(227,24,55,.3)';
+    addBtn.setAttribute('onclick', 'addDelStop()');
+    addBtn.textContent = '+ Add Delivery';
     var doneBtn = document.createElement('button');
     doneBtn.className = 'done-stop-btn';
     doneBtn.setAttribute('onclick', '_doneStop('+id+')');
-    doneBtn.textContent = '✓ Done with this stop';
-    body.appendChild(doneBtn);
+    doneBtn.textContent = '\u2713 Done with this stop';
+    actionRow.appendChild(addBtn);
+    actionRow.appendChild(doneBtn);
+    body.appendChild(actionRow);
   }
 
   card.appendChild(head);
@@ -684,6 +694,26 @@ function _renderStopCard(type, id){
         }
       });
     }
+  }
+  // For delivery cards, update summary with PRO#/consignee as driver pre-enters
+  // them (drivers often fill this in ahead of time, then update times on arrival)
+  if(type === 'd'){
+    var updateDelSummary = function(){
+      var sumEl = document.getElementById('stsum_'+id);
+      var cardBody = document.getElementById('stopbody_'+id);
+      if(!sumEl || !cardBody || cardBody.classList.contains('collapsed'))return;
+      var pro = document.getElementById('dref_'+id)?.value || '';
+      var cons = document.getElementById('dcons_'+id)?.value || '';
+      if(pro || cons){
+        sumEl.textContent = [pro,cons].filter(Boolean).join(' \u00b7 ');
+      } else {
+        sumEl.innerHTML = '<span style="font-size:10px;color:var(--muted);font-style:italic">tap header to collapse</span>';
+      }
+    };
+    var proEl = document.getElementById('dref_'+id);
+    var consEl = document.getElementById('dcons_'+id);
+    if(proEl) proEl.addEventListener('input', updateDelSummary);
+    if(consEl) consEl.addEventListener('input', updateDelSummary);
   }
   // Pre-fill time in with current time
   setTimeout(function(){
@@ -873,7 +903,9 @@ function getOpenPickups(){
 function arrivedAtExp(){
   var openPUs = getOpenPickups();
   if(!openPUs.length){ showToast('No open pick ups to return'); return; }
-  // Show arrive time popup
+  // Show arrive time + drop location popup
+  buildDropLocationSelect('arrExpDrop');
+  var otherEl=document.getElementById('arrExpDrop_other');if(otherEl){otherEl.style.display='none';otherEl.value='';}
   var arrEl = document.getElementById('arrExpTime');
   if(arrEl) arrEl.value = nowTime();
   var sub = document.getElementById('arrExpSubtitle');
@@ -885,32 +917,28 @@ function arrivedAtExp(){
 function confirmArriveExp(){
   var arrTime = document.getElementById('arrExpTime')?.value;
   if(!arrTime){ showToast('Please enter arrive time', 3000); return; }
+  var dropLoc = _resolveDropLocation('arrExpDrop');
+  if(!dropLoc){ showToast('Please select a drop location', 3000); return; }
   var openPUs = getOpenPickups();
   _retExpArriveTime = arrTime;
   openPUs.forEach(function(id){
     var arrEl = document.getElementById('parr_'+id);
     if(arrEl) arrEl.value = arrTime;
+    _setDropLocationValue('pdrop_'+id, dropLoc);
     _checkReturnPending(id);
   });
   document.getElementById('arrExpOv').classList.remove('open');
   // Switch button to Depart
   var btn = document.getElementById('returnExpBtn');
   if(btn){
-    btn.innerHTML = '<button onclick="showDepartExp()" style="width:100%;padding:12px;border-radius:8px;border:1.5px solid #185FA5;background:#185FA5;color:white;font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:700;cursor:pointer;touch-action:manipulation">&#128337; Departed Expeditors — Confirm Drop Location</button>';
+    btn.innerHTML = '<button onclick="showDepartExp()" style="width:100%;padding:12px;border-radius:8px;border:1.5px solid #185FA5;background:#185FA5;color:white;font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:700;cursor:pointer;touch-action:manipulation">&#128337; Departed Expeditors — Confirm Time</button>';
   }
   showToast('\u2713 Arrived at Expeditors logged', 3000);
   saveDraft();
 }
 
 function showDepartExp(){
-  // Tap 2 — show drop location popup
-  var dropSel = document.getElementById('departExpDrop');
-  if(dropSel){
-    var locs = getDropLocations();
-    dropSel.innerHTML = '<option value="">Select location...</option>';
-    if(locs.loc1) dropSel.innerHTML += '<option value="'+locs.loc1+'">'+locs.loc1+'</option>';
-    if(locs.loc2) dropSel.innerHTML += '<option value="'+locs.loc2+'">'+locs.loc2+'</option>';
-  }
+  // Tap 2 — depart time only (drop location was already chosen on arrival)
   var sub = document.getElementById('departExpSubtitle');
   var count = puIds.filter(function(id){
     var parr=document.getElementById('parr_'+id);
@@ -925,19 +953,16 @@ function showDepartExp(){
 }
 
 function confirmDepartExp(){
-  var drop = document.getElementById('departExpDrop')?.value;
-  if(!drop){ showToast('Please select a drop location', 3000); return; }
   var departTime = document.getElementById('departExpTime')?.value;
   if(!departTime){ showToast('Please enter depart time', 3000); return; }
   // Update all pickups that have arrive but no depart, then mark done
+  // (drop location was already set at the arrive step)
   var updated = 0;
   puIds.forEach(function(id){
     var parr = document.getElementById('parr_'+id);
     var pdep = document.getElementById('pdep2_'+id);
-    var dropEl = document.getElementById('pdrop_'+id);
     if(parr && parr.value && pdep && !pdep.value){
       pdep.value = departTime;
-      if(dropEl) dropEl.value = drop;
       updated++;
       // Auto-complete the stop
       _doneStop(id);

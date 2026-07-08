@@ -247,6 +247,9 @@ html{overflow-x:hidden;max-width:100vw;}body{font-family:'Barlow',sans-serif;bac
 .stop-card-body.collapsed{display:none;}
 .done-stop-btn{width:100%;margin-top:10px;padding:11px;border-radius:6px;border:none;background:#16a34a;color:white;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer;touch-action:manipulation;}
 .done-stop-btn:active{opacity:.8;}
+.stop-action-row{display:flex;gap:8px;margin-top:10px;}
+.stop-action-row .add-btn{width:auto;flex:1;margin-top:0;padding:12px;font-size:15px;min-height:44px;}
+.stop-action-row .done-stop-btn{flex:1;margin-top:0;padding:12px;font-size:15px;min-height:44px;}
 
 /* Return pending badge on pickup cards */
 .return-pending-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#d97706;background:#fffbeb;border:1px solid #fcd34d;border-radius:20px;padding:2px 8px;white-space:nowrap;flex-shrink:0;}

@@ -253,19 +253,19 @@
 
 
   <!-- API / Storage Layer -->
-  <script src="/js/config.js?v40"></script>
-  <script src="/js/api.js?v40"></script>
-  <script src="/js/drivers.js?v40"></script>
+  <script src="/js/config.js?v41"></script>
+  <script src="/js/api.js?v41"></script>
+  <script src="/js/drivers.js?v41"></script>
 
   <!-- Feature Modules -->
-  <script src="/js/auth.js?v40"></script>
-  <script src="/js/draft.js?v40"></script>
-  <script src="/js/form.js?v40"></script>
-  <script src="/js/manager.js?v40"></script>
-  <script src="/js/summary.js?v40"></script>
+  <script src="/js/auth.js?v41"></script>
+  <script src="/js/draft.js?v41"></script>
+  <script src="/js/form.js?v41"></script>
+  <script src="/js/manager.js?v41"></script>
+  <script src="/js/summary.js?v41"></script>
 
   <!-- App Init (load last) -->
-  <script src="/js/app.js?v40"></script>
+  <script src="/js/app.js?v41"></script>
 
 
 
@@ -528,20 +528,14 @@
 </div>
 
 
-<!-- DEPART EXPEDITORS POPUP (drop location only) -->
+<!-- DEPART EXPEDITORS POPUP (confirm depart time — location already chosen on arrival) -->
 <div class="modal-overlay" id="departExpOv" style="align-items:center;justify-content:center;z-index:999">
   <div style="background:var(--surface);border-radius:12px;width:calc(100% - 32px);max-width:340px;overflow:hidden;box-shadow:var(--shadow-lg)">
     <div style="background:#185FA5;padding:14px 18px">
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:white">Departed Expeditors</div>
-      <div style="font-size:13px;color:rgba(255,255,255,.65);margin-top:2px" id="departExpSubtitle">Select drop location</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.65);margin-top:2px" id="departExpSubtitle">Confirm depart time</div>
     </div>
     <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
-      <div>
-        <label style="display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px">Drop Location</label>
-        <select id="departExpDrop" style="width:100%;height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:16px;box-sizing:border-box;background:white">
-          <option value="">Select location...</option>
-        </select>
-      </div>
       <div>
         <label style="display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px">Depart Time (24hr)</label>
         <input type="time" id="departExpTime" onkeydown="if(event.key==='Enter')confirmDepartExp()" style="width:100%;height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:16px;box-sizing:border-box">
@@ -555,14 +549,21 @@
 </div>
 
 
-<!-- ARRIVED AT EXPEDITORS POPUP -->
+<!-- ARRIVED AT EXPEDITORS POPUP (drop location chosen here, at arrival) -->
 <div class="modal-overlay" id="arrExpOv" style="align-items:center;justify-content:center;z-index:999">
   <div style="background:var(--surface);border-radius:12px;width:calc(100% - 32px);max-width:340px;overflow:hidden;box-shadow:var(--shadow-lg)">
     <div style="background:#185FA5;padding:14px 18px">
       <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:white">Arrived at Expeditors</div>
-      <div style="font-size:13px;color:rgba(255,255,255,.65);margin-top:2px" id="arrExpSubtitle">Confirm arrive time</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.65);margin-top:2px" id="arrExpSubtitle">Confirm arrive time and drop location</div>
     </div>
     <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
+      <div>
+        <label style="display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px">Drop Location</label>
+        <select id="arrExpDrop" onchange="_toggleOtherLoc('arrExpDrop')" style="width:100%;height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:16px;box-sizing:border-box;background:white">
+          <option value="">Select location...</option>
+        </select>
+        <input type="text" id="arrExpDrop_other" placeholder="Type location" style="display:none;margin-top:6px;width:100%;height:44px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;box-sizing:border-box">
+      </div>
       <div>
         <label style="display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px">Arrive Time (24hr)</label>
         <input type="time" id="arrExpTime" onkeydown="if(event.key==='Enter')confirmArriveExp()" style="width:100%;height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:16px;box-sizing:border-box">

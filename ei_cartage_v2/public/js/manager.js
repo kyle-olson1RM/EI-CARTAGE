@@ -367,7 +367,8 @@ function editManifest(id){
       set2('pship_'+id2, p.shipper);
       set2('ptin_'+id2, p.pickupIn);
       set2('ptout_'+id2, p.pickupOut);
-      set2('pdrop_'+id2, p.dropLocation);
+      if(typeof _setDropLocationValue==='function')_setDropLocationValue('pdrop_'+id2, p.dropLocation);
+      else set2('pdrop_'+id2, p.dropLocation);
       set2('parr_'+id2, p.arriveExp);
       set2('pdep2_'+id2, p.departExp);
       if(p.pickupIn&&p.pickupOut&&typeof _revealPuDropSection==='function')_revealPuDropSection(id2);

@@ -39,7 +39,7 @@ function saveDraft(){
       startMi:document.getElementById('fSMi')?.value||'',endMi:document.getElementById('fEMi')?.value||'',
       deliveries:[],pickups:[]};
     delIds.forEach(function(id){var _db=document.getElementById('stopbody_'+id);var _dd=document.getElementById('stdone_'+id);draft.deliveries.push({id:id,proNum:document.getElementById('dref_'+id)?.value||'',pieces:document.getElementById('dp_'+id)?.value||'',weight:document.getElementById('dw_'+id)?.value||'',city:document.getElementById('dcity_'+id)?.value||'',consignee:document.getElementById('dcons_'+id)?.value||'',timeIn:document.getElementById('dtin_'+id)?.value||'',timeOut:document.getElementById('dtout_'+id)?.value||'',note:document.getElementById('dnote_'+id)?.value||'',done:_db&&_db.classList.contains('collapsed'),summary:document.getElementById('stsum_'+id)?.textContent||'',subDrops:(delSubDrops[id]||[]).map(function(sid){return{sid:sid,proNum:document.getElementById('sdref_'+sid)?.value||'',pieces:document.getElementById('sdpcs_'+sid)?.value||'',weight:document.getElementById('sdwt_'+sid)?.value||''};})});});
-    puIds.forEach(function(id){var _pb=document.getElementById('stopbody_'+id);var _pd=document.getElementById('stdone_'+id);var _retPend=document.getElementById('retpend_'+id);draft.pickups.push({id:id,done:_pb&&_pb.classList.contains('collapsed'),returnPending:_retPend&&_retPend.style.display!=='none',summary:document.getElementById('stsum_'+id)?.textContent||'',proNum:document.getElementById('pref_'+id)?.value||'',expRef:document.getElementById('pexpref_'+id)?.value||'',pieces:document.getElementById('pp_'+id)?.value||'',weight:document.getElementById('pw_'+id)?.value||'',shipper:document.getElementById('pship_'+id)?.value||'',pickupIn:document.getElementById('ptin_'+id)?.value||'',pickupOut:document.getElementById('ptout_'+id)?.value||'',dropLocation:document.getElementById('pdrop_'+id)?.value||'',arriveExp:document.getElementById('parr_'+id)?.value||'',departExp:document.getElementById('pdep2_'+id)?.value||'',note:document.getElementById('pnote_'+id)?.value||'',subPickups:(puSubDrops[id]||[]).map(function(sid){return{sid:sid,consignee:document.getElementById('sdcons_'+sid)?.value||'',city:document.getElementById('sdcity_'+sid)?.value||'',timeIn:document.getElementById('sdtin_'+sid)?.value||'',timeOut:document.getElementById('sdtout_'+sid)?.value||''};})});});
+    puIds.forEach(function(id){var _pb=document.getElementById('stopbody_'+id);var _pd=document.getElementById('stdone_'+id);var _retPend=document.getElementById('retpend_'+id);draft.pickups.push({id:id,done:_pb&&_pb.classList.contains('collapsed'),returnPending:_retPend&&_retPend.style.display!=='none',summary:document.getElementById('stsum_'+id)?.textContent||'',proNum:document.getElementById('pref_'+id)?.value||'',expRef:document.getElementById('pexpref_'+id)?.value||'',pieces:document.getElementById('pp_'+id)?.value||'',weight:document.getElementById('pw_'+id)?.value||'',shipper:document.getElementById('pship_'+id)?.value||'',pickupIn:document.getElementById('ptin_'+id)?.value||'',pickupOut:document.getElementById('ptout_'+id)?.value||'',dropLocation:_resolveDropLocation('pdrop_'+id),arriveExp:document.getElementById('parr_'+id)?.value||'',departExp:document.getElementById('pdep2_'+id)?.value||'',note:document.getElementById('pnote_'+id)?.value||'',subPickups:(puSubDrops[id]||[]).map(function(sid){return{sid:sid,proNum:document.getElementById('sdref_'+sid)?.value||'',pieces:document.getElementById('sdpcs_'+sid)?.value||'',weight:document.getElementById('sdwt_'+sid)?.value||''};})});});
     var key=currentDraftKey();
     if(!localStorage.getItem(key)&&!draft.truckNum&&!draft.startTime&&draft.deliveries.length===0&&draft.pickups.length===0)return;
     localStorage.setItem(key,JSON.stringify(draft));
@@ -106,7 +106,8 @@ function continueDraft(){
       var set2=function(fid,val){var e=document.getElementById(fid);if(e)e.value=val||'';};
       set2('pref_'+id,p.proNum);set2('pexpref_'+id,p.expRef);set2('pp_'+id,p.pieces);
       set2('pw_'+id,p.weight);set2('pship_'+id,p.shipper);set2('ptin_'+id,p.pickupIn);
-      set2('ptout_'+id,p.pickupOut);set2('pdrop_'+id,p.dropLocation);
+      set2('ptout_'+id,p.pickupOut);
+      if(typeof _setDropLocationValue==='function')_setDropLocationValue('pdrop_'+id,p.dropLocation);
       set2('parr_'+id,p.arriveExp);set2('pdep2_'+id,p.departExp);
       if(p.pickupIn&&p.pickupOut&&typeof _revealPuDropSection==='function')_revealPuDropSection(id);
       if(p.note){var nt=document.getElementById('pnote_'+id);if(nt)nt.value=p.note;var nw=document.getElementById('pnote_wrap_'+id);if(nw)nw.style.display='block';}
@@ -116,8 +117,7 @@ function continueDraft(){
         var subId=(puSubDrops[id]||[])[((puSubDrops[id]||[]).length)-1];
         if(subId!=null){
           var set3=function(fid,val){var e=document.getElementById(fid);if(e)e.value=val||'';};
-          set3('sdcons_'+subId,sp.consignee);set3('sdcity_'+subId,sp.city);
-          set3('sdtin_'+subId,sp.timeIn);set3('sdtout_'+subId,sp.timeOut);
+          set3('sdref_'+subId,sp.proNum);set3('sdpcs_'+subId,sp.pieces);set3('sdwt_'+subId,sp.weight);
         }
       });
       // Restore collapsed/done/returnPending state
