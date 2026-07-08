@@ -45,7 +45,7 @@ function addSubDrop(stopId,type){
   if(type==='d'){
     div.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px">Same Stop &mdash; Item '+n+'</span><button data-sid="'+sid+'" data-stopid="'+stopId+'" data-type="'+type+'" onclick="removeSubDrop(parseInt(this.dataset.sid),parseInt(this.dataset.stopid),this.dataset.type)" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 6px;touch-action:manipulation">&#215;</button></div><div class="fg fg3"><div class="field"><label>Pro # / AWB # / Ref #</label><input type="text" id="sdref_'+sid+'" placeholder="Reference number" inputmode="tel" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div><div class="field"><label>Pieces</label><input type="number" id="sdpcs_'+sid+'" placeholder="0" inputmode="tel" oninput="updateTotals()" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div><div class="field"><label>Weight (lbs)</label><input type="number" id="sdwt_'+sid+'" placeholder="0" inputmode="decimal" oninput="updateTotals()" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div></div><div style="margin-top:6px;font-size:11px;color:var(--muted)">&#9432; Same consignee, city &amp; times as this stop</div>';
   }else{
-    div.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px">Same Shipper &mdash; Item '+n+'</span><button data-sid="'+sid+'" data-stopid="'+stopId+'" data-type="'+type+'" onclick="removeSubDrop(parseInt(this.dataset.sid),parseInt(this.dataset.stopid),this.dataset.type)" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 6px;touch-action:manipulation">&#215;</button></div><div class="fg fg3"><div class="field"><label>Pro # / AWB # / Ref #</label><input type="text" id="sdref_'+sid+'" placeholder="Reference number" inputmode="tel" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div><div class="field"><label>Pieces</label><input type="number" id="sdpcs_'+sid+'" placeholder="0" inputmode="tel" oninput="updateTotals()" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div><div class="field"><label>Weight (lbs)</label><input type="number" id="sdwt_'+sid+'" placeholder="0" inputmode="decimal" oninput="updateTotals()" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div></div><div style="margin-top:6px;font-size:11px;color:var(--muted)">&#9432; Same shipper &amp; times as this pick up</div>';
+    div.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px">Same Shipper &mdash; Item '+n+'</span><button data-sid="'+sid+'" data-stopid="'+stopId+'" data-type="'+type+'" onclick="removeSubDrop(parseInt(this.dataset.sid),parseInt(this.dataset.stopid),this.dataset.type)" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 6px;touch-action:manipulation">&#215;</button></div><div class="fg fg2" style="margin-bottom:8px"><div class="field"><label>Pro # / AWB # / Ref #</label><input type="text" id="sdref_'+sid+'" placeholder="Reference number" inputmode="tel" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div><div class="field"><label>Exp Ref # *</label><input type="text" id="sdexpref_'+sid+'" placeholder="Expeditors ref #" autocapitalize="characters" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div></div><div class="fg fg2"><div class="field"><label>Pieces</label><input type="number" id="sdpcs_'+sid+'" placeholder="0" inputmode="tel" oninput="updateTotals()" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div><div class="field"><label>Weight (lbs)</label><input type="number" id="sdwt_'+sid+'" placeholder="0" inputmode="decimal" oninput="updateTotals()" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div></div><div style="margin-top:6px;font-size:11px;color:var(--muted)">&#9432; Same shipper &amp; times as this pick up</div>';
   }
   container.appendChild(div);
   // Move the "Add Another" button to below the new entry (both drops and pickups)
@@ -63,7 +63,9 @@ function removeSubDrop(sid,stopId,type){
 function getSubDrops(stopId,type){
   var ids=type==='d'?(delSubDrops[stopId]||[]):(puSubDrops[stopId]||[]);
   return ids.map(function(sid){
-    return{proNum:document.getElementById('sdref_'+sid)?.value||'',pieces:parseInt(document.getElementById('sdpcs_'+sid)?.value)||0,weight:parseFloat(document.getElementById('sdwt_'+sid)?.value)||0};
+    var out={proNum:document.getElementById('sdref_'+sid)?.value||'',pieces:parseInt(document.getElementById('sdpcs_'+sid)?.value)||0,weight:parseFloat(document.getElementById('sdwt_'+sid)?.value)||0};
+    if(type==='p') out.expRef=document.getElementById('sdexpref_'+sid)?.value||'';
+    return out;
   });
 }
 
@@ -759,7 +761,15 @@ function _isStopComplete(id){
   var isD = stopEntry.type === 'd';
   var tIn  = document.getElementById((isD?'dtin_':'ptin_')+id)?.value;
   var tOut = document.getElementById((isD?'dtout_':'ptout_')+id)?.value;
-  return !!(tIn && tOut);
+  if(!tIn || !tOut) return false;
+  if(!isD){
+    var subIds = puSubDrops[id] || [];
+    for(var i=0;i<subIds.length;i++){
+      var expEl = document.getElementById('sdexpref_'+subIds[i]);
+      if(!expEl || !expEl.value.trim()) return false;
+    }
+  }
+  return true;
 }
 
 function _updateIncompleteBadge(id){
@@ -818,6 +828,19 @@ function markPickupComplete(id){
   if(!tIn){showToast('Please enter time in at shipper',3000);document.getElementById('ptin_'+id)?.focus();return;}
   if(!tOut){showToast('Please enter time out at shipper',3000);document.getElementById('ptout_'+id)?.focus();return;}
 
+  // Every "same shipper" item added under this pickup needs its own Exp Ref#
+  // — check this before they leave the shipper, not after
+  var subIds1 = puSubDrops[id] || [];
+  for(var i=0;i<subIds1.length;i++){
+    var sid1 = subIds1[i];
+    var expEl1 = document.getElementById('sdexpref_'+sid1);
+    if(!expEl1 || !expEl1.value.trim()){
+      showToast('Please enter the Exp Ref # for each item added at this shipper',3500);
+      if(expEl1){expEl1.scrollIntoView({behavior:'smooth',block:'center'});expEl1.focus();}
+      return;
+    }
+  }
+
   // Show the drop off section, hide the Pick Up Complete button
   _revealPuDropSection(id);
 
@@ -858,6 +881,19 @@ function _doneStop(id){
         showToast('Please enter a time out before completing this stop',3000);
         document.getElementById((isD0?'dtout_':'ptout_')+id)?.focus();
         return;
+      }
+      // Every "same shipper" item added under this pickup needs its own Exp Ref#
+      if(!isD0){
+        var subIds0 = puSubDrops[id] || [];
+        for(var i=0;i<subIds0.length;i++){
+          var sid0 = subIds0[i];
+          var expEl = document.getElementById('sdexpref_'+sid0);
+          if(!expEl || !expEl.value.trim()){
+            showToast('Please enter the Exp Ref # for each item added at this shipper',3500);
+            if(expEl){expEl.scrollIntoView({behavior:'smooth',block:'center'});expEl.focus();}
+            return;
+          }
+        }
       }
     }
   }
