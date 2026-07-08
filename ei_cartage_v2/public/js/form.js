@@ -288,22 +288,28 @@ function submitManifest(){
       return;
     }
   }
-  // Check all stops are marked done with required times (skip when editing)
+  // Check all stops are marked done with all required fields filled (skip when editing)
   if(!editingManifestId){
     var incompleteStops=[];
     delIds.forEach(function(id,i){
       var body=document.getElementById('stopbody_'+id);
       var isDone=body&&body.classList.contains('collapsed');
-      var tIn=document.getElementById('dtin_'+id)?.value;
-      var tOut=document.getElementById('dtout_'+id)?.value;
-      if(!isDone||!tIn||!tOut) incompleteStops.push('DEL '+(i+1));
+      var missing=_checkRequired(_deliveryRequiredFields(id));
+      if(!missing){
+        var subIds=delSubDrops[id]||[];
+        for(var s=0;s<subIds.length&&!missing;s++) missing=_checkRequired(_subDropRequiredFields(subIds[s]));
+      }
+      if(!isDone||missing) incompleteStops.push('DEL '+(i+1));
     });
     puIds.forEach(function(id,i){
       var body=document.getElementById('stopbody_'+id);
       var isDone=body&&body.classList.contains('collapsed');
-      var tIn=document.getElementById('ptin_'+id)?.value;
-      var tOut=document.getElementById('ptout_'+id)?.value;
-      if(!isDone||!tIn||!tOut) incompleteStops.push('P/U '+(i+1));
+      var missing=_checkRequired(_pickupShipperRequiredFields(id)) || _missingDropLocation(id) || _checkRequired(_pickupFinalRequiredFields(id));
+      if(!missing){
+        var subIdsP=puSubDrops[id]||[];
+        for(var s2=0;s2<subIdsP.length&&!missing;s2++) missing=_checkRequired(_subPickupRequiredFields(subIdsP[s2]));
+      }
+      if(!isDone||missing) incompleteStops.push('P/U '+(i+1));
     });
     if(incompleteStops.length){
       showToast('Complete all stops first: '+incompleteStops.join(', '),4000);
@@ -764,18 +770,31 @@ function _updatePuSummary(id){
 function _isStopComplete(id){
   var stopEntry = stopOrder.find(function(s){return s.id===id;});
   if(!stopEntry) return true;
-  var isD = stopEntry.type === 'd';
-  var tIn  = document.getElementById((isD?'dtin_':'ptin_')+id)?.value;
-  var tOut = document.getElementById((isD?'dtout_':'ptout_')+id)?.value;
-  if(!tIn || !tOut) return false;
-  if(!isD){
-    var subIds = puSubDrops[id] || [];
+  if(stopEntry.type === 'd'){
+    if(_checkRequired(_deliveryRequiredFields(id))) return false;
+    var subIds = delSubDrops[id] || [];
     for(var i=0;i<subIds.length;i++){
-      var expEl = document.getElementById('sdexpref_'+subIds[i]);
-      if(!expEl || !expEl.value.trim()) return false;
+      if(_checkRequired(_subDropRequiredFields(subIds[i]))) return false;
     }
+    return true;
+  } else {
+    // Shipper-side fields always matter
+    if(_checkRequired(_pickupShipperRequiredFields(id))) return false;
+    var subIdsP = puSubDrops[id] || [];
+    for(var j=0;j<subIdsP.length;j++){
+      if(_checkRequired(_subPickupRequiredFields(subIdsP[j]))) return false;
+    }
+    // Once Pick Up Complete has happened, the pickup is legitimately
+    // "pending return" — that's covered by the amber return-pending badge,
+    // not a red warning icon. Only check drop-off fields if that stage
+    // has actually been reached.
+    var dropSec = document.getElementById('puDropSection_'+id);
+    var pastPickupComplete = dropSec && dropSec.style.display !== 'none';
+    if(!pastPickupComplete) return true;
+    if(_missingDropLocation(id)) return false;
+    if(_checkRequired(_pickupFinalRequiredFields(id))) return false;
+    return true;
   }
-  return true;
 }
 
 function _updateIncompleteBadge(id){
@@ -828,23 +847,16 @@ function _revealPuDropSection(id){
 }
 
 function markPickupComplete(id){
-  // Validate pickup times are entered
-  var tIn  = document.getElementById('ptin_'+id)?.value;
-  var tOut = document.getElementById('ptout_'+id)?.value;
-  if(!tIn){showToast('Please enter time in at shipper',3000);document.getElementById('ptin_'+id)?.focus();return;}
-  if(!tOut){showToast('Please enter time out at shipper',3000);document.getElementById('ptout_'+id)?.focus();return;}
+  // Validate every required at-shipper field before letting them leave
+  var missingP = _checkRequired(_pickupShipperRequiredFields(id));
+  if(missingP){ _focusMissing(missingP); return; }
 
-  // Every "same shipper" item added under this pickup needs its own Exp Ref#
+  // Every "same shipper" item added under this pickup needs its own fields too
   // — check this before they leave the shipper, not after
   var subIds1 = puSubDrops[id] || [];
   for(var i=0;i<subIds1.length;i++){
-    var sid1 = subIds1[i];
-    var expEl1 = document.getElementById('sdexpref_'+sid1);
-    if(!expEl1 || !expEl1.value.trim()){
-      showToast('Please enter the Exp Ref # for each item added at this shipper',3500);
-      if(expEl1){expEl1.scrollIntoView({behavior:'smooth',block:'center'});expEl1.focus();}
-      return;
-    }
+    var missingSub = _checkRequired(_subPickupRequiredFields(subIds1[i]));
+    if(missingSub){ _focusMissing(missingSub); return; }
   }
 
   // Show the drop off section, hide the Pick Up Complete button
@@ -867,36 +879,102 @@ function markPickupComplete(id){
   showToast('\u2713 Pick up logged — return to Expeditors to complete');
 }
 
+function _checkRequired(fieldList){
+  for(var i=0;i<fieldList.length;i++){
+    var el = document.getElementById(fieldList[i].id);
+    if(!el || !String(el.value||'').trim()){
+      return {el:el, msg:fieldList[i].msg};
+    }
+  }
+  return null;
+}
+
+function _deliveryRequiredFields(id){
+  return [
+    {id:'dref_'+id, msg:'Please enter the Pro # / AWB # / Ref #'},
+    {id:'dcons_'+id, msg:'Please enter the Consignee'},
+    {id:'dcity_'+id, msg:'Please enter the City'},
+    {id:'dp_'+id, msg:'Please enter Pieces'},
+    {id:'dw_'+id, msg:'Please enter Weight'},
+    {id:'dtin_'+id, msg:'Please enter a time in'},
+    {id:'dtout_'+id, msg:'Please enter a time out'}
+  ];
+}
+function _pickupShipperRequiredFields(id){
+  return [
+    {id:'pref_'+id, msg:'Please enter the Pro # / AWB # / Ref #'},
+    {id:'pexpref_'+id, msg:'Please enter the Exp Ref #'},
+    {id:'pship_'+id, msg:'Please enter the Shipper'},
+    {id:'pp_'+id, msg:'Please enter Pieces'},
+    {id:'pw_'+id, msg:'Please enter Weight'},
+    {id:'ptin_'+id, msg:'Please enter time in at shipper'},
+    {id:'ptout_'+id, msg:'Please enter time out at shipper'}
+  ];
+}
+function _pickupFinalRequiredFields(id){
+  return [
+    {id:'parr_'+id, msg:'Please enter arrive time at Expeditors'},
+    {id:'pdep2_'+id, msg:'Please enter depart time at Expeditors'}
+  ];
+}
+function _subDropRequiredFields(sid){
+  return [
+    {id:'sdref_'+sid, msg:'Please enter the Pro # / AWB # / Ref # for each item added at this stop'},
+    {id:'sdpcs_'+sid, msg:'Please enter Pieces for each item added at this stop'},
+    {id:'sdwt_'+sid, msg:'Please enter Weight for each item added at this stop'}
+  ];
+}
+function _subPickupRequiredFields(sid){
+  return [
+    {id:'sdref_'+sid, msg:'Please enter the Pro # / AWB # / Ref # for each item added at this shipper'},
+    {id:'sdexpref_'+sid, msg:'Please enter the Exp Ref # for each item added at this shipper'},
+    {id:'sdpcs_'+sid, msg:'Please enter Pieces for each item added at this shipper'},
+    {id:'sdwt_'+sid, msg:'Please enter Weight for each item added at this shipper'}
+  ];
+}
+// Missing drop location isn't a plain input value — resolve it the same way the rest of the app does
+function _missingDropLocation(id){
+  if(_resolveDropLocation('pdrop_'+id)) return null;
+  return {el:document.getElementById('pdrop_'+id), msg:'Please select a drop location'};
+}
+
+function _focusMissing(missing){
+  showToast(missing.msg, 3500);
+  if(missing.el){
+    missing.el.scrollIntoView({behavior:'smooth', block:'center'});
+    missing.el.focus();
+  }
+}
+
 function _doneStop(id){
-  // Validate required times before marking done (skip when editing)
+  // Validate all required fields before marking done (skip when editing)
   if(!editingManifestId){
     var stopEntry0 = stopOrder.find(function(s){return s.id===id;});
     if(stopEntry0){
       var isD0 = stopEntry0.type === 'd';
-      var tIn  = document.getElementById((isD0?'dtin_':'ptin_')+id)?.value;
-      var tOut = document.getElementById((isD0?'dtout_':'ptout_')+id)?.value;
-      if(!tIn){
-        showToast('Please enter a time in before completing this stop',3000);
-        document.getElementById((isD0?'dtin_':'ptin_')+id)?.focus();
-        return;
-      }
-      if(!tOut){
-        showToast('Please enter a time out before completing this stop',3000);
-        document.getElementById((isD0?'dtout_':'ptout_')+id)?.focus();
-        return;
-      }
-      // Every "same shipper" item added under this pickup needs its own Exp Ref#
-      if(!isD0){
-        var subIds0 = puSubDrops[id] || [];
-        for(var i=0;i<subIds0.length;i++){
-          var sid0 = subIds0[i];
-          var expEl = document.getElementById('sdexpref_'+sid0);
-          if(!expEl || !expEl.value.trim()){
-            showToast('Please enter the Exp Ref # for each item added at this shipper',3500);
-            if(expEl){expEl.scrollIntoView({behavior:'smooth',block:'center'});expEl.focus();}
-            return;
-          }
+      if(isD0){
+        var missingD = _checkRequired(_deliveryRequiredFields(id));
+        if(missingD){ _focusMissing(missingD); return; }
+        var subIdsD = delSubDrops[id] || [];
+        for(var i=0;i<subIdsD.length;i++){
+          var missingSD = _checkRequired(_subDropRequiredFields(subIdsD[i]));
+          if(missingSD){ _focusMissing(missingSD); return; }
         }
+      } else {
+        // Covers both the normal path (via Pick Up Complete) and a direct
+        // tap of "Done with this Stop" that skips it — either way, every
+        // required field for this pickup must be filled before it's done.
+        var missingP = _checkRequired(_pickupShipperRequiredFields(id));
+        if(missingP){ _focusMissing(missingP); return; }
+        var subIdsP = puSubDrops[id] || [];
+        for(var j=0;j<subIdsP.length;j++){
+          var missingSP = _checkRequired(_subPickupRequiredFields(subIdsP[j]));
+          if(missingSP){ _focusMissing(missingSP); return; }
+        }
+        var missingLoc = _missingDropLocation(id);
+        if(missingLoc){ _focusMissing(missingLoc); return; }
+        var missingFinal = _checkRequired(_pickupFinalRequiredFields(id));
+        if(missingFinal){ _focusMissing(missingFinal); return; }
       }
     }
   }
