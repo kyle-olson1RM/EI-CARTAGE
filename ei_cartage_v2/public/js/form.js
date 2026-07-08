@@ -265,7 +265,7 @@ function clearFormWithConfirm(){
   showToast('Form cleared');
 }
 
-function gD(id){return{proNum:document.getElementById('dref_'+id)?.value||'',shipper:document.getElementById('dship_'+id)?.value||'',pieces:parseInt(document.getElementById('dp_'+id)?.value)||0,weight:parseFloat(document.getElementById('dw_'+id)?.value)||0,city:document.getElementById('dcity_'+id)?.value||'',consignee:document.getElementById('dcons_'+id)?.value||'',timeIn:document.getElementById('dtin_'+id)?.value||'',timeOut:document.getElementById('dtout_'+id)?.value||'',note:document.getElementById('dnote_'+id)?.value.trim()||'',subDrops:getSubDrops(id,'d')};}
+function gD(id){return{proNum:document.getElementById('dref_'+id)?.value||'',shipper:'Expeditors',pieces:parseInt(document.getElementById('dp_'+id)?.value)||0,weight:parseFloat(document.getElementById('dw_'+id)?.value)||0,city:document.getElementById('dcity_'+id)?.value||'',consignee:document.getElementById('dcons_'+id)?.value||'',timeIn:document.getElementById('dtin_'+id)?.value||'',timeOut:document.getElementById('dtout_'+id)?.value||'',note:document.getElementById('dnote_'+id)?.value.trim()||'',subDrops:getSubDrops(id,'d')};}
 
 function gP(id){return{proNum:document.getElementById('pref_'+id)?.value||'',expRef:document.getElementById('pexpref_'+id)?.value||'',pieces:parseInt(document.getElementById('pp_'+id)?.value)||0,weight:parseFloat(document.getElementById('pw_'+id)?.value)||0,shipper:document.getElementById('pship_'+id)?.value||'',pickupIn:document.getElementById('ptin_'+id)?.value||'',pickupOut:document.getElementById('ptout_'+id)?.value||'',dropLocation:_resolveDropLocation('pdrop_'+id),arriveExp:document.getElementById('parr_'+id)?.value||'',departExp:document.getElementById('pdep2_'+id)?.value||'',consignee:document.getElementById('pcons_'+id)?.value||'',deliverIn:document.getElementById('pdlin_'+id)?.value||'',deliverOut:document.getElementById('pdlout_'+id)?.value||'',note:document.getElementById('pnote_'+id)?.value.trim()||'',subPickups:getSubDrops(id,'p')};}
 
@@ -530,6 +530,8 @@ function _updateStopsLbl(){
   if(pl) pl.textContent = puCount + ' stop' + (puCount!==1?'s':'');
   var collapseBtn = document.getElementById('collapseAllBtn');
   if(collapseBtn) collapseBtn.style.display = (delCount+puCount>0) ? 'flex' : 'none';
+  var previewBtn = document.getElementById('previewManifestBtn');
+  if(previewBtn) previewBtn.style.display = (delCount+puCount>0) ? 'flex' : 'none';
   var retBtn = document.getElementById('returnExpBtn');
   if(!retBtn) return;
   // Check state: pickups with no arrive = show Arrived button
@@ -1024,4 +1026,84 @@ function confirmDepartExp(){
   showToast('\u2713 Departed Expeditors — '+updated+' pick up'+(updated!==1?'s':'')+' complete');
   updateTotals();
   saveDraft();
+}
+
+// ── MANIFEST PREVIEW (read-only, mirrors the paper form) ────────────────────
+function _mpEsc(v){
+  return (v==null?'':String(v)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function _mpCell(v){ return '<td style="border:1px solid #999;padding:5px 7px;font-size:13px;white-space:nowrap">'+(_mpEsc(v)||'&nbsp;')+'</td>'; }
+
+function showManifestPreview(){
+  var name = document.getElementById('fName')?.value || (session?session.name:'');
+  var truck = document.getElementById('fTruck')?.value || '';
+  var driverNum = session?.driverNum || '';
+  var date = document.getElementById('fDate')?.value || '';
+  var start = document.getElementById('fStart')?.value || '';
+  var end = document.getElementById('fEnd')?.value || '';
+  var sMi = document.getElementById('fSMi')?.value || '';
+  var eMi = document.getElementById('fEMi')?.value || '';
+  var totMi = document.getElementById('fTotMi')?.textContent || '';
+
+  var html = '<div style="font-family:Barlow,sans-serif;color:#1a1a1a">';
+
+  // Header — matches the paper form's top fields
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 24px;font-size:14px;margin-bottom:18px;padding-bottom:14px;border-bottom:2px solid #1a1a1a">';
+  html += '<div><b>Driver Name:</b> '+_mpEsc(name)+'</div>';
+  html += '<div><b>Date:</b> '+_mpEsc(date)+'</div>';
+  html += '<div><b>Truck #:</b> '+_mpEsc(truck)+'</div>';
+  html += '<div><b>Driver\'s #:</b> '+_mpEsc(driverNum)+'</div>';
+  html += '<div><b>Start Time:</b> '+_mpEsc(start)+'</div>';
+  html += '<div><b>End Time:</b> '+_mpEsc(end)+'</div>';
+  html += '<div><b>Starting Mileage:</b> '+_mpEsc(sMi)+'</div>';
+  html += '<div><b>Ending Mileage:</b> '+_mpEsc(eMi)+' &nbsp; <b>Total Mileage:</b> '+_mpEsc(totMi)+'</div>';
+  html += '</div>';
+
+  // Deliveries table
+  html += '<div style="font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:700;margin-bottom:6px">Deliveries</div>';
+  html += '<table style="border-collapse:collapse;width:100%;margin-bottom:22px"><thead><tr style="background:#f0f0f0">';
+  ['Pro #, AWB # or Ref #','Pieces','Weight','Shipper / Forwarder','Consigneee','City','Time In','Time Out'].forEach(function(h){
+    html += '<th style="border:1px solid #999;padding:5px 7px;font-size:12px;text-align:left;white-space:nowrap">'+h+'</th>';
+  });
+  html += '</tr></thead><tbody>';
+  if(!delIds.length){
+    html += '<tr>'+_mpCell('')+_mpCell('')+_mpCell('')+_mpCell('')+_mpCell('')+_mpCell('')+_mpCell('')+_mpCell('')+'</tr>';
+  }
+  delIds.forEach(function(id){
+    var d = gD(id);
+    html += '<tr>'+_mpCell(d.proNum)+_mpCell(d.pieces||'')+_mpCell(d.weight||'')+_mpCell(d.shipper)+_mpCell(d.consignee)+_mpCell(d.city)+_mpCell(d.timeIn)+_mpCell(d.timeOut)+'</tr>';
+    (d.subDrops||[]).forEach(function(sd){
+      html += '<tr>'+_mpCell(sd.proNum)+_mpCell(sd.pieces||'')+_mpCell(sd.weight||'')+_mpCell(d.shipper)+_mpCell(d.consignee)+_mpCell(d.city)+_mpCell(d.timeIn)+_mpCell(d.timeOut)+'</tr>';
+    });
+  });
+  html += '</tbody></table>';
+
+  // Pick Ups table
+  html += '<div style="font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:700;margin-bottom:6px">Pick Ups</div>';
+  html += '<table style="border-collapse:collapse;width:100%"><thead><tr style="background:#f0f0f0">';
+  ['Pro #, AWB # or Ref #','Pieces','Weight','Shipper','Exp Ref #','Time In','Time Out','Drop Off Location','Time In','Time Out'].forEach(function(h){
+    html += '<th style="border:1px solid #999;padding:5px 7px;font-size:12px;text-align:left;white-space:nowrap">'+h+'</th>';
+  });
+  html += '</tr></thead><tbody>';
+  if(!puIds.length){
+    html += '<tr>'+_mpCell('')+_mpCell('')+_mpCell('')+_mpCell('')+_mpCell('')+_mpCell('')+_mpCell('')+_mpCell('')+_mpCell('')+_mpCell('')+'</tr>';
+  }
+  puIds.forEach(function(id){
+    var p = gP(id);
+    html += '<tr>'+_mpCell(p.proNum)+_mpCell(p.pieces||'')+_mpCell(p.weight||'')+_mpCell(p.shipper)+_mpCell(p.expRef)+_mpCell(p.pickupIn)+_mpCell(p.pickupOut)+_mpCell(p.dropLocation)+_mpCell(p.arriveExp)+_mpCell(p.departExp)+'</tr>';
+    (p.subPickups||[]).forEach(function(sp){
+      html += '<tr>'+_mpCell(sp.proNum)+_mpCell(sp.pieces||'')+_mpCell(sp.weight||'')+_mpCell(p.shipper)+_mpCell(sp.expRef)+_mpCell(p.pickupIn)+_mpCell(p.pickupOut)+_mpCell(p.dropLocation)+_mpCell(p.arriveExp)+_mpCell(p.departExp)+'</tr>';
+    });
+  });
+  html += '</tbody></table>';
+
+  html += '</div>';
+
+  var body = document.getElementById('manifestPreviewBody');
+  if(body) body.innerHTML = html;
+  document.getElementById('manifestPreviewOv').classList.add('open');
+}
+
+function closeManifestPreview(){
+  document.getElementById('manifestPreviewOv').classList.remove('open');
 }

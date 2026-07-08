@@ -86,7 +86,10 @@
     </div>
   </div>
   <div class="form-body" oninput="saveDraft()" onchange="saveDraft()">
-    <button id="collapseAllBtn" onclick="collapseAllStops()" style="display:none;width:100%;align-items:center;justify-content:center;gap:6px;padding:9px;margin-bottom:10px;border-radius:8px;border:1.5px solid var(--border2);background:var(--surface2);color:var(--text2);font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;cursor:pointer;touch-action:manipulation">&#8963; Collapse All Stops</button>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <button id="collapseAllBtn" onclick="collapseAllStops()" style="display:none;flex:1;align-items:center;justify-content:center;gap:6px;padding:9px;border-radius:8px;border:1.5px solid var(--border2);background:var(--surface2);color:var(--text2);font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;cursor:pointer;touch-action:manipulation">&#8963; Collapse All Stops</button>
+      <button id="previewManifestBtn" onclick="showManifestPreview()" style="display:none;flex:1;align-items:center;justify-content:center;gap:6px;padding:9px;border-radius:8px;border:1.5px solid var(--border2);background:var(--surface2);color:var(--text2);font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;cursor:pointer;touch-action:manipulation">&#128203; Preview Manifest</button>
+    </div>
     <!-- 1. TRIP INFO -->
     <div class="fsec">
       <div class="fsec-head"><h2>1 &mdash; Trip Info</h2></div>
@@ -254,19 +257,19 @@
 
 
   <!-- API / Storage Layer -->
-  <script src="/js/config.js?v46"></script>
-  <script src="/js/api.js?v46"></script>
-  <script src="/js/drivers.js?v46"></script>
+  <script src="/js/config.js?v47"></script>
+  <script src="/js/api.js?v47"></script>
+  <script src="/js/drivers.js?v47"></script>
 
   <!-- Feature Modules -->
-  <script src="/js/auth.js?v46"></script>
-  <script src="/js/draft.js?v46"></script>
-  <script src="/js/form.js?v46"></script>
-  <script src="/js/manager.js?v46"></script>
-  <script src="/js/summary.js?v46"></script>
+  <script src="/js/auth.js?v47"></script>
+  <script src="/js/draft.js?v47"></script>
+  <script src="/js/form.js?v47"></script>
+  <script src="/js/manager.js?v47"></script>
+  <script src="/js/summary.js?v47"></script>
 
   <!-- App Init (load last) -->
-  <script src="/js/app.js?v46"></script>
+  <script src="/js/app.js?v47"></script>
 
 
 
@@ -574,6 +577,18 @@
         <button onclick="confirmArriveExp()" style="height:46px;border-radius:6px;border:none;background:#185FA5;color:white;font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;cursor:pointer;touch-action:manipulation">Confirm</button>
       </div>
     </div>
+  </div>
+</div>
+
+
+<!-- MANIFEST PREVIEW (read-only, mirrors the paper Expeditors Drivers Manifest) -->
+<div class="modal-overlay" id="manifestPreviewOv" style="align-items:flex-start;justify-content:center;z-index:999;overflow-y:auto;padding:20px 10px" onclick="if(event.target===this)closeManifestPreview()">
+  <div style="background:white;border-radius:8px;width:100%;max-width:900px;overflow:hidden;box-shadow:var(--shadow-lg);margin-bottom:20px">
+    <div style="background:#1a1a1a;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:2">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:white">Manifest Preview</div>
+      <button onclick="closeManifestPreview()" style="background:rgba(255,255,255,.15);border:none;color:white;font-size:15px;font-weight:700;cursor:pointer;padding:8px 16px;border-radius:6px;font-family:'Barlow Condensed',sans-serif;touch-action:manipulation">Close</button>
+    </div>
+    <div id="manifestPreviewBody" style="padding:16px;overflow-x:auto"></div>
   </div>
 </div>
 
