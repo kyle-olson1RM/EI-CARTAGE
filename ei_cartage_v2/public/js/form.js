@@ -687,39 +687,20 @@ function _renderStopCard(type, id){
   // Append to the correct section container
   container.appendChild(card);
 
-  // For pickup cards, update summary with shipper name as driver types
+  // For pickup cards, update summary with Shipper + PRO# as driver types
   if(type === 'p'){
     var shipEl = document.getElementById('pship_'+id);
-    if(shipEl){
-      shipEl.addEventListener('input', function(){
-        var sumEl = document.getElementById('stsum_'+id);
-        var body = document.getElementById('stopbody_'+id);
-        // Only update summary if card is NOT yet collapsed/done
-        if(sumEl && body && !body.classList.contains('collapsed')){
-          sumEl.textContent = this.value || ('P/U '+puIds.indexOf(id)+1);
-        }
-      });
-    }
+    var proElP = document.getElementById('pref_'+id);
+    if(shipEl) shipEl.addEventListener('input', function(){_updatePuSummary(id);});
+    if(proElP) proElP.addEventListener('input', function(){_updatePuSummary(id);});
   }
-  // For delivery cards, update summary with PRO#/consignee as driver pre-enters
+  // For delivery cards, update summary with PRO# + Consignee as driver pre-enters
   // them (drivers often fill this in ahead of time, then update times on arrival)
   if(type === 'd'){
-    var updateDelSummary = function(){
-      var sumEl = document.getElementById('stsum_'+id);
-      var cardBody = document.getElementById('stopbody_'+id);
-      if(!sumEl || !cardBody || cardBody.classList.contains('collapsed'))return;
-      var pro = document.getElementById('dref_'+id)?.value || '';
-      var cons = document.getElementById('dcons_'+id)?.value || '';
-      if(pro || cons){
-        sumEl.textContent = [pro,cons].filter(Boolean).join(' \u00b7 ');
-      } else {
-        sumEl.innerHTML = '<span style="font-size:10px;color:var(--muted);font-style:italic">tap header to collapse</span>';
-      }
-    };
     var proEl = document.getElementById('dref_'+id);
     var consEl = document.getElementById('dcons_'+id);
-    if(proEl) proEl.addEventListener('input', updateDelSummary);
-    if(consEl) consEl.addEventListener('input', updateDelSummary);
+    if(proEl) proEl.addEventListener('input', function(){_updateDelSummary(id);});
+    if(consEl) consEl.addEventListener('input', function(){_updateDelSummary(id);});
   }
   // Pre-fill time in with current time
   setTimeout(function(){
@@ -753,6 +734,29 @@ function _removeStop(id, type){
   _updateStopsLbl();
   updateTotals();
   saveDraft();
+}
+
+function _updateDelSummary(id){
+  var sumEl = document.getElementById('stsum_'+id);
+  if(!sumEl) return;
+  var pro = document.getElementById('dref_'+id)?.value || '';
+  var cons = document.getElementById('dcons_'+id)?.value || '';
+  if(pro || cons){
+    sumEl.textContent = [pro,cons].filter(Boolean).join(' \u00b7 ');
+  } else {
+    sumEl.innerHTML = '<span style="font-size:10px;color:var(--muted);font-style:italic">tap header to collapse</span>';
+  }
+}
+function _updatePuSummary(id){
+  var sumEl = document.getElementById('stsum_'+id);
+  if(!sumEl) return;
+  var shipper = document.getElementById('pship_'+id)?.value || '';
+  var pro = document.getElementById('pref_'+id)?.value || '';
+  if(shipper || pro){
+    sumEl.textContent = [shipper,pro].filter(Boolean).join(' \u00b7 ');
+  } else {
+    sumEl.innerHTML = '<span style="font-size:10px;color:var(--muted);font-style:italic">tap header to collapse</span>';
+  }
 }
 
 function _isStopComplete(id){
@@ -844,11 +848,8 @@ function markPickupComplete(id){
   // Show the drop off section, hide the Pick Up Complete button
   _revealPuDropSection(id);
 
-  // Update the card summary with shipper info
-  var shipper = document.getElementById('pship_'+id)?.value || '';
-  var pcs = document.getElementById('pp_'+id)?.value || '0';
-  var sum = document.getElementById('stsum_'+id);
-  if(sum) sum.textContent = (shipper ? shipper+' · ' : '') + pcs + ' pcs · picked up';
+  // Update the card summary — Shipper + PRO# (consistent format)
+  _updatePuSummary(id);
 
   // Collapse the card
   var body = document.getElementById('stopbody_'+id);
@@ -897,41 +898,11 @@ function _doneStop(id){
       }
     }
   }
-  // Update summary line with key info
+  // Update summary line — same format used while editing, for consistency
   var stopEntry = stopOrder.find(function(s){return s.id===id;});
   if(stopEntry){
-    var isD = stopEntry.type === 'd';
-    var sum = document.getElementById('stsum_'+id);
-    if(sum){
-      if(isD){
-        // Delivery: show consignee + total pcs/weight across all drops
-        var cons = document.getElementById('dcons_'+id)?.value || '';
-        var totalPcs = parseInt(document.getElementById('dp_'+id)?.value)||0;
-        var totalWt  = parseFloat(document.getElementById('dw_'+id)?.value)||0;
-        // Add sub-drop pieces and weight
-        var subIds = delSubDrops[id] || [];
-        subIds.forEach(function(sid){
-          totalPcs += parseInt(document.getElementById('sdpcs_'+sid)?.value)||0;
-          totalWt  += parseFloat(document.getElementById('sdwt_'+sid)?.value)||0;
-        });
-        var dropCount = 1 + subIds.length;
-        var summary = (cons ? cons + ' · ' : '') +
-                      totalPcs + ' pcs · ' + totalWt + ' lbs' +
-                      (dropCount > 1 ? ' · ' + dropCount + ' drops' : '');
-        sum.textContent = summary;
-      } else {
-        // Pickup: show shipper + total pcs/weight + sub-pickup count
-        var shipper = document.getElementById('pship_'+id)?.value || '';
-        var totalPcs = parseInt(document.getElementById('pp_'+id)?.value)||0;
-        var totalWt  = parseFloat(document.getElementById('pw_'+id)?.value)||0;
-        var subPuIds = puSubDrops[id] || [];
-        // sub-pickups inherit pieces/weight from parent so don't double count
-        var pickupCount = 1 + subPuIds.length;
-        sum.textContent = (shipper ? shipper + ' · ' : '') +
-                          totalPcs + ' pcs · ' + totalWt + ' lbs' +
-                          (pickupCount > 1 ? ' · ' + pickupCount + ' pick ups' : '');
-      }
-    }
+    if(stopEntry.type === 'd') _updateDelSummary(id);
+    else _updatePuSummary(id);
   }
   // Show done tick, collapse body
   var done = document.getElementById('stdone_'+id);

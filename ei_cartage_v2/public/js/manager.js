@@ -396,29 +396,14 @@ function editManifest(id){
 
     updateTotals();
     // Set summary text on all stop cards so they show info when collapsed
-    // Use _doneStop logic directly for consistency
+    // (same format used everywhere else: PRO#+Consignee / Shipper+PRO#)
     delIds.forEach(function(id){
-      var cons=document.getElementById('dcons_'+id)?.value||'';
-      var pcs=parseInt(document.getElementById('dp_'+id)?.value)||0;
-      var wt=parseFloat(document.getElementById('dw_'+id)?.value)||0;
-      var subIds=delSubDrops[id]||[];
-      var totalPcs=pcs, totalWt=wt;
-      subIds.forEach(function(sid){
-        totalPcs+=parseInt(document.getElementById('sdpcs_'+sid)?.value)||0;
-        totalWt+=parseFloat(document.getElementById('sdwt_'+sid)?.value)||0;
-      });
-      var dropCount=1+subIds.length;
-      var sum=document.getElementById('stsum_'+id);
-      if(sum) sum.textContent=(cons?cons+' · ':'')+totalPcs+' pcs · '+totalWt+' lbs'+(dropCount>1?' · '+dropCount+' drops':'');
+      if(typeof _updateDelSummary==='function')_updateDelSummary(id);
       var done=document.getElementById('stdone_'+id);
       if(done) done.style.display='flex';
     });
     puIds.forEach(function(id){
-      var shipper=document.getElementById('pship_'+id)?.value||'';
-      var pcs=parseInt(document.getElementById('pp_'+id)?.value)||0;
-      var wt=parseFloat(document.getElementById('pw_'+id)?.value)||0;
-      var sum=document.getElementById('stsum_'+id);
-      if(sum) sum.textContent=(shipper?shipper+' · ':'')+pcs+' pcs · '+wt+' lbs';
+      if(typeof _updatePuSummary==='function')_updatePuSummary(id);
       var done=document.getElementById('stdone_'+id);
       if(done) done.style.display='flex';
     });

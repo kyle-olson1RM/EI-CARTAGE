@@ -81,6 +81,7 @@ function continueDraft(){
       set2('dref_'+id,d.proNum);set2('dp_'+id,d.pieces);set2('dw_'+id,d.weight);
       set2('dcity_'+id,d.city);set2('dcons_'+id,d.consignee);
       set2('dtin_'+id,d.timeIn);set2('dtout_'+id,d.timeOut);
+      if(typeof _updateDelSummary==='function')_updateDelSummary(id);
       if(d.note){var nt=document.getElementById('dnote_'+id);if(nt)nt.value=d.note;var nw=document.getElementById('dnote_wrap_'+id);if(nw)nw.style.display='block';}
       // Restore sub-drops
       (d.subDrops||[]).forEach(function(sd){
@@ -95,7 +96,6 @@ function continueDraft(){
       if(d.done){
         var _b=document.getElementById('stopbody_'+id);var _c=document.getElementById('stchev_'+id);var _dk=document.getElementById('stdone_'+id);
         if(_b)_b.classList.add('collapsed');if(_c)_c.style.transform='rotate(-90deg)';if(_dk)_dk.style.display='flex';
-        if(d.summary){var _s=document.getElementById('stsum_'+id);if(_s)_s.textContent=d.summary;}
       }
     });
     (draft.pickups||[]).forEach(function(p){
@@ -107,6 +107,7 @@ function continueDraft(){
       set2('pref_'+id,p.proNum);set2('pexpref_'+id,p.expRef);set2('pp_'+id,p.pieces);
       set2('pw_'+id,p.weight);set2('pship_'+id,p.shipper);set2('ptin_'+id,p.pickupIn);
       set2('ptout_'+id,p.pickupOut);
+      if(typeof _updatePuSummary==='function')_updatePuSummary(id);
       if(typeof _setDropLocationValue==='function')_setDropLocationValue('pdrop_'+id,p.dropLocation);
       set2('parr_'+id,p.arriveExp);set2('pdep2_'+id,p.departExp);
       if(p.pickupIn&&p.pickupOut&&typeof _revealPuDropSection==='function')_revealPuDropSection(id);
@@ -124,7 +125,6 @@ function continueDraft(){
       if(p.done){
         var _b=document.getElementById('stopbody_'+id);var _c=document.getElementById('stchev_'+id);var _dk=document.getElementById('stdone_'+id);
         if(_b)_b.classList.add('collapsed');if(_c)_c.style.transform='rotate(-90deg)';if(_dk)_dk.style.display='flex';
-        if(p.summary){var _s=document.getElementById('stsum_'+id);if(_s)_s.textContent=p.summary;}
       }
       if(p.returnPending){var _rp=document.getElementById('retpend_'+id);if(_rp)_rp.style.display='inline-flex';}
       if(typeof _checkReturnPending==='function')_checkReturnPending(id);
