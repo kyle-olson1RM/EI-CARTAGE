@@ -41,11 +41,11 @@ function addSubDrop(stopId,type){
   else{if(!puSubDrops[stopId])puSubDrops[stopId]=[];puSubDrops[stopId].push(sid);}
   var container=document.getElementById((type==='d'?'del':'pu')+'subs_'+stopId);if(!container)return;
   var ids=type==='d'?delSubDrops[stopId]:puSubDrops[stopId],n=ids.length;
-  var div=document.createElement('div');div.id='subdrop_'+sid;div.style.cssText='border-top:1px dashed var(--border2);padding:10px 0 4px;margin-top:8px';
+  var div=document.createElement('div');div.id='subdrop_'+sid;div.style.cssText='background:var(--surface2);border-radius:6px;padding:10px 10px 6px;margin-top:8px;border:1px dashed var(--border2)';
   if(type==='d'){
-    div.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.5px">Additional Drop '+n+'</span><button data-sid="'+sid+'" data-stopid="'+stopId+'" data-type="'+type+'" onclick="removeSubDrop(parseInt(this.dataset.sid),parseInt(this.dataset.stopid),this.dataset.type)" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 6px;touch-action:manipulation">&#215;</button></div><div class="fg fg3"><div class="field"><label>Pro # / AWB # / Ref #</label><input type="text" id="sdref_'+sid+'" placeholder="Reference number" inputmode="tel" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div><div class="field"><label>Pieces</label><input type="number" id="sdpcs_'+sid+'" placeholder="0" inputmode="tel" oninput="updateTotals()" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div><div class="field"><label>Weight (lbs)</label><input type="number" id="sdwt_'+sid+'" placeholder="0" inputmode="decimal" oninput="updateTotals()" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div></div><div style="margin-top:6px;font-size:11px;color:var(--muted)">&#9432; Consignee, city &amp; times same as above</div>';
+    div.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px">Same Stop &mdash; Item '+n+'</span><button data-sid="'+sid+'" data-stopid="'+stopId+'" data-type="'+type+'" onclick="removeSubDrop(parseInt(this.dataset.sid),parseInt(this.dataset.stopid),this.dataset.type)" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 6px;touch-action:manipulation">&#215;</button></div><div class="fg fg3"><div class="field"><label>Pro # / AWB # / Ref #</label><input type="text" id="sdref_'+sid+'" placeholder="Reference number" inputmode="tel" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div><div class="field"><label>Pieces</label><input type="number" id="sdpcs_'+sid+'" placeholder="0" inputmode="tel" oninput="updateTotals()" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div><div class="field"><label>Weight (lbs)</label><input type="number" id="sdwt_'+sid+'" placeholder="0" inputmode="decimal" oninput="updateTotals()" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div></div><div style="margin-top:6px;font-size:11px;color:var(--muted)">&#9432; Same consignee, city &amp; times as this stop</div>';
   }else{
-    div.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;color:#185FA5;text-transform:uppercase;letter-spacing:.5px">Additional Pick Up '+n+'</span><button data-sid="'+sid+'" data-stopid="'+stopId+'" data-type="'+type+'" onclick="removeSubDrop(parseInt(this.dataset.sid),parseInt(this.dataset.stopid),this.dataset.type)" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 6px;touch-action:manipulation">&#215;</button></div><div class="fg fg3"><div class="field"><label>Pro # / AWB # / Ref #</label><input type="text" id="sdref_'+sid+'" placeholder="Reference number" inputmode="tel" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div><div class="field"><label>Pieces</label><input type="number" id="sdpcs_'+sid+'" placeholder="0" inputmode="tel" oninput="updateTotals()" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div><div class="field"><label>Weight (lbs)</label><input type="number" id="sdwt_'+sid+'" placeholder="0" inputmode="decimal" oninput="updateTotals()" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div></div><div style="margin-top:6px;font-size:11px;color:var(--muted)">&#9432; Shipper &amp; times same as above</div>';
+    div.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px">Same Shipper &mdash; Item '+n+'</span><button data-sid="'+sid+'" data-stopid="'+stopId+'" data-type="'+type+'" onclick="removeSubDrop(parseInt(this.dataset.sid),parseInt(this.dataset.stopid),this.dataset.type)" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 6px;touch-action:manipulation">&#215;</button></div><div class="fg fg3"><div class="field"><label>Pro # / AWB # / Ref #</label><input type="text" id="sdref_'+sid+'" placeholder="Reference number" inputmode="tel" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div><div class="field"><label>Pieces</label><input type="number" id="sdpcs_'+sid+'" placeholder="0" inputmode="tel" oninput="updateTotals()" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div><div class="field"><label>Weight (lbs)</label><input type="number" id="sdwt_'+sid+'" placeholder="0" inputmode="decimal" oninput="updateTotals()" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div></div><div style="margin-top:6px;font-size:11px;color:var(--muted)">&#9432; Same shipper &amp; times as this pick up</div>';
   }
   container.appendChild(div);
   // Move the "Add Another" button to below the new entry (both drops and pickups)
@@ -147,7 +147,7 @@ function addDel(){
     <div class="field"><label>Time In &rarr; Time Out — 24hr</label><div class="time-pair"><input type="time" id="dtin_${id}"><span>&rarr;</span><input type="time" id="dtout_${id}"></div></div>
     <div id="dnote_wrap_${id}" style="display:none;margin-top:8px"><div class="field"><label>Note</label><textarea id="dnote_${id}" placeholder="e.g. Sub driver, weight corrected..." rows="2" style="width:100%;padding:8px 10px;border:1.5px solid var(--warn);border-radius:6px;font-family:Barlow,sans-serif;font-size:14px;resize:vertical;background:var(--warn-light)"></textarea></div></div>
     <button class="add-note-btn" id="dnotebtn_${id}" onclick="toggleNote(\'dnote_wrap_${id}\', this)">&#128221; Add Note</button>
-      <button class="add-note-btn" id="adddrop_${id}" data-sid="${id}" onclick="addSubDrop(parseInt(this.dataset.sid),\'d\')" style="border-color:var(--accent2);color:var(--accent2);touch-action:manipulation">&#43; Add Another Drop</button>
+      <button class="add-note-btn" id="adddrop_${id}" data-sid="${id}" onclick="addSubDrop(parseInt(this.dataset.sid),\'d\')" style="touch-action:manipulation">&#43; Add Item to This Stop (same consignee)</button>
     </div>
     <div id="delsubs_${id}"></div>
   </div>`;
@@ -185,7 +185,7 @@ function addPU(){
           <div class="time-pair"><input type="time" id="ptin_${id}"><span>&rarr;</span><input type="time" id="ptout_${id}"></div>
         </div>
         <div id="pusubs_${id}" style="margin-top:4px"></div>
-        <button class="add-note-btn" id="addpu_${id}" onclick="addSubDrop(${id},'p')" style="margin-top:8px;border-color:#185FA5;color:#185FA5;touch-action:manipulation">+ Add Another Pick Up</button>
+        <button class="add-note-btn" id="addpu_${id}" onclick="addSubDrop(${id},'p')" style="margin-top:8px;touch-action:manipulation">+ Add Item to This Pick Up (same shipper)</button>
         <button id="puCompleteBtn_${id}" onclick="markPickupComplete(${id})" style="width:100%;margin-top:10px;padding:11px;border-radius:6px;border:none;background:#185FA5;color:white;font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:700;cursor:pointer;touch-action:manipulation">&#10003; Pick Up Complete</button>
       </div>
     </div>
@@ -526,6 +526,8 @@ function _updateStopsLbl(){
   var pl = document.getElementById('puLbl');
   if(dl) dl.textContent = delCount + ' stop' + (delCount!==1?'s':'');
   if(pl) pl.textContent = puCount + ' stop' + (puCount!==1?'s':'');
+  var collapseBtn = document.getElementById('collapseAllBtn');
+  if(collapseBtn) collapseBtn.style.display = (delCount+puCount>0) ? 'flex' : 'none';
   var retBtn = document.getElementById('returnExpBtn');
   if(!retBtn) return;
   // Check state: pickups with no arrive = show Arrived button
@@ -570,6 +572,7 @@ function _collapseAllExceptLast(){
       if(body) body.classList.remove('collapsed');
       if(chev) chev.style.transform = '';
     }
+    _updateIncompleteBadge(parseInt(cardId));
   });
 }
 
@@ -633,6 +636,7 @@ function _renderStopCard(type, id){
     '<span class="stop-badge '+badgeClass+'">'+badgeTxt+'</span>'+
     '<span class="stop-card-summary" id="stsum_'+id+'"><span style="font-size:10px;color:var(--muted);font-style:italic">tap header to collapse</span></span>'+
     retPendBadge+
+    '<span id="stincomplete_'+id+'" title="Incomplete — tap to finish" style="display:none;color:var(--warn);flex-shrink:0;margin-right:2px" onclick="event.stopPropagation();_toggleStop('+id+')">&#9888;&#65039;</span>'+
     '<span id="stdone_'+id+'" class="stop-card-done" style="display:none">'+
       '<svg width="12" height="12" viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3" stroke="#16a34a" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>'+
     '</span>'+
@@ -749,6 +753,25 @@ function _removeStop(id, type){
   saveDraft();
 }
 
+function _isStopComplete(id){
+  var stopEntry = stopOrder.find(function(s){return s.id===id;});
+  if(!stopEntry) return true;
+  var isD = stopEntry.type === 'd';
+  var tIn  = document.getElementById((isD?'dtin_':'ptin_')+id)?.value;
+  var tOut = document.getElementById((isD?'dtout_':'ptout_')+id)?.value;
+  return !!(tIn && tOut);
+}
+
+function _updateIncompleteBadge(id){
+  var badge = document.getElementById('stincomplete_'+id);
+  var body = document.getElementById('stopbody_'+id);
+  var doneEl = document.getElementById('stdone_'+id);
+  if(!badge || !body) return;
+  var collapsed = body.classList.contains('collapsed');
+  var done = doneEl && doneEl.style.display !== 'none';
+  badge.style.display = (collapsed && !done && !_isStopComplete(id)) ? 'inline-flex' : 'none';
+}
+
 function _toggleStop(id){
   var body = document.getElementById('stopbody_'+id);
   var chev = document.getElementById('stchev_'+id);
@@ -761,6 +784,23 @@ function _toggleStop(id){
     body.classList.remove('collapsed');
     if(chev) chev.style.transform = '';
   }
+  _updateIncompleteBadge(id);
+}
+
+function collapseAllStops(){
+  var cards = document.querySelectorAll('.stop-card');
+  if(!cards.length) return;
+  cards.forEach(function(card){
+    var cardId = parseInt(card.id.replace('stopcard_',''));
+    var body = document.getElementById('stopbody_'+cardId);
+    var chev = document.getElementById('stchev_'+cardId);
+    if(body && !body.classList.contains('collapsed')){
+      body.classList.add('collapsed');
+      if(chev) chev.style.transform = 'rotate(-90deg)';
+    }
+    _updateIncompleteBadge(cardId);
+  });
+  showToast('All stops collapsed');
 }
 
 
@@ -792,6 +832,7 @@ function markPickupComplete(id){
   var chev = document.getElementById('stchev_'+id);
   if(body) body.classList.add('collapsed');
   if(chev) chev.style.transform = 'rotate(-90deg)';
+  _updateIncompleteBadge(id);
 
   // Show return pending badge
   _checkReturnPending(id);
@@ -863,6 +904,7 @@ function _doneStop(id){
   if(body) body.classList.add('collapsed');
   var chev = document.getElementById('stchev_'+id);
   if(chev) chev.style.transform = 'rotate(-90deg)';
+  _updateIncompleteBadge(id);
   // Check return pending for pickup cards
   _checkReturnPending(id);
   _updateStopsLbl();
