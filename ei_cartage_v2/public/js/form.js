@@ -146,7 +146,7 @@ function addDel(){
       <div class="field"><label>City</label><input type="text" id="dcity_${id}" placeholder="City" autocapitalize="characters" oninput="this.value=this.value.toUpperCase()"></div>
     </div>
     <div class="field" style="margin-bottom:8px"><label>Consignee</label><input type="text" id="dcons_${id}" placeholder="Consignee / company name" autocapitalize="characters" oninput="this.value=this.value.toUpperCase()"></div>
-    <div class="field"><label>Time In &rarr; Time Out — 24hr</label><div class="time-pair"><input type="time" id="dtin_${id}" onfocus="setTimeNow('dtin_${id}')"><span>&rarr;</span><input type="time" id="dtout_${id}"></div></div>
+    <div class="field"><label>Time In &rarr; Time Out — 24hr</label><div class="time-pair"><input type="time" id="dtin_${id}"><span>&rarr;</span><input type="time" id="dtout_${id}"></div></div>
     <div id="dnote_wrap_${id}" style="display:none;margin-top:8px"><div class="field"><label>Note</label><textarea id="dnote_${id}" placeholder="e.g. Sub driver, weight corrected..." rows="2" style="width:100%;padding:8px 10px;border:1.5px solid var(--warn);border-radius:6px;font-family:Barlow,sans-serif;font-size:14px;resize:vertical;background:var(--warn-light)"></textarea></div></div>
     <button class="add-note-btn" id="dnotebtn_${id}" onclick="toggleNote(\'dnote_wrap_${id}\', this)">&#128221; Add Note</button>
       <button class="add-note-btn" id="adddrop_${id}" data-sid="${id}" onclick="addSubDrop(parseInt(this.dataset.sid),\'d\')" style="touch-action:manipulation">&#43; Add Item to This Stop (same consignee)</button>
@@ -710,13 +710,8 @@ function _renderStopCard(type, id){
     if(proEl) proEl.addEventListener('input', function(){_updateDelSummary(id);});
     if(consEl) consEl.addEventListener('input', function(){_updateDelSummary(id);});
   }
-  // Pre-fill time in with current time (pickups only — delivery time in
-  // now fills on focus instead, so pre-entering PRO#/consignee ahead of
-  // arrival doesn't leave a stale time that needs correcting)
+  // No auto-fill for time fields — both stay blank until manually entered
   setTimeout(function(){
-    if(type!=='d'){
-      setTimeNow('ptin_'+id);
-    }
     card.scrollIntoView({behavior:'smooth',block:'center'});
   }, 150);
 }
