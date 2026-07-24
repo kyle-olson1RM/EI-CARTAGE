@@ -32,9 +32,18 @@ function renderCards(){
   const funit=document.getElementById('fUnit')?.value||'';
   var ffrom='',fto='';
   if(mgrWeekIdx>=0&&mgrWeeks[mgrWeekIdx]){
-    ffrom=mgrWeeks[mgrWeekIdx];
-    var _fri=new Date(ffrom+'T12:00:00');_fri.setDate(_fri.getDate()+4);
-    fto=_fri.toISOString().split('T')[0];
+    // The week label (updateMgrWeekLabel) shows Sun–Sat, so the filter
+    // must match Sun–Sat too. This previously ran Monday–Friday only
+    // (ffrom=Monday, fto=Monday+4), which silently hid any Saturday- or
+    // Sunday-dated manifest from every specific-week view even though it
+    // still showed up fine under "All Weeks".
+    var _pad=function(n){return String(n).padStart(2,'0');};
+    var _lfmt=function(d){return d.getFullYear()+'-'+_pad(d.getMonth()+1)+'-'+_pad(d.getDate());};
+    var _mon=new Date(mgrWeeks[mgrWeekIdx]+'T12:00:00');
+    var _sun=new Date(_mon);_sun.setDate(_mon.getDate()-1);
+    var _sat=new Date(_mon);_sat.setDate(_mon.getDate()+5);
+    ffrom=_lfmt(_sun);
+    fto=_lfmt(_sat);
   }
 
   let list=manifests.filter(function(m){
@@ -508,10 +517,15 @@ function buildAllWeeks(){
   var earliestMon=new Date(earliestDate);
   earliestMon.setDate(earliestDate.getDate()-(ed===0?6:ed-1));
 
-  // Generate every Monday from earliest to current week
+  // Generate every Monday from earliest to current week.
+  // Compare formatted date strings, not raw Date objects: cur inherits
+  // earliestDate's baked-in noon time while thisMon carries the actual
+  // current time, so a raw Date comparison silently drops the current
+  // week whenever the dashboard is opened before noon local time.
   var weeks=[];
   var cur=new Date(earliestMon);
-  while(cur<=thisMon){
+  var thisMonFmt=fmt(thisMon);
+  while(fmt(cur)<=thisMonFmt){
     weeks.push(fmt(cur));
     cur.setDate(cur.getDate()+7);
   }
@@ -612,7 +626,7 @@ function saveJFiles(jfiles){
 }
 
 function showJFiles(){
-  var today = new Date().toISOString().split('T')[0];
+  var today = localDateStr();
   var dateEl = document.getElementById('jfDate');
   if(dateEl && !dateEl.value) dateEl.value = today;
   renderJFilesList();

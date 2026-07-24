@@ -22,11 +22,17 @@ function wkLbl(mon){
 function allWks(){
   var weeks=new Set();
   manifests.forEach(function(m){if(m.date)weeks.add(getMon(m.date));});
+  // Use a local-date string for "today" rather than toISOString(), which
+  // converts to UTC first and can land on tomorrow's date during evening
+  // hours in US timezones — that could push currentMon a full week ahead
+  // whenever "tomorrow" crosses a Sunday-to-Monday boundary.
+  var _pad=function(n){return String(n).padStart(2,'0');};
+  var _lfmt=function(d){return d.getFullYear()+'-'+_pad(d.getMonth()+1)+'-'+_pad(d.getDate());};
   var today=new Date();
-  var currentMon=getMon(today.toISOString().split('T')[0]);
+  var currentMon=getMon(_lfmt(today));
   var eightWeeksAgo=new Date(today);
   eightWeeksAgo.setDate(eightWeeksAgo.getDate()-56);
-  var startMon=getMon(eightWeeksAgo.toISOString().split('T')[0]);
+  var startMon=getMon(_lfmt(eightWeeksAgo));
   var allDataWeeks=[...weeks].sort();
   if(allDataWeeks.length&&allDataWeeks[0]<startMon)startMon=allDataWeeks[0];
   var cursor=new Date(startMon+'T12:00:00');
@@ -403,7 +409,7 @@ function showSumForWeek(mon){
 function showSum(){
   var wks=allWks();
   var sel=document.getElementById('weekSel');
-  var currentMon=getMon(new Date().toISOString().split('T')[0]);
+  var currentMon=getMon(localDateStr());
   if(!wks.length){
     sel.innerHTML='<option value="">No data yet</option>';
   } else {
