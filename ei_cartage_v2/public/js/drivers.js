@@ -28,6 +28,25 @@ function sortRoster(roster){
     return(parseInt(a.unit.replace(/[^0-9]/g,''))||0)-(parseInt(b.unit.replace(/[^0-9]/g,''))||0);
   });
 }
+
+// ── UNIT TYPE / AUTO-NUMBERING HELPERS ─────────────────────────────────────────
+// Truck type is always derived from the unit string's prefix ('TT' or 'ST'),
+// never freely typed, so numbering stays consistent and pricing (which is
+// keyed off truck type) can never drift.
+function _unitType(unit){return(unit||'').trim().toUpperCase().startsWith('ST')?'ST':'TT';}
+function _unitNum(unit){return parseInt((unit||'').replace(/[^0-9]/g,''))||0;}
+function _nextUnitNum(roster,type){
+  var nums=roster.filter(function(d){return _unitType(d.unit)===type;}).map(function(d){return _unitNum(d.unit);});
+  return(nums.length?Math.max.apply(null,nums):0)+1;
+}
+// Reassigns sequential unit numbers (1, 2, 3...) within one truck type, closing
+// any gap left by a removed or moved driver, while preserving relative order.
+function _renumberType(roster,type){
+  var group=roster.filter(function(d){return _unitType(d.unit)===type;});
+  group.sort(function(a,b){return _unitNum(a.unit)-_unitNum(b.unit);});
+  group.forEach(function(d,i){d.unit=type+' '+(i+1);});
+}
+
 function rebuildUnitMap(roster){
   var sel=document.getElementById('loginName');if(!sel)return;
   var cur=sel.value;
@@ -121,31 +140,159 @@ function renderDriverList(){
 }
 function editDriver(i){
   var roster=getDriverRoster(),d=roster[i],row=document.getElementById('dlrow_'+i);if(!row)return;
-  row.innerHTML='<div style="display:grid;grid-template-columns:70px 80px 1fr 80px auto auto auto;gap:8px;align-items:center;width:100%;padding:6px 0"><input type="text" id="edit_unit_'+i+'" value="'+_escAttr(d.unit||'')+'" placeholder="TT 1" style="height:40px;padding:0 8px;border:1.5px solid var(--accent);border-radius:5px;font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;color:var(--accent);width:100%"><input type="text" id="edit_dnum_'+i+'" value="'+_escAttr(d.driverNum||'')+'" placeholder="e.g. 751" inputmode="tel" style="height:40px;padding:0 8px;border:1.5px solid var(--accent);border-radius:5px;font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:600;width:100%"><input type="text" id="edit_name_'+i+'" value="'+_escAttr(d.name||'')+'" placeholder="Driver name" style="height:40px;padding:0 10px;border:1.5px solid var(--accent);border-radius:5px;font-size:14px;font-family:Barlow,sans-serif;width:100%"><input type="number" id="edit_rate_'+i+'" value="'+_escAttr(d.rate||92)+'" placeholder="92" style="height:40px;padding:0 8px;border:1.5px solid var(--accent);border-radius:5px;font-size:14px;font-family:Barlow Condensed,sans-serif;font-weight:600;width:100%"><button onclick="saveDriverEdit('+i+')" style="height:40px;padding:0 14px;border-radius:5px;border:none;background:var(--success);color:white;font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;touch-action:manipulation">Save</button><button onclick="renderDriverList()" style="height:40px;padding:0 10px;border-radius:5px;border:1.5px solid var(--border2);background:var(--surface2);color:var(--text2);font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;cursor:pointer;touch-action:manipulation">Cancel</button><button onclick="removeDriverRow('+i+')" style="height:40px;padding:0 10px;border-radius:5px;border:1.5px solid var(--danger);background:var(--danger-light);color:var(--danger);font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;cursor:pointer;touch-action:manipulation">&#128465;</button></div>';
+  var curType=_unitType(d.unit);
+  row.innerHTML='<div style="display:grid;grid-template-columns:78px 80px 1fr 80px auto auto auto;gap:8px;align-items:center;width:100%;padding:6px 0"><div><select id="edit_type_'+i+'" onchange="_editTypeChanged('+i+')" style="width:100%;height:40px;padding:0 4px;border:1.5px solid var(--accent);border-radius:5px;font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;color:var(--accent)"><option value="TT"'+(curType==='TT'?' selected':'')+'>TT</option><option value="ST"'+(curType==='ST'?' selected':'')+'>ST</option></select><div style="font-size:9px;color:var(--muted);margin-top:2px;white-space:nowrap">Now: <b id="edit_unit_lbl_'+i+'">'+_escAttr(d.unit)+'</b></div></div><input type="text" id="edit_dnum_'+i+'" value="'+_escAttr(d.driverNum||'')+'" placeholder="e.g. 751" inputmode="tel" style="height:40px;padding:0 8px;border:1.5px solid var(--accent);border-radius:5px;font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:600;width:100%"><input type="text" id="edit_name_'+i+'" value="'+_escAttr(d.name||'')+'" placeholder="Driver name" style="height:40px;padding:0 10px;border:1.5px solid var(--accent);border-radius:5px;font-size:14px;font-family:Barlow,sans-serif;width:100%"><input type="number" id="edit_rate_'+i+'" value="'+_escAttr(d.rate||92)+'" placeholder="92" style="height:40px;padding:0 8px;border:1.5px solid var(--accent);border-radius:5px;font-size:14px;font-family:Barlow Condensed,sans-serif;font-weight:600;width:100%"><button onclick="saveDriverEdit('+i+')" style="height:40px;padding:0 14px;border-radius:5px;border:none;background:var(--success);color:white;font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;touch-action:manipulation">Save</button><button onclick="renderDriverList()" style="height:40px;padding:0 10px;border-radius:5px;border:1.5px solid var(--border2);background:var(--surface2);color:var(--text2);font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;cursor:pointer;touch-action:manipulation">Cancel</button><button onclick="removeDriverRow('+i+')" style="height:40px;padding:0 10px;border-radius:5px;border:1.5px solid var(--danger);background:var(--danger-light);color:var(--danger);font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;cursor:pointer;touch-action:manipulation">&#128465;</button></div>';
   setTimeout(function(){document.getElementById('edit_name_'+i)?.focus();},50);
 }
+// Live preview when the truck type dropdown changes during edit: shows the
+// unit # this driver will move to on save, and offers to swap the rate to
+// match the new type's default (only if the rate hadn't been overridden).
+function _editTypeChanged(i){
+  var roster=getDriverRoster(),d=roster[i];
+  var oldType=_unitType(d.unit);
+  var newType=document.getElementById('edit_type_'+i)?.value;
+  var lbl=document.getElementById('edit_unit_lbl_'+i);
+  var rateEl=document.getElementById('edit_rate_'+i);
+  if(newType===oldType){
+    if(lbl)lbl.textContent=d.unit;
+  } else {
+    var num=_nextUnitNum(roster,newType);
+    if(lbl)lbl.innerHTML=d.unit+' &rarr; '+newType+' '+num+' <span style="color:var(--accent)">(on save)</span>';
+    if(rateEl && parseFloat(rateEl.value)===TRUCK_RATES[oldType]) rateEl.value=TRUCK_RATES[newType]||92;
+  }
+}
 function saveDriverEdit(i){
-  var unit=document.getElementById('edit_unit_'+i)?.value.trim(),driverNum=document.getElementById('edit_dnum_'+i)?.value.trim(),name=document.getElementById('edit_name_'+i)?.value.trim(),rate=parseFloat(document.getElementById('edit_rate_'+i)?.value)||92;
-  if(!name){showToast('Driver name required');return;}if(!unit){showToast('Unit required');return;}
-  var roster=getDriverRoster();roster[i]={unit:unit,driverNum:driverNum,name:name,rate:rate};saveDriverRoster(roster);renderDriverList();showToast('\u2713 Driver updated');
+  var newType=document.getElementById('edit_type_'+i)?.value||'TT';
+  var driverNum=document.getElementById('edit_dnum_'+i)?.value.trim(),name=document.getElementById('edit_name_'+i)?.value.trim(),rate=parseFloat(document.getElementById('edit_rate_'+i)?.value)||TRUCK_RATES[newType]||92;
+  if(!name){showToast('Driver name required');return;}
+  var roster=getDriverRoster();
+  var oldType=_unitType(roster[i].unit);
+  if(newType!==oldType){
+    // Moving to a different truck type: take the next open number in the new
+    // type's sequence, then close the gap this driver leaves behind in the old type.
+    var num=_nextUnitNum(roster,newType);
+    roster[i]={unit:newType+' '+num,driverNum:driverNum,name:name,rate:rate};
+    _renumberType(roster,oldType);
+  } else {
+    roster[i]={unit:roster[i].unit,driverNum:driverNum,name:name,rate:rate};
+  }
+  saveDriverRoster(roster);renderDriverList();showToast('\u2713 Driver updated');
 }
 function removeDriverRow(i){
-  var roster=getDriverRoster();if(!confirm('Remove '+roster[i].name+'?'))return;roster.splice(i,1);saveDriverRoster(roster);renderDriverList();showToast('Driver removed');
+  var roster=getDriverRoster();if(!confirm('Remove '+roster[i].name+'?'))return;
+  var removedType=_unitType(roster[i].unit);
+  roster.splice(i,1);
+  _renumberType(roster,removedType); // close the gap left behind so numbering stays sequential
+  saveDriverRoster(roster);renderDriverList();showToast('Driver removed');
 }
-function cancelAddDriver(){var f=document.getElementById('addDriverForm');if(f)f.remove();}
+function cancelAddDriver(){var f=document.getElementById('addDriverForm');if(f)f.remove();window._newDriverRowIds=[];}
 function addDriverRow(){
-  var container=document.getElementById('addDriverForm');
-  if(container){container.style.display=container.style.display==='none'?'block':'none';return;}
+  var existing=document.getElementById('addDriverForm');
+  if(existing){existing.remove();window._newDriverRowIds=[];return;}
   var list=document.getElementById('driverList'),form=document.createElement('div');
   form.id='addDriverForm';form.style.cssText='background:var(--accent-light);border:1.5px solid var(--accent);border-radius:8px;padding:14px;margin-bottom:14px;';
-  form.innerHTML='<div style="font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">New Driver</div><div style="display:grid;grid-template-columns:70px 80px 1fr 80px;gap:8px;margin-bottom:10px"><div><label style="display:block;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px">Unit</label><input type="text" id="new_unit" placeholder="TT 12" style="width:100%;height:40px;padding:0 8px;border:1.5px solid var(--border);border-radius:5px;font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;color:var(--accent)"></div><div><label style="display:block;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px">Driver #</label><input type="text" id="new_dnum" placeholder="e.g. 751" inputmode="tel" style="width:100%;height:40px;padding:0 8px;border:1.5px solid var(--border);border-radius:5px;font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:600"></div><div><label style="display:block;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px">Driver Name</label><input type="text" id="new_name" placeholder="First Last" autocapitalize="words" oninput="capWords(this)" style="width:100%;height:40px;padding:0 10px;border:1.5px solid var(--border);border-radius:5px;font-size:14px;font-family:Barlow,sans-serif"></div><div><label style="display:block;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px">Rate ($/hr)</label><input type="number" id="new_rate" value="92" inputmode="decimal" style="width:100%;height:40px;padding:0 8px;border:1.5px solid var(--border);border-radius:5px;font-size:14px;font-family:Barlow Condensed,sans-serif;font-weight:600"></div></div><div style="display:flex;gap:8px"><button onclick="confirmAddDriver()" style="flex:1;height:40px;border-radius:5px;border:none;background:var(--accent);color:white;font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:700;cursor:pointer;touch-action:manipulation">Add Driver</button><button onclick="cancelAddDriver()" style="height:40px;padding:0 16px;border-radius:5px;border:1.5px solid var(--border2);background:white;color:var(--text2);font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;cursor:pointer;touch-action:manipulation">Cancel</button></div>';
-  list.parentNode.insertBefore(form,list);setTimeout(function(){document.getElementById('new_name').focus();},50);
+  form.innerHTML=
+    '<div style="font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">New Driver(s)</div>'+
+    '<div style="font-size:11px;color:var(--muted);margin-bottom:10px">Set the truck type per driver &mdash; TT and ST can be mixed in the same batch. Unit #s auto-assign as the next open number for each type.</div>'+
+    '<div id="newDriverRows"></div>'+
+    '<button type="button" onclick="_addAnotherNewDriverRow()" style="width:100%;height:38px;margin-bottom:10px;border-radius:6px;border:1.5px dashed var(--accent);background:white;color:var(--accent);font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;cursor:pointer;touch-action:manipulation">+ Add Another Driver</button>'+
+    '<div style="display:flex;gap:8px">'+
+      '<button onclick="confirmAddDriver()" style="flex:1;height:40px;border-radius:5px;border:none;background:var(--accent);color:white;font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:700;cursor:pointer;touch-action:manipulation">Add Driver(s)</button>'+
+      '<button onclick="cancelAddDriver()" style="height:40px;padding:0 16px;border-radius:5px;border:1.5px solid var(--border2);background:white;color:var(--text2);font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;cursor:pointer;touch-action:manipulation">Cancel</button>'+
+    '</div>';
+  list.parentNode.insertBefore(form,list);
+  window._newDriverRowIds=[];window._newDriverRowSeq=0;
+  _addAnotherNewDriverRow();
+  setTimeout(function(){form.scrollIntoView({behavior:'smooth',block:'center'});},50);
+}
+// Adds one more Type / Name / Driver # / Rate row to the batch. New rows
+// default to the same type as the row above them (the common case is
+// several of the same type in a row), but each row's type can be changed
+// independently so TT and ST drivers can be mixed in one batch. Unit #
+// previews recompute per-type whenever any row's type changes or a row is
+// added/removed, counting each type's rows in order to stay contiguous.
+function _addAnotherNewDriverRow(){
+  var rid=window._newDriverRowSeq++;
+  var priorRid=window._newDriverRowIds.length?window._newDriverRowIds[window._newDriverRowIds.length-1]:null;
+  var defaultType=priorRid!=null?(document.getElementById('newrow_type_'+priorRid)?.value||'TT'):'TT';
+  window._newDriverRowIds.push(rid);
+  var rows=document.getElementById('newDriverRows');if(!rows)return;
+  var div=document.createElement('div');
+  div.id='newrow_'+rid;
+  div.dataset.type=defaultType;
+  div.style.cssText='background:white;border:1px solid var(--border);border-radius:6px;padding:10px;margin-bottom:8px';
+  div.innerHTML=
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'+
+      '<span id="newrow_unit_'+rid+'" style="font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;color:var(--accent)"></span>'+
+      '<button type="button" onclick="_removeNewDriverRow('+rid+')" id="newrow_rm_'+rid+'" style="background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:2px 6px;touch-action:manipulation">&#215;</button>'+
+    '</div>'+
+    '<div style="display:grid;grid-template-columns:64px 1fr 84px 84px;gap:8px">'+
+      '<div><label style="display:block;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px">Type</label><select id="newrow_type_'+rid+'" onchange="_onRowTypeChange('+rid+')" style="width:100%;height:40px;padding:0 4px;border:1.5px solid var(--border);border-radius:5px;font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700"><option value="TT"'+(defaultType==='TT'?' selected':'')+'>TT</option><option value="ST"'+(defaultType==='ST'?' selected':'')+'>ST</option></select></div>'+
+      '<div><label style="display:block;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px">Driver Name</label><input type="text" id="new_name_'+rid+'" placeholder="First Last" autocapitalize="words" oninput="capWords(this)" style="width:100%;height:40px;padding:0 10px;border:1.5px solid var(--border);border-radius:5px;font-size:14px;font-family:Barlow,sans-serif"></div>'+
+      '<div><label style="display:block;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px">Driver #</label><input type="text" id="new_dnum_'+rid+'" placeholder="e.g. 751" inputmode="tel" style="width:100%;height:40px;padding:0 8px;border:1.5px solid var(--border);border-radius:5px;font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:600"></div>'+
+      '<div><label style="display:block;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px">Rate ($/hr)</label><input type="number" id="new_rate_'+rid+'" inputmode="decimal" value="'+(TRUCK_RATES[defaultType]||92)+'" style="width:100%;height:40px;padding:0 8px;border:1.5px solid var(--border);border-radius:5px;font-size:14px;font-family:Barlow Condensed,sans-serif;font-weight:600"></div>'+
+    '</div>';
+  rows.appendChild(div);
+  _refreshNewDriverRowPreviews();
+  setTimeout(function(){document.getElementById('new_name_'+rid)?.focus();},50);
+}
+// When a row's type changes, swap its rate to the new type's default too —
+// but only if the rate was still sitting at the old type's default, so a
+// manually-typed exception rate doesn't get silently overwritten.
+function _onRowTypeChange(rid){
+  var wrap=document.getElementById('newrow_'+rid);
+  var sel=document.getElementById('newrow_type_'+rid);
+  var rateEl=document.getElementById('new_rate_'+rid);
+  var oldType=wrap?wrap.dataset.type:'TT';
+  var newType=sel?sel.value:'TT';
+  if(rateEl&&parseFloat(rateEl.value)===TRUCK_RATES[oldType])rateEl.value=TRUCK_RATES[newType]||92;
+  if(wrap)wrap.dataset.type=newType;
+  _refreshNewDriverRowPreviews();
+}
+function _removeNewDriverRow(rid){
+  if(window._newDriverRowIds.length<=1)return; // always keep at least one row
+  window._newDriverRowIds=window._newDriverRowIds.filter(function(x){return x!==rid;});
+  var el=document.getElementById('newrow_'+rid);if(el)el.remove();
+  _refreshNewDriverRowPreviews();
+}
+function _refreshNewDriverRowPreviews(){
+  var roster=getDriverRoster();
+  var bases={TT:_nextUnitNum(roster,'TT'),ST:_nextUnitNum(roster,'ST')};
+  var counts={TT:0,ST:0};
+  window._newDriverRowIds.forEach(function(rid){
+    var type=document.getElementById('newrow_type_'+rid)?.value||'TT';
+    var lbl=document.getElementById('newrow_unit_'+rid);
+    if(lbl)lbl.textContent='Unit '+type+' '+(bases[type]+counts[type]);
+    counts[type]++;
+    var rm=document.getElementById('newrow_rm_'+rid);
+    if(rm)rm.style.display=window._newDriverRowIds.length>1?'inline-block':'none';
+  });
 }
 function confirmAddDriver(){
-  var unit=document.getElementById('new_unit')?.value.trim(),driverNum=document.getElementById('new_dnum')?.value.trim(),name=document.getElementById('new_name')?.value.trim(),rate=parseFloat(document.getElementById('new_rate')?.value)||92;
-  if(!name){showToast('Driver name required');return;}if(!unit){showToast('Unit required (e.g. TT 12)');return;}
-  var roster=getDriverRoster();roster.push({unit:unit,driverNum:driverNum,name:name,rate:rate});saveDriverRoster(roster);
-  var form=document.getElementById('addDriverForm');if(form)form.remove();renderDriverList();showToast('\u2713 '+name+' added');
+  var ids=window._newDriverRowIds||[];
+  var entries=[];
+  ids.forEach(function(rid){
+    var name=document.getElementById('new_name_'+rid)?.value.trim();
+    if(!name)return; // skip any blank rows rather than blocking the whole batch
+    var type=document.getElementById('newrow_type_'+rid)?.value||'TT';
+    var driverNum=document.getElementById('new_dnum_'+rid)?.value.trim();
+    var rate=parseFloat(document.getElementById('new_rate_'+rid)?.value)||TRUCK_RATES[type]||92;
+    entries.push({type:type,driverNum:driverNum,name:name,rate:rate});
+  });
+  if(!entries.length){showToast('Enter at least one driver name');return;}
+  var roster=getDriverRoster();
+  // Recomputed at save time (in case the roster changed while the form was open),
+  // then each type gets its own running counter so mixed TT/ST batches stay contiguous.
+  var counters={TT:_nextUnitNum(roster,'TT'),ST:_nextUnitNum(roster,'ST')};
+  entries.forEach(function(e){
+    roster.push({unit:e.type+' '+counters[e.type],driverNum:e.driverNum,name:e.name,rate:e.rate});
+    counters[e.type]++;
+  });
+  saveDriverRoster(roster);
+  var form=document.getElementById('addDriverForm');if(form)form.remove();
+  window._newDriverType=null;window._newDriverRowIds=[];
+  renderDriverList();
+  showToast('\u2713 '+entries.length+' driver'+(entries.length!==1?'s':'')+' added');
 }
 function saveDrivers(){rebuildUnitMap(getDriverRoster());showToast('\u2713 Roster saved');setTimeout(function(){ss('manager');},600);}
 function saveTruckRates(){

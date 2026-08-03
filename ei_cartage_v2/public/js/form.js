@@ -43,9 +43,9 @@ function addSubDrop(stopId,type){
   var ids=type==='d'?delSubDrops[stopId]:puSubDrops[stopId],n=ids.length;
   var div=document.createElement('div');div.id='subdrop_'+sid;div.style.cssText='background:var(--surface2);border-radius:6px;padding:10px 10px 6px;margin-top:8px;border:1px dashed var(--border2)';
   if(type==='d'){
-    div.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px">Same Stop &mdash; Item '+n+'</span><button data-sid="'+sid+'" data-stopid="'+stopId+'" data-type="'+type+'" onclick="removeSubDrop(parseInt(this.dataset.sid),parseInt(this.dataset.stopid),this.dataset.type)" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 6px;touch-action:manipulation">&#215;</button></div><div class="fg fg3"><div class="field"><label>Pro # / AWB # / Ref #</label><input type="text" id="sdref_'+sid+'" placeholder="Reference number" inputmode="tel" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div><div class="field"><label>Pieces</label><input type="number" id="sdpcs_'+sid+'" placeholder="0" inputmode="tel" oninput="updateTotals()" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div><div class="field"><label>Weight (lbs)</label><input type="number" id="sdwt_'+sid+'" placeholder="0" inputmode="decimal" oninput="updateTotals()" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div></div><div style="margin-top:6px;font-size:11px;color:var(--muted)">&#9432; Same consignee, city &amp; times as this stop</div>';
+    div.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px">Same Stop &mdash; Item '+n+'</span><button data-sid="'+sid+'" data-stopid="'+stopId+'" data-type="'+type+'" onclick="removeSubDrop(parseInt(this.dataset.sid),parseInt(this.dataset.stopid),this.dataset.type)" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 6px;touch-action:manipulation">&#215;</button></div><div class="fg fg3"><div class="field"><label>Pro # / AWB # / Ref #</label><input type="text" id="sdref_'+sid+'" placeholder="Reference number" inputmode="tel" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div><div class="field"><label>Pieces</label><input type="number" id="sdpcs_'+sid+'" placeholder="0" inputmode="tel" oninput="updateTotals();_updateDelSummary('+stopId+')" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div><div class="field"><label>Weight (lbs)</label><input type="number" id="sdwt_'+sid+'" placeholder="0" inputmode="decimal" oninput="updateTotals();_updateDelSummary('+stopId+')" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div></div><div style="margin-top:6px;font-size:11px;color:var(--muted)">&#9432; Same consignee, city &amp; times as this stop</div>';
   }else{
-    div.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px">Same Shipper &mdash; Item '+n+'</span><button data-sid="'+sid+'" data-stopid="'+stopId+'" data-type="'+type+'" onclick="removeSubDrop(parseInt(this.dataset.sid),parseInt(this.dataset.stopid),this.dataset.type)" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 6px;touch-action:manipulation">&#215;</button></div><div class="fg fg2" style="margin-bottom:8px"><div class="field"><label>Pro # / AWB # / Ref #</label><input type="text" id="sdref_'+sid+'" placeholder="Reference number" inputmode="tel" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div><div class="field"><label>Exp Ref # *</label><input type="text" id="sdexpref_'+sid+'" placeholder="Expeditors ref #" autocapitalize="characters" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div></div><div class="fg fg2"><div class="field"><label>Pieces</label><input type="number" id="sdpcs_'+sid+'" placeholder="0" inputmode="tel" oninput="updateTotals()" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div><div class="field"><label>Weight (lbs)</label><input type="number" id="sdwt_'+sid+'" placeholder="0" inputmode="decimal" oninput="updateTotals()" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div></div><div style="margin-top:6px;font-size:11px;color:var(--muted)">&#9432; Same shipper &amp; times as this pick up</div>';
+    div.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><span style="font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px">Same Shipper &mdash; Item '+n+'</span><button data-sid="'+sid+'" data-stopid="'+stopId+'" data-type="'+type+'" onclick="removeSubDrop(parseInt(this.dataset.sid),parseInt(this.dataset.stopid),this.dataset.type)" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 6px;touch-action:manipulation">&#215;</button></div><div class="fg fg2" style="margin-bottom:8px"><div class="field"><label>Pro # / AWB # / Ref #</label><input type="text" id="sdref_'+sid+'" placeholder="Reference number" inputmode="tel" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div><div class="field"><label>Exp Ref # *</label><input type="text" id="sdexpref_'+sid+'" placeholder="Expeditors ref #" autocapitalize="characters" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div></div><div class="fg fg2"><div class="field"><label>Pieces</label><input type="number" id="sdpcs_'+sid+'" placeholder="0" inputmode="tel" oninput="updateTotals();_updatePuSummary('+stopId+')" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div><div class="field"><label>Weight (lbs)</label><input type="number" id="sdwt_'+sid+'" placeholder="0" inputmode="decimal" oninput="updateTotals();_updatePuSummary('+stopId+')" style="height:46px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-size:15px;width:100%"></div></div><div style="margin-top:6px;font-size:11px;color:var(--muted)">&#9432; Same shipper &amp; times as this pick up</div>';
   }
   container.appendChild(div);
   // Move the "Add Another" button to below the new entry (both drops and pickups)
@@ -57,8 +57,14 @@ function addSubDrop(stopId,type){
 }
 function removeSubDrop(sid,stopId,type){
   var el=document.getElementById('subdrop_'+sid);if(el)el.remove();
-  if(type==='d'&&delSubDrops[stopId])delSubDrops[stopId]=delSubDrops[stopId].filter(function(x){return x!==sid;});
-  else if(puSubDrops[stopId])puSubDrops[stopId]=puSubDrops[stopId].filter(function(x){return x!==sid;});
+  if(type==='d'&&delSubDrops[stopId]){
+    delSubDrops[stopId]=delSubDrops[stopId].filter(function(x){return x!==sid;});
+    _updateDelSummary(stopId);
+  } else if(puSubDrops[stopId]){
+    puSubDrops[stopId]=puSubDrops[stopId].filter(function(x){return x!==sid;});
+    _updatePuSummary(stopId);
+  }
+  updateTotals();
 }
 function getSubDrops(stopId,type){
   var ids=type==='d'?(delSubDrops[stopId]||[]):(puSubDrops[stopId]||[]);
@@ -332,8 +338,22 @@ function submitManifest(){
   // Show end of shift popup
   var dels=delIds.length,pus=puIds.length;
   var totWt=0,totPcs=0;
-  delIds.forEach(function(id){totPcs+=parseInt(document.getElementById('dp_'+id)?.value)||0;totWt+=parseFloat(document.getElementById('dw_'+id)?.value)||0;});
-  puIds.forEach(function(id){totPcs+=parseInt(document.getElementById('pp_'+id)?.value)||0;totWt+=parseFloat(document.getElementById('pw_'+id)?.value)||0;});
+  delIds.forEach(function(id){
+    totPcs+=parseInt(document.getElementById('dp_'+id)?.value)||0;
+    totWt+=parseFloat(document.getElementById('dw_'+id)?.value)||0;
+    (delSubDrops[id]||[]).forEach(function(sid){
+      totPcs+=parseInt(document.getElementById('sdpcs_'+sid)?.value)||0;
+      totWt+=parseFloat(document.getElementById('sdwt_'+sid)?.value)||0;
+    });
+  });
+  puIds.forEach(function(id){
+    totPcs+=parseInt(document.getElementById('pp_'+id)?.value)||0;
+    totWt+=parseFloat(document.getElementById('pw_'+id)?.value)||0;
+    (puSubDrops[id]||[]).forEach(function(sid){
+      totPcs+=parseInt(document.getElementById('sdpcs_'+sid)?.value)||0;
+      totWt+=parseFloat(document.getElementById('sdwt_'+sid)?.value)||0;
+    });
+  });
   var summary=document.getElementById('eosSummary');
   if(summary){
     summary.innerHTML=
@@ -410,11 +430,15 @@ function _doSubmit(){
       var sdCity=document.getElementById('sdcity_'+sid)?.value||'';
       var sdTin=document.getElementById('sdtin_'+sid)?.value||'';
       var sdTout=document.getElementById('sdtout_'+sid)?.value||'';
+      var sdRefP=document.getElementById('sdref_'+sid)?.value||'';
+      var sdExpRefP=document.getElementById('sdexpref_'+sid)?.value||'';
+      var sdPcsP=parseInt(document.getElementById('sdpcs_'+sid)?.value)||0;
+      var sdWtP=parseFloat(document.getElementById('sdwt_'+sid)?.value)||0;
       pickups.push({
-        proNum: main.proNum,
-        expRef: main.expRef,
-        pieces: main.pieces,
-        weight: main.weight,
+        proNum: sdRefP,
+        expRef: sdExpRefP,
+        pieces: sdPcsP,
+        weight: sdWtP,
         shipper: main.shipper,
         pickupIn: sdTin,
         pickupOut: sdTout,
@@ -423,7 +447,8 @@ function _doSubmit(){
         departExp: main.departExp,
         consignee: sdCons,
         note: '',
-        isSubDrop: true
+        isSubDrop: true,
+        parentProNum: main.proNum
       });
     });
   });
@@ -695,20 +720,31 @@ function _renderStopCard(type, id){
   // Append to the correct section container
   container.appendChild(card);
 
-  // For pickup cards, update summary with Shipper + PRO# as driver types
+  // For pickup cards, update summary with Shipper + PRO# + total pieces/weight as driver types
   if(type === 'p'){
     var shipEl = document.getElementById('pship_'+id);
     var proElP = document.getElementById('pref_'+id);
+    var pcsElP = document.getElementById('pp_'+id);
+    var wtElP = document.getElementById('pw_'+id);
     if(shipEl) shipEl.addEventListener('input', function(){_updatePuSummary(id);});
     if(proElP) proElP.addEventListener('input', function(){_updatePuSummary(id);});
+    if(pcsElP) pcsElP.addEventListener('input', function(){_updatePuSummary(id);});
+    if(wtElP) wtElP.addEventListener('input', function(){_updatePuSummary(id);});
   }
-  // For delivery cards, update summary with PRO# + Consignee as driver pre-enters
-  // them (drivers often fill this in ahead of time, then update times on arrival)
+  // For delivery cards, update summary with PRO# + Consignee + City + total pieces/weight
+  // as driver pre-enters them (drivers often fill this in ahead of time, then update
+  // times on arrival)
   if(type === 'd'){
     var proEl = document.getElementById('dref_'+id);
     var consEl = document.getElementById('dcons_'+id);
+    var cityEl = document.getElementById('dcity_'+id);
+    var pcsEl = document.getElementById('dp_'+id);
+    var wtEl = document.getElementById('dw_'+id);
     if(proEl) proEl.addEventListener('input', function(){_updateDelSummary(id);});
     if(consEl) consEl.addEventListener('input', function(){_updateDelSummary(id);});
+    if(cityEl) cityEl.addEventListener('input', function(){_updateDelSummary(id);});
+    if(pcsEl) pcsEl.addEventListener('input', function(){_updateDelSummary(id);});
+    if(wtEl) wtEl.addEventListener('input', function(){_updateDelSummary(id);});
   }
   // No auto-fill for time fields — both stay blank until manually entered
   setTimeout(function(){
@@ -744,8 +780,20 @@ function _updateDelSummary(id){
   if(!sumEl) return;
   var pro = document.getElementById('dref_'+id)?.value || '';
   var cons = document.getElementById('dcons_'+id)?.value || '';
-  if(pro || cons){
-    sumEl.textContent = [pro,cons].filter(Boolean).join(' \u00b7 ');
+  var city = document.getElementById('dcity_'+id)?.value || '';
+  var pcs = parseInt(document.getElementById('dp_'+id)?.value)||0;
+  var wt = parseFloat(document.getElementById('dw_'+id)?.value)||0;
+  (delSubDrops[id]||[]).forEach(function(sid){
+    pcs += parseInt(document.getElementById('sdpcs_'+sid)?.value)||0;
+    wt += parseFloat(document.getElementById('sdwt_'+sid)?.value)||0;
+  });
+  var qtyBits = [];
+  if(pcs>0) qtyBits.push(pcs+' pcs');
+  if(wt>0) qtyBits.push(wt.toLocaleString()+' lbs');
+  var parts = [pro,cons,city].filter(Boolean);
+  if(qtyBits.length) parts.push(qtyBits.join(' / '));
+  if(parts.length){
+    sumEl.textContent = parts.join(' \u00b7 ');
   } else {
     sumEl.innerHTML = '<span style="font-size:10px;color:var(--muted);font-style:italic">tap header to collapse</span>';
   }
@@ -755,8 +803,19 @@ function _updatePuSummary(id){
   if(!sumEl) return;
   var shipper = document.getElementById('pship_'+id)?.value || '';
   var pro = document.getElementById('pref_'+id)?.value || '';
-  if(shipper || pro){
-    sumEl.textContent = [shipper,pro].filter(Boolean).join(' \u00b7 ');
+  var pcs = parseInt(document.getElementById('pp_'+id)?.value)||0;
+  var wt = parseFloat(document.getElementById('pw_'+id)?.value)||0;
+  (puSubDrops[id]||[]).forEach(function(sid){
+    pcs += parseInt(document.getElementById('sdpcs_'+sid)?.value)||0;
+    wt += parseFloat(document.getElementById('sdwt_'+sid)?.value)||0;
+  });
+  var qtyBits = [];
+  if(pcs>0) qtyBits.push(pcs+' pcs');
+  if(wt>0) qtyBits.push(wt.toLocaleString()+' lbs');
+  var parts = [shipper,pro].filter(Boolean);
+  if(qtyBits.length) parts.push(qtyBits.join(' / '));
+  if(parts.length){
+    sumEl.textContent = parts.join(' \u00b7 ');
   } else {
     sumEl.innerHTML = '<span style="font-size:10px;color:var(--muted);font-style:italic">tap header to collapse</span>';
   }

@@ -5,18 +5,49 @@
  */
 
 
+// Returns the Sun–Sat {from, to} date-string range for the currently
+// selected manager week, or {from:'', to:''} when "All Weeks" is selected.
+// Shared by renderCards() (card filtering) and updateMgrStats() (summary bar)
+// so the two can never drift out of sync with each other.
+function getMgrWeekRange(){
+  if(mgrWeekIdx>=0&&mgrWeeks[mgrWeekIdx]){
+    var _pad=function(n){return String(n).padStart(2,'0');};
+    var _lfmt=function(d){return d.getFullYear()+'-'+_pad(d.getMonth()+1)+'-'+_pad(d.getDate());};
+    var _mon=new Date(mgrWeeks[mgrWeekIdx]+'T12:00:00');
+    var _sun=new Date(_mon);_sun.setDate(_mon.getDate()-1);
+    var _sat=new Date(_mon);_sat.setDate(_mon.getDate()+5);
+    return {from:_lfmt(_sun), to:_lfmt(_sat)};
+  }
+  return {from:'', to:''};
+}
+
+// Manifests belonging to the currently selected manager week (or all
+// manifests when "All Weeks" is selected).
+function getMgrWeekManifests(){
+  var r=getMgrWeekRange();
+  if(!r.from)return manifests;
+  return manifests.filter(function(m){return m.date>=r.from&&m.date<=r.to;});
+}
+
+// Recomputes the top summary bar (Submitted / Pending / Drivers / Flagged)
+// scoped to the currently selected week, instead of across all manifests.
+function updateMgrStats(){
+  var wm=getMgrWeekManifests();
+  document.getElementById('stTot').textContent=wm.length;
+  document.getElementById('stPend').textContent=wm.filter(function(m){return m.status==='pending';}).length;
+  document.getElementById('stDrvs').textContent=new Set(wm.map(function(m){return m.driverName;})).size;
+  document.getElementById('stFlgs').textContent=wm.filter(function(m){return m.flags&&m.flags.length>0;}).length;
+}
+
 async function refreshMgr(){
   var fresh=await apiRefresh('ei_manifests');
   manifests=JSON.parse(fresh||cacheGet('ei_manifests')||'[]');
-  document.getElementById('stTot').textContent=manifests.length;
-  document.getElementById('stPend').textContent=manifests.filter(m=>m.status==='pending').length;
-  document.getElementById('stDrvs').textContent=new Set(manifests.map(m=>m.driverName)).size;
-  document.getElementById('stFlgs').textContent=manifests.filter(m=>m.flags&&m.flags.length>0).length;
   // Build ALL weeks (even empty ones) from earliest to current
   mgrWeeks=buildAllWeeks();
   if(mgrWeekIdx<0&&mgrWeeks.length>0) mgrWeekIdx=0; // default to most recent
   if(mgrWeekIdx>=mgrWeeks.length) mgrWeekIdx=mgrWeeks.length-1;
   updateMgrWeekLabel();
+  updateMgrStats();
 
   // Populate driver dropdown
   const sel=document.getElementById('fDrv'),cur=sel.value;
@@ -30,21 +61,8 @@ function renderCards(){
   const fs=document.getElementById('fStat').value;
   const fdy=document.getElementById('fDy').value;
   const funit=document.getElementById('fUnit')?.value||'';
-  var ffrom='',fto='';
-  if(mgrWeekIdx>=0&&mgrWeeks[mgrWeekIdx]){
-    // The week label (updateMgrWeekLabel) shows Sun–Sat, so the filter
-    // must match Sun–Sat too. This previously ran Monday–Friday only
-    // (ffrom=Monday, fto=Monday+4), which silently hid any Saturday- or
-    // Sunday-dated manifest from every specific-week view even though it
-    // still showed up fine under "All Weeks".
-    var _pad=function(n){return String(n).padStart(2,'0');};
-    var _lfmt=function(d){return d.getFullYear()+'-'+_pad(d.getMonth()+1)+'-'+_pad(d.getDate());};
-    var _mon=new Date(mgrWeeks[mgrWeekIdx]+'T12:00:00');
-    var _sun=new Date(_mon);_sun.setDate(_mon.getDate()-1);
-    var _sat=new Date(_mon);_sat.setDate(_mon.getDate()+5);
-    ffrom=_lfmt(_sun);
-    fto=_lfmt(_sat);
-  }
+  var wkRange=getMgrWeekRange();
+  var ffrom=wkRange.from,fto=wkRange.to;
 
   let list=manifests.filter(function(m){
     if(fd&&m.driverName!==fd)return false;
@@ -454,7 +472,7 @@ async function appM(id){
     var groupBadge=group.querySelector('.dg-header .mbadge');
     if(groupBadge&&allReviewed){groupBadge.className='mbadge br';groupBadge.textContent='REVIEWED';}
   }
-  document.getElementById('stPend').textContent=manifests.filter(function(x){return x.status==='pending';}).length;
+  updateMgrStats();
   showToast('Marked reviewed');
 }
 
@@ -558,12 +576,14 @@ function shiftMgrWeek(dir){
     if(mgrWeekIdx>=mgrWeeks.length)mgrWeekIdx=mgrWeeks.length-1;
   }
   updateMgrWeekLabel();
+  updateMgrStats();
   renderCards();
 }
 
 function setMgrWeekAll(){
   mgrWeekIdx=-1;
   updateMgrWeekLabel();
+  updateMgrStats();
   renderCards();
 }
 
