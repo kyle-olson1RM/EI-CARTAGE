@@ -108,7 +108,10 @@ function renderCards(){
   var jfRow=weekJFiles.length
     ?'<tr class="data-row" style="background:#fffbeb"><td colspan="2"><strong>&#128196; J Files</strong> ('+weekJFiles.length+')</td><td>—</td><td>—</td><td>'+weekJFiles.length+'</td><td>'+jfWt.toLocaleString()+'</td><td>—</td><td>—</td><td class="chg-cell" style="color:#d97706">$'+jfTotal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td></tr>'
     :'';
-  var pgLabel=ffrom?('Week of '+(function(){var d=new Date(ffrom+'T12:00:00');return(d.getMonth()+1)+'/'+d.getDate()+'–'+(function(){var f=new Date(ffrom+'T12:00:00');f.setDate(f.getDate()+4);return(f.getMonth()+1)+'/'+f.getDate();})()+'/'+d.getFullYear();})()):'All Weeks';
+  // ffrom is the Sunday of the selected week (see getMgrWeekRange) — add 6
+  // days to land on Saturday, matching the Sun-Sat range used everywhere
+  // else on this dashboard (label, filter, stats bar).
+  var pgLabel=ffrom?('Week of '+(function(){var d=new Date(ffrom+'T12:00:00');return(d.getMonth()+1)+'/'+d.getDate()+'–'+(function(){var f=new Date(ffrom+'T12:00:00');f.setDate(f.getDate()+6);return(f.getMonth()+1)+'/'+f.getDate();})()+'/'+d.getFullYear();})()):'All Weeks';
   var totalsBox='<div class="grand-box" style="margin-bottom:14px"><h3>Program Totals &mdash; '+pgLabel+'</h3>'
     +'<div class="grand-grid">'
     +'<div class="gi"><div class="gi-val">'+pgD+'</div><div class="gi-lbl">Deliveries</div></div>'
@@ -172,7 +175,9 @@ function renderCards(){
       return '<div class="day-entry" id="dentry_'+m.id+'" style="border-top:1px solid var(--border)">'+
         '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface2)">'+
           '<div>'+
-            '<div style="font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:700">'+m.dayOfWeek+' &middot; '+ds+'</div>'+
+            '<div style="font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:700">'+m.dayOfWeek+' &middot; '+ds+
+              (m.isSubstitute?' <span class="mbadge" style="background:var(--warn-light);color:var(--warn);font-size:10px;vertical-align:middle" title="'+_escAttr(m.driverName)+' covered this shift for '+_escAttr(m.subFor||'?')+'">SUB: '+_escAttr(m.driverName)+'</span>':'')+
+            '</div>'+
             '<div style="font-size:11px;color:var(--muted);margin-top:2px">Truck '+( m.truckNum||'&mdash;')+' &middot; '+m.startTime+' &rarr; '+m.endTime+' &middot; '+m.totalHours+' hrs</div>'+
           '</div>'+
           '<div style="display:flex;gap:10px;align-items:center">'+
@@ -190,8 +195,8 @@ function renderCards(){
         detailTbls+
         '<div style="display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--border)">'+
           '<button class="ea-btn" title="Edit" data-mid="'+m.id+'" onclick="editManifest(this.dataset.mid)" style="background:var(--accent-light);color:var(--accent);border-color:var(--accent)">&#9998;</button>'+
-          '<button class="ea-btn ea-del" title="Delete manifest" data-mid="'+m.id+'" onclick="if(confirm(\'Delete this manifest?\'))delM(this.dataset.mid)">&#128465;</button>'+
-          '<button class="ea-btn ea-ok" style="font-size:13px;height:36px" data-mid="'+m.id+'" onclick="appM(this.dataset.mid)">'+(m.status==='reviewed'?'Reviewed':'Mark Reviewed')+'</button>'+
+          '<button class="ea-btn ea-del" title="Delete manifest" data-mid="'+m.id+'" onclick="delM(this.dataset.mid)">&#128465;</button>'+
+          '<button class="ea-btn ea-ok" style="font-size:13px;height:36px" data-mid="'+m.id+'" onclick="appM(this.dataset.mid)">'+(m.status==='reviewed'?'Mark Pending':'Mark Reviewed')+'</button>'+
         '</div>'+
       '</div>';
     }).join('');
@@ -293,7 +298,7 @@ function openMod(id){
     '<div class="ms"><div class="ms-v">'+(m.ttlPickups||0)+'</div><div class="ms-l">Pick Ups</div></div>'+
     '<div class="ms"><div class="ms-v">'+(m.ttlShipments||0)+'</div><div class="ms-l">Shipments</div></div>'+
     '<div class="ms"><div class="ms-v">'+(m.ttlWeight||0).toLocaleString()+'</div><div class="ms-l">lbs</div></div>'+
-    '<div class="ms"><div class="ms-v">'+(m.totalMiles||0)+'</div><div class="ms-l">Miles</div></div>'+'<div class="ms"><div class="ms-v">'+(m.totalHours||0).toFixed(2)+'</div><div class="ms-l">Hours</div></div>'+
+    '<div class="ms"><div class="ms-v">'+(m.totalMiles||0)+'</div><div class="ms-l">Miles</div></div>'+
     '<div class="ms"><div class="ms-v">'+(m.totalHours||0).toFixed(2)+'</div><div class="ms-l">Hours</div></div>'+
     '<div class="ms"><div class="ms-v ms-chg">$'+chg.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div><div class="ms-l">Charges</div></div>'+
   '</div>';
@@ -321,7 +326,7 @@ function openMod(id){
   html+='<div class="modal-actions">';
   html+='<button class="mbtn" data-mid="'+id+'" onclick="editManifest(this.dataset.mid)" style="background:var(--accent-light);color:var(--accent);border:1.5px solid var(--accent)">&#9998; Edit</button>';
   html+='<button class="mbtn mbtn-del" data-mid="'+id+'" onclick="delM(this.dataset.mid)">&#128465; Delete</button>';
-  html+='<button class="mbtn mbtn-ok" data-mid="'+id+'" onclick="appM(this.dataset.mid)">'+(m.status==='reviewed'?'Reviewed':'Mark Reviewed')+'</button>';
+  html+='<button class="mbtn mbtn-ok" data-mid="'+id+'" onclick="appM(this.dataset.mid)">'+(m.status==='reviewed'?'Mark Pending':'Mark Reviewed')+'</button>';
   html+='</div>';
 
   document.getElementById('modContent').innerHTML=html;
@@ -448,32 +453,40 @@ function closeMod(e){if(e.target===document.getElementById('modOv'))document.get
 async function appM(id){
   var m=manifests.find(function(x){return x.id===id;});
   if(!m)return;
+  var newStatus=m.status==='reviewed'?'pending':'reviewed';
   var result=await refreshThenMutateManifests(function(fresh){
     var idx=fresh.findIndex(function(x){return x.id===id;});
-    if(idx>=0)fresh[idx].status='reviewed';
+    if(idx>=0)fresh[idx].status=newStatus;
     return fresh;
   });
   if(!result.ok){showToast('\u26a0 Could not save — check connection and try again',4000);return;}
-  // Update card expand button
+  m.status=newStatus;
+  var isReviewed=newStatus==='reviewed';
+  var btnLabel=isReviewed?'Mark Pending':'Mark Reviewed';
+  // Update card action button + its own row badge
   var btn=document.querySelector('[data-mid="'+id+'"].ea-btn.ea-ok');
-  if(btn)btn.textContent='Reviewed';
-  // Update card badge
-  var badge=btn?btn.closest('.day-entry')?.querySelector('.mbadge'):null;
-  if(badge){badge.className='mbadge br';badge.textContent='REVIEWED';}
+  if(btn)btn.textContent=btnLabel;
+  var dayEntry=btn?btn.closest('.day-entry'):null;
+  var badge=dayEntry?dayEntry.querySelector('.mbadge'):null;
+  if(badge){badge.className='mbadge '+(isReviewed?'br':'bp');badge.textContent=newStatus.toUpperCase();}
   // Update modal button if open
   var mBtn=document.querySelector('[data-mid="'+id+'"].mbtn-ok');
-  if(mBtn)mBtn.textContent='Reviewed';
-  // Update driver group header badge
+  if(mBtn)mBtn.textContent=btnLabel;
+  // Recompute the driver-group header badge from scratch (handles un-reviewing too,
+  // not just the all-reviewed case)
   var group=btn?btn.closest('.driver-group'):null;
   if(group){
     var allReviewed=Array.from(group.querySelectorAll('.day-entry')).every(function(de){
       return de.querySelector('.mbadge.br');
     });
     var groupBadge=group.querySelector('.dg-header .mbadge');
-    if(groupBadge&&allReviewed){groupBadge.className='mbadge br';groupBadge.textContent='REVIEWED';}
+    if(groupBadge){
+      groupBadge.className='mbadge '+(allReviewed?'br':'bp');
+      groupBadge.textContent=allReviewed?'REVIEWED':'PENDING';
+    }
   }
   updateMgrStats();
-  showToast('Marked reviewed');
+  showToast(isReviewed?'Marked reviewed':'Marked pending');
 }
 
 async function delM(id){
@@ -483,14 +496,6 @@ async function delM(id){
   document.getElementById('modOv').classList.remove('open');
   refreshMgr();
   showToast('Deleted');
-}
-
-async function clearAll(){
-  if(!confirm('Delete ALL manifests? Cannot be undone.'))return;
-  var result=await refreshThenMutateManifests(function(){return [];});
-  if(!result.ok){showToast('\u26a0 Clear failed — check connection and try again',4000);return;}
-  refreshMgr();
-  showToast('All cleared');
 }
 
 function save(){saveManifests();}
