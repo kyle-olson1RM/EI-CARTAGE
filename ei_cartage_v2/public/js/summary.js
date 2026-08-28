@@ -446,12 +446,13 @@ function renderSum(){
   var rows=roster.map(function(drv){
     var name=drv.name,unit=drv.unit,r=rate(name);
     var d=dm[name];
-    if(!d)return '<tr class="zero-row"><td><strong>'+unit+'</strong></td><td>'+name+'</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0.00</td><td>$0.00</td></tr>';
+    if(!d)return '<tr class="zero-row"><td><strong>'+unit+'</strong></td><td>'+name+'</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0.00</td><td>$0.00</td><td>$0.0000</td></tr>';
     var wD=0,wP=0,wS=0,wW=0,wM=0,wH=0;
     d.forEach(function(m){wD+=m.ttlDeliveries||0;wP+=m.ttlPickups||0;wS+=m.ttlShipments||0;wW+=m.ttlWeight||0;wM+=m.totalMiles||0;wH+=m.totalHours||0;});
     var wC=wH*r;
+    var wCpl=wW>0?wC/wW:0;
     gD+=wD;gP+=wP;gS+=wS;gW+=wW;gM+=wM;gH+=wH;gC+=wC;
-    return '<tr class="data-row"><td><strong>'+unit+'</strong></td><td>'+name+'</td><td>'+wD+'</td><td>'+wP+'</td><td>'+wS+'</td><td>'+wW.toLocaleString()+'</td><td>'+wM+'</td><td>'+wH.toFixed(2)+'</td><td class="chg-cell">$'+wC.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td></tr>';
+    return '<tr class="data-row"><td><strong>'+unit+'</strong></td><td>'+name+'</td><td>'+wD+'</td><td>'+wP+'</td><td>'+wS+'</td><td>'+wW.toLocaleString()+'</td><td>'+wM+'</td><td>'+wH.toFixed(2)+'</td><td class="chg-cell">$'+wC.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td><td class="chg-cell">$'+wCpl.toFixed(4)+'</td></tr>';
   }).join('');
 
   // J Files for this week
@@ -459,8 +460,9 @@ function renderSum(){
   var weekJFiles=jfiles.filter(function(j){return j.date>=sunday&&j.date<=friday;});
   var jfTotal=weekJFiles.reduce(function(s,j){return s+(parseFloat(j.price)||0);},0);
   var jfWt=weekJFiles.reduce(function(s,j){return s+(parseFloat(j.wt)||0);},0);
+  var jfCpl=jfWt>0?jfTotal/jfWt:0;
   var jfRow=weekJFiles.length
-    ?'<tr class="data-row" style="background:#fffbeb"><td colspan="2"><strong>J Files</strong> ('+weekJFiles.length+')</td><td>—</td><td>—</td><td>'+weekJFiles.length+'</td><td>'+jfWt.toLocaleString()+'</td><td>—</td><td>—</td><td class="chg-cell">$'+jfTotal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td></tr>'
+    ?'<tr class="data-row" style="background:#fffbeb"><td colspan="2"><strong>J Files</strong> ('+weekJFiles.length+')</td><td>—</td><td>—</td><td>'+weekJFiles.length+'</td><td>'+jfWt.toLocaleString()+'</td><td>—</td><td>—</td><td class="chg-cell">$'+jfTotal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td><td class="chg-cell">$'+jfCpl.toFixed(4)+'</td></tr>'
     :'';
   var grandC=gC+jfTotal;
   var grandW=gW+jfWt;
@@ -481,9 +483,9 @@ function renderSum(){
     +'<div class="sum-report">'
     +'<div class="sum-report-head"><div class="srh-title">Expeditors Cartage Program</div><div class="srh-week">Week Ending '+fs(friday)+'</div></div>'
     +'<div style="overflow-x:auto"><table class="sum-tbl">'
-    +'<thead><tr><th>Unit</th><th>Driver</th><th>Deliveries</th><th>Pick Ups</th><th>Shipments</th><th>Weight (lbs)</th><th>Miles</th><th>Hours</th><th>Charges</th></tr></thead>'
+    +'<thead><tr><th>Unit</th><th>Driver</th><th>Deliveries</th><th>Pick Ups</th><th>Shipments</th><th>Weight (lbs)</th><th>Miles</th><th>Hours</th><th>Charges</th><th>$/Lb</th></tr></thead>'
     +'<tbody>'+rows+'</tbody>'
-    +'<tfoot>'+jfRow+'<tr class="total-row"><td colspan="2"><strong>TOTAL</strong></td><td>'+gD+'</td><td>'+gP+'</td><td>'+gS+'</td><td>'+grandW.toLocaleString()+'</td><td>'+gM+'</td><td>'+gH.toFixed(2)+'</td><td class="chg-cell">$'+grandC.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td></tr></tfoot>'
+    +'<tfoot>'+jfRow+'<tr class="total-row"><td colspan="2"><strong>TOTAL</strong></td><td>'+gD+'</td><td>'+gP+'</td><td>'+gS+'</td><td>'+grandW.toLocaleString()+'</td><td>'+gM+'</td><td>'+gH.toFixed(2)+'</td><td class="chg-cell">$'+grandC.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td><td class="chg-cell">$'+(grandW>0?(grandC/grandW).toFixed(4):'0.0000')+'</td></tr></tfoot>'
     +'</table></div>'
     +'<div class="sum-stats">'
     +'<div class="ss-row"><div class="ss-lbl">Average Cost Per Shipment</div><div class="ss-val">$'+acps.toFixed(2)+'</div></div>'
