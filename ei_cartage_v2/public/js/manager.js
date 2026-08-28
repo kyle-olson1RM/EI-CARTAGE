@@ -25,8 +25,10 @@ function getMgrWeekRange(){
 // manifests when "All Weeks" is selected).
 function getMgrWeekManifests(){
   var r=getMgrWeekRange();
-  if(!r.from)return manifests;
-  return manifests.filter(function(m){return m.date>=r.from&&m.date<=r.to;});
+  var adminNames=getAdminDriverNames();
+  var base=adminNames.size?manifests.filter(function(m){return !adminNames.has(m.driverName);}):manifests;
+  if(!r.from)return base;
+  return base.filter(function(m){return m.date>=r.from&&m.date<=r.to;});
 }
 
 // Recomputes the top summary bar (Submitted / Pending / Drivers / Flagged)
@@ -49,10 +51,11 @@ async function refreshMgr(){
   updateMgrWeekLabel();
   updateMgrStats();
 
-  // Populate driver dropdown
+  // Populate driver dropdown (admin/test drivers excluded - they're hidden from this dashboard entirely)
   const sel=document.getElementById('fDrv'),cur=sel.value;
   sel.innerHTML='<option value="">All Drivers</option>';
-  [...new Set(manifests.map(m=>m.driverName))].sort().forEach(n=>{const o=document.createElement('option');o.value=o.textContent=n;if(n===cur)o.selected=true;sel.appendChild(o);});
+  var adminNamesForDrv=getAdminDriverNames();
+  [...new Set(manifests.map(m=>m.driverName))].filter(function(n){return !adminNamesForDrv.has(n);}).sort().forEach(n=>{const o=document.createElement('option');o.value=o.textContent=n;if(n===cur)o.selected=true;sel.appendChild(o);});
   renderCards();
 }
 
@@ -63,8 +66,10 @@ function renderCards(){
   const funit=document.getElementById('fUnit')?.value||'';
   var wkRange=getMgrWeekRange();
   var ffrom=wkRange.from,fto=wkRange.to;
+  var adminNames=getAdminDriverNames();
 
   let list=manifests.filter(function(m){
+    if(adminNames.has(m.driverName))return false;
     if(fd&&m.driverName!==fd)return false;
     if(fs&&m.status!==fs)return false;
     if(fdy&&m.dayOfWeek!==fdy)return false;

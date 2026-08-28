@@ -23,26 +23,37 @@ function saveDriverRoster(roster){
 }
 function sortRoster(roster){
   return roster.slice().sort(function(a,b){
+    var aAdm=!!a.isAdmin,bAdm=!!b.isAdmin;
+    if(aAdm!==bAdm)return(aAdm?1:0)-(bAdm?1:0); // admin/test drivers always sort last
+    if(aAdm&&bAdm)return a.name.localeCompare(b.name);
     var aT=a.unit.toUpperCase().startsWith('ST')?1:0,bT=b.unit.toUpperCase().startsWith('ST')?1:0;
     if(aT!==bT)return aT-bT;
     return(parseInt(a.unit.replace(/[^0-9]/g,''))||0)-(parseInt(b.unit.replace(/[^0-9]/g,''))||0);
   });
 }
+// Names of drivers flagged as admin/test-only. Used to exclude their manifests
+// from the manager dashboard, weekly Summary, custom-range reports, and the
+// customer-facing dashboard — they exist purely to test the driver-side
+// manifest flow and were never real billable work.
+function getAdminDriverNames(){
+  return new Set(getDriverRoster().filter(function(d){return d.isAdmin;}).map(function(d){return d.name;}));
+}
 
 // ── UNIT TYPE / AUTO-NUMBERING HELPERS ─────────────────────────────────────────
 // Truck type is always derived from the unit string's prefix ('TT' or 'ST'),
 // never freely typed, so numbering stays consistent and pricing (which is
-// keyed off truck type) can never drift.
+// keyed off truck type) can never drift. Admin/test drivers (unit 'ADMIN')
+// are excluded entirely — they never occupy or consume a TT/ST slot.
 function _unitType(unit){return(unit||'').trim().toUpperCase().startsWith('ST')?'ST':'TT';}
 function _unitNum(unit){return parseInt((unit||'').replace(/[^0-9]/g,''))||0;}
 function _nextUnitNum(roster,type){
-  var nums=roster.filter(function(d){return _unitType(d.unit)===type;}).map(function(d){return _unitNum(d.unit);});
+  var nums=roster.filter(function(d){return !d.isAdmin&&_unitType(d.unit)===type;}).map(function(d){return _unitNum(d.unit);});
   return(nums.length?Math.max.apply(null,nums):0)+1;
 }
 // Reassigns sequential unit numbers (1, 2, 3...) within one truck type, closing
 // any gap left by a removed or moved driver, while preserving relative order.
 function _renumberType(roster,type){
-  var group=roster.filter(function(d){return _unitType(d.unit)===type;});
+  var group=roster.filter(function(d){return !d.isAdmin&&_unitType(d.unit)===type;});
   group.sort(function(a,b){return _unitNum(a.unit)-_unitNum(b.unit);});
   group.forEach(function(d,i){d.unit=type+' '+(i+1);});
 }
@@ -135,14 +146,36 @@ function renderDriverList(){
   el.innerHTML='<div style="display:flex;align-items:center;gap:10px;padding:6px 0 8px;border-bottom:2px solid var(--border2)"><div style="width:60px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)">Unit</div><div style="width:80px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)">Driver #</div><div style="flex:1;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)">Name</div><div style="width:65px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);text-align:right">Rate</div><div style="width:60px"></div></div>'+
   sorted.map(function(d){
     var origIdx=roster.indexOf(d);
-    return '<div class="dl-row" id="dlrow_'+origIdx+'" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)"><div style="width:60px;font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:700;color:var(--accent)">'+d.unit+'</div><div style="width:80px;font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:600;color:var(--text2)">'+(d.driverNum?'#'+d.driverNum:'&mdash;')+'</div><div style="flex:1;font-size:14px;font-weight:500">'+d.name+'</div><div style="width:65px;font-family:Barlow Condensed,sans-serif;font-size:14px;color:var(--text2);text-align:right">$'+d.rate+'/hr</div><button onclick="editDriver('+origIdx+')" style="height:34px;padding:0 14px;border-radius:5px;border:1.5px solid var(--accent);background:var(--accent-light);color:var(--accent);font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;cursor:pointer;touch-action:manipulation">Edit</button></div>';
+    var unitDisplay=d.isAdmin?'<span style="font-size:10px;padding:2px 6px;border-radius:3px;background:var(--surface2);color:var(--muted);font-weight:700;letter-spacing:.3px">ADMIN</span>':d.unit;
+    var rateDisplay=d.isAdmin?'&mdash;':('$'+d.rate+'/hr');
+    return '<div class="dl-row" id="dlrow_'+origIdx+'" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)"><div style="width:60px;font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:700;color:var(--accent)">'+unitDisplay+'</div><div style="width:80px;font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:600;color:var(--text2)">'+(d.driverNum?'#'+d.driverNum:'&mdash;')+'</div><div style="flex:1;font-size:14px;font-weight:500">'+d.name+(d.isAdmin?' <span style="font-size:10px;color:var(--muted);font-weight:400">(test only \u2014 hidden from reports)</span>':'')+'</div><div style="width:65px;font-family:Barlow Condensed,sans-serif;font-size:14px;color:var(--text2);text-align:right">'+rateDisplay+'</div><button onclick="editDriver('+origIdx+')" style="height:34px;padding:0 14px;border-radius:5px;border:1.5px solid var(--accent);background:var(--accent-light);color:var(--accent);font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;cursor:pointer;touch-action:manipulation">Edit</button></div>';
   }).join('');
 }
 function editDriver(i){
   var roster=getDriverRoster(),d=roster[i],row=document.getElementById('dlrow_'+i);if(!row)return;
+  var isAdmin=!!d.isAdmin;
   var curType=_unitType(d.unit);
-  row.innerHTML='<div style="display:grid;grid-template-columns:78px 80px 1fr 80px auto auto auto;gap:8px;align-items:center;width:100%;padding:6px 0"><div><select id="edit_type_'+i+'" onchange="_editTypeChanged('+i+')" style="width:100%;height:40px;padding:0 4px;border:1.5px solid var(--accent);border-radius:5px;font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;color:var(--accent)"><option value="TT"'+(curType==='TT'?' selected':'')+'>TT</option><option value="ST"'+(curType==='ST'?' selected':'')+'>ST</option></select><div style="font-size:9px;color:var(--muted);margin-top:2px;white-space:nowrap">Now: <b id="edit_unit_lbl_'+i+'">'+_escAttr(d.unit)+'</b></div></div><input type="text" id="edit_dnum_'+i+'" value="'+_escAttr(d.driverNum||'')+'" placeholder="e.g. 751" inputmode="tel" style="height:40px;padding:0 8px;border:1.5px solid var(--accent);border-radius:5px;font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:600;width:100%"><input type="text" id="edit_name_'+i+'" value="'+_escAttr(d.name||'')+'" placeholder="Driver name" style="height:40px;padding:0 10px;border:1.5px solid var(--accent);border-radius:5px;font-size:14px;font-family:Barlow,sans-serif;width:100%"><input type="number" id="edit_rate_'+i+'" value="'+_escAttr(d.rate||92)+'" placeholder="92" style="height:40px;padding:0 8px;border:1.5px solid var(--accent);border-radius:5px;font-size:14px;font-family:Barlow Condensed,sans-serif;font-weight:600;width:100%"><button onclick="saveDriverEdit('+i+')" style="height:40px;padding:0 14px;border-radius:5px;border:none;background:var(--success);color:white;font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;touch-action:manipulation">Save</button><button onclick="renderDriverList()" style="height:40px;padding:0 10px;border-radius:5px;border:1.5px solid var(--border2);background:var(--surface2);color:var(--text2);font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;cursor:pointer;touch-action:manipulation">Cancel</button><button onclick="removeDriverRow('+i+')" style="height:40px;padding:0 10px;border-radius:5px;border:1.5px solid var(--danger);background:var(--danger-light);color:var(--danger);font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;cursor:pointer;touch-action:manipulation">&#128465;</button></div>';
+  row.innerHTML='<div style="display:grid;grid-template-columns:88px 80px 1fr 80px auto auto auto;gap:8px;align-items:start;width:100%;padding:6px 0"><div><select id="edit_type_'+i+'" onchange="_editTypeChanged('+i+')" '+(isAdmin?'disabled':'')+' style="width:100%;height:40px;padding:0 4px;border:1.5px solid var(--accent);border-radius:5px;font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;color:var(--accent)"><option value="TT"'+(curType==='TT'?' selected':'')+'>TT</option><option value="ST"'+(curType==='ST'?' selected':'')+'>ST</option></select><div style="font-size:9px;color:var(--muted);margin-top:2px;white-space:nowrap">Now: <b id="edit_unit_lbl_'+i+'">'+_escAttr(d.unit)+'</b></div><label style="display:flex;align-items:center;gap:3px;font-size:9px;color:var(--muted);margin-top:4px;white-space:nowrap;cursor:pointer"><input type="checkbox" id="edit_admin_'+i+'" onchange="_editAdminToggled('+i+')" '+(isAdmin?'checked':'')+'> Admin/test</label></div><input type="text" id="edit_dnum_'+i+'" value="'+_escAttr(d.driverNum||'')+'" placeholder="e.g. 751" inputmode="tel" style="height:40px;padding:0 8px;border:1.5px solid var(--accent);border-radius:5px;font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:600;width:100%"><input type="text" id="edit_name_'+i+'" value="'+_escAttr(d.name||'')+'" placeholder="Driver name" style="height:40px;padding:0 10px;border:1.5px solid var(--accent);border-radius:5px;font-size:14px;font-family:Barlow,sans-serif;width:100%"><input type="number" id="edit_rate_'+i+'" value="'+_escAttr(d.rate||92)+'" placeholder="92" '+(isAdmin?'disabled':'')+' style="height:40px;padding:0 8px;border:1.5px solid var(--accent);border-radius:5px;font-size:14px;font-family:Barlow Condensed,sans-serif;font-weight:600;width:100%"><button onclick="saveDriverEdit('+i+')" style="height:40px;padding:0 14px;border-radius:5px;border:none;background:var(--success);color:white;font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;touch-action:manipulation">Save</button><button onclick="renderDriverList()" style="height:40px;padding:0 10px;border-radius:5px;border:1.5px solid var(--border2);background:var(--surface2);color:var(--text2);font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;cursor:pointer;touch-action:manipulation">Cancel</button><button onclick="removeDriverRow('+i+')" style="height:40px;padding:0 10px;border-radius:5px;border:1.5px solid var(--danger);background:var(--danger-light);color:var(--danger);font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;cursor:pointer;touch-action:manipulation">&#128465;</button></div>';
   setTimeout(function(){document.getElementById('edit_name_'+i)?.focus();},50);
+}
+// Toggling the Admin/test checkbox during edit disables the Type/Rate fields
+// (irrelevant for a non-billed test driver) and previews where the unit #
+// will land on save — either 'ADMIN' or the next open slot in the chosen type.
+function _editAdminToggled(i){
+  var roster=getDriverRoster(),d=roster[i];
+  var checked=document.getElementById('edit_admin_'+i)?.checked;
+  var typeSel=document.getElementById('edit_type_'+i);
+  var rateEl=document.getElementById('edit_rate_'+i);
+  var lbl=document.getElementById('edit_unit_lbl_'+i);
+  if(typeSel)typeSel.disabled=checked;
+  if(rateEl)rateEl.disabled=checked;
+  if(checked){
+    if(lbl)lbl.innerHTML=d.unit+' &rarr; ADMIN <span style="color:var(--accent)">(on save)</span>';
+  } else {
+    var newType=typeSel?typeSel.value:'TT';
+    var num=_nextUnitNum(roster,newType);
+    if(lbl)lbl.innerHTML=d.unit+' &rarr; '+newType+' '+num+' <span style="color:var(--accent)">(on save)</span>';
+  }
 }
 // Live preview when the truck type dropdown changes during edit: shows the
 // unit # this driver will move to on save, and offers to swap the rate to
@@ -162,19 +195,30 @@ function _editTypeChanged(i){
   }
 }
 function saveDriverEdit(i){
+  var isAdminNow=!!document.getElementById('edit_admin_'+i)?.checked;
   var newType=document.getElementById('edit_type_'+i)?.value||'TT';
-  var driverNum=document.getElementById('edit_dnum_'+i)?.value.trim(),name=document.getElementById('edit_name_'+i)?.value.trim(),rate=parseFloat(document.getElementById('edit_rate_'+i)?.value)||TRUCK_RATES[newType]||92;
+  var driverNum=document.getElementById('edit_dnum_'+i)?.value.trim(),name=document.getElementById('edit_name_'+i)?.value.trim();
+  var rate=isAdminNow?0:(parseFloat(document.getElementById('edit_rate_'+i)?.value)||TRUCK_RATES[newType]||92);
   if(!name){showToast('Driver name required');return;}
   var roster=getDriverRoster();
+  var wasAdmin=!!roster[i].isAdmin;
   var oldType=_unitType(roster[i].unit);
-  if(newType!==oldType){
-    // Moving to a different truck type: take the next open number in the new
-    // type's sequence, then close the gap this driver leaves behind in the old type.
+  if(isAdminNow&&!wasAdmin){
+    // Becoming admin/test: drop out of whichever type group they were in and close that gap
+    roster[i]={unit:'ADMIN',driverNum:driverNum,name:name,rate:0,isAdmin:true};
+    _renumberType(roster,oldType);
+  } else if(!isAdminNow&&wasAdmin){
+    // Leaving admin/test: join the selected type's sequence at the next open number
     var num=_nextUnitNum(roster,newType);
-    roster[i]={unit:newType+' '+num,driverNum:driverNum,name:name,rate:rate};
+    roster[i]={unit:newType+' '+num,driverNum:driverNum,name:name,rate:rate,isAdmin:false};
+  } else if(isAdminNow&&wasAdmin){
+    roster[i]={unit:'ADMIN',driverNum:driverNum,name:name,rate:0,isAdmin:true};
+  } else if(newType!==oldType){
+    var num2=_nextUnitNum(roster,newType);
+    roster[i]={unit:newType+' '+num2,driverNum:driverNum,name:name,rate:rate,isAdmin:false};
     _renumberType(roster,oldType);
   } else {
-    roster[i]={unit:roster[i].unit,driverNum:driverNum,name:name,rate:rate};
+    roster[i]={unit:roster[i].unit,driverNum:driverNum,name:name,rate:rate,isAdmin:false};
   }
   saveDriverRoster(roster);renderDriverList();showToast('\u2713 Driver updated');
 }
@@ -226,12 +270,13 @@ function _addAnotherNewDriverRow(){
       '<span id="newrow_unit_'+rid+'" style="font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;color:var(--accent)"></span>'+
       '<button type="button" onclick="_removeNewDriverRow('+rid+')" id="newrow_rm_'+rid+'" style="background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:2px 6px;touch-action:manipulation">&#215;</button>'+
     '</div>'+
-    '<div style="display:grid;grid-template-columns:64px 1fr 84px 84px;gap:8px">'+
+    '<div style="display:grid;grid-template-columns:64px 1fr 84px 84px;gap:8px;margin-bottom:8px">'+
       '<div><label style="display:block;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px">Type</label><select id="newrow_type_'+rid+'" onchange="_onRowTypeChange('+rid+')" style="width:100%;height:40px;padding:0 4px;border:1.5px solid var(--border);border-radius:5px;font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700"><option value="TT"'+(defaultType==='TT'?' selected':'')+'>TT</option><option value="ST"'+(defaultType==='ST'?' selected':'')+'>ST</option></select></div>'+
       '<div><label style="display:block;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px">Driver Name</label><input type="text" id="new_name_'+rid+'" placeholder="First Last" autocapitalize="words" oninput="capWords(this)" style="width:100%;height:40px;padding:0 10px;border:1.5px solid var(--border);border-radius:5px;font-size:14px;font-family:Barlow,sans-serif"></div>'+
       '<div><label style="display:block;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px">Driver #</label><input type="text" id="new_dnum_'+rid+'" placeholder="e.g. 751" inputmode="tel" style="width:100%;height:40px;padding:0 8px;border:1.5px solid var(--border);border-radius:5px;font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:600"></div>'+
       '<div><label style="display:block;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px">Rate ($/hr)</label><input type="number" id="new_rate_'+rid+'" inputmode="decimal" value="'+(TRUCK_RATES[defaultType]||92)+'" style="width:100%;height:40px;padding:0 8px;border:1.5px solid var(--border);border-radius:5px;font-size:14px;font-family:Barlow Condensed,sans-serif;font-weight:600"></div>'+
-    '</div>';
+    '</div>'+
+    '<label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);cursor:pointer"><input type="checkbox" id="newrow_admin_'+rid+'" onchange="_onRowAdminToggle('+rid+')"> Admin/test driver &mdash; no truck, hidden from Summary &amp; Manager dashboard</label>';
   rows.appendChild(div);
   _refreshNewDriverRowPreviews();
   setTimeout(function(){document.getElementById('new_name_'+rid)?.focus();},50);
@@ -249,6 +294,16 @@ function _onRowTypeChange(rid){
   if(wrap)wrap.dataset.type=newType;
   _refreshNewDriverRowPreviews();
 }
+// Admin/test rows skip truck assignment entirely — disable Type/Rate and
+// drop out of the TT/ST slot counting used for the unit-number previews.
+function _onRowAdminToggle(rid){
+  var checked=document.getElementById('newrow_admin_'+rid)?.checked;
+  var typeSel=document.getElementById('newrow_type_'+rid);
+  var rateEl=document.getElementById('new_rate_'+rid);
+  if(typeSel)typeSel.disabled=checked;
+  if(rateEl)rateEl.disabled=checked;
+  _refreshNewDriverRowPreviews();
+}
 function _removeNewDriverRow(rid){
   if(window._newDriverRowIds.length<=1)return; // always keep at least one row
   window._newDriverRowIds=window._newDriverRowIds.filter(function(x){return x!==rid;});
@@ -260,10 +315,15 @@ function _refreshNewDriverRowPreviews(){
   var bases={TT:_nextUnitNum(roster,'TT'),ST:_nextUnitNum(roster,'ST')};
   var counts={TT:0,ST:0};
   window._newDriverRowIds.forEach(function(rid){
-    var type=document.getElementById('newrow_type_'+rid)?.value||'TT';
+    var isAdmin=document.getElementById('newrow_admin_'+rid)?.checked;
     var lbl=document.getElementById('newrow_unit_'+rid);
-    if(lbl)lbl.textContent='Unit '+type+' '+(bases[type]+counts[type]);
-    counts[type]++;
+    if(isAdmin){
+      if(lbl)lbl.textContent='ADMIN (no truck)';
+    } else {
+      var type=document.getElementById('newrow_type_'+rid)?.value||'TT';
+      if(lbl)lbl.textContent='Unit '+type+' '+(bases[type]+counts[type]);
+      counts[type]++;
+    }
     var rm=document.getElementById('newrow_rm_'+rid);
     if(rm)rm.style.display=window._newDriverRowIds.length>1?'inline-block':'none';
   });
@@ -274,19 +334,29 @@ function confirmAddDriver(){
   ids.forEach(function(rid){
     var name=document.getElementById('new_name_'+rid)?.value.trim();
     if(!name)return; // skip any blank rows rather than blocking the whole batch
-    var type=document.getElementById('newrow_type_'+rid)?.value||'TT';
+    var isAdmin=!!document.getElementById('newrow_admin_'+rid)?.checked;
     var driverNum=document.getElementById('new_dnum_'+rid)?.value.trim();
-    var rate=parseFloat(document.getElementById('new_rate_'+rid)?.value)||TRUCK_RATES[type]||92;
-    entries.push({type:type,driverNum:driverNum,name:name,rate:rate});
+    if(isAdmin){
+      entries.push({isAdmin:true,driverNum:driverNum,name:name,rate:0});
+    } else {
+      var type=document.getElementById('newrow_type_'+rid)?.value||'TT';
+      var rate=parseFloat(document.getElementById('new_rate_'+rid)?.value)||TRUCK_RATES[type]||92;
+      entries.push({isAdmin:false,type:type,driverNum:driverNum,name:name,rate:rate});
+    }
   });
   if(!entries.length){showToast('Enter at least one driver name');return;}
   var roster=getDriverRoster();
   // Recomputed at save time (in case the roster changed while the form was open),
   // then each type gets its own running counter so mixed TT/ST batches stay contiguous.
+  // Admin/test entries skip this entirely - they never occupy a TT/ST slot.
   var counters={TT:_nextUnitNum(roster,'TT'),ST:_nextUnitNum(roster,'ST')};
   entries.forEach(function(e){
-    roster.push({unit:e.type+' '+counters[e.type],driverNum:e.driverNum,name:e.name,rate:e.rate});
-    counters[e.type]++;
+    if(e.isAdmin){
+      roster.push({unit:'ADMIN',driverNum:e.driverNum,name:e.name,rate:0,isAdmin:true});
+    } else {
+      roster.push({unit:e.type+' '+counters[e.type],driverNum:e.driverNum,name:e.name,rate:e.rate,isAdmin:false});
+      counters[e.type]++;
+    }
   });
   saveDriverRoster(roster);
   var form=document.getElementById('addDriverForm');if(form)form.remove();

@@ -21,7 +21,8 @@ function wkLbl(mon){
 
 function allWks(){
   var weeks=new Set();
-  manifests.forEach(function(m){if(m.date)weeks.add(getMon(m.date));});
+  var adminNames0=getAdminDriverNames();
+  manifests.forEach(function(m){if(m.date&&!adminNames0.has(m.driverName))weeks.add(getMon(m.date));});
   // Use a local-date string for "today" rather than toISOString(), which
   // converts to UTC first and can land on tomorrow's date during evening
   // hours in US timezones — that could push currentMon a full week ahead
@@ -78,7 +79,8 @@ function rsPreset(p){
 }
 function renderRangeStats(){
   var from=document.getElementById('rsFrom')?.value,to=document.getElementById('rsTo')?.value,el=document.getElementById('rsContent');if(!el)return;
-  var filtered=manifests.slice();
+  var adminNames=getAdminDriverNames();
+  var filtered=manifests.filter(function(m){return !adminNames.has(m.driverName);});
   if(from)filtered=filtered.filter(function(m){return m.date>=from;});
   if(to)filtered=filtered.filter(function(m){return m.date<=to;});
   if(!filtered.length){el.innerHTML='<div class="no-data"><div style="font-size:36px;margin-bottom:10px">&#128197;</div><div style="font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:700">No data in this range</div></div>';return;}
@@ -86,7 +88,7 @@ function renderRangeStats(){
   var dm={};filtered.forEach(function(m){if(!dm[m.driverName])dm[m.driverName]={del:0,pu:0,ship:0,wt:0,mi:0,hrs:0,days:new Set()};dm[m.driverName].del+=m.ttlDeliveries||0;dm[m.driverName].pu+=m.ttlPickups||0;dm[m.driverName].ship+=m.ttlShipments||0;dm[m.driverName].wt+=m.ttlWeight||0;dm[m.driverName].mi+=m.totalMiles||0;dm[m.driverName].hrs+=m.totalHours||0;dm[m.driverName].days.add(m.date);});
   var gD=0,gP=0,gS=0,gW=0,gM=0,gH=0,gC=0;
   Object.keys(dm).forEach(function(n){var d=dm[n],r=rate(n),c=d.hrs*r;gD+=d.del;gP+=d.pu;gS+=d.ship;gW+=d.wt;gM+=d.mi;gH+=d.hrs;gC+=c;});
-  var roster=getDriverRoster();
+  var roster=getDriverRoster().filter(function(d){return !d.isAdmin;});
   var totalDays=new Set(filtered.map(function(m){return m.date;})).size;
   var acps=gS>0?gC/gS:0,acpl=gW>0?gC/gW:0,asph=gH>0?gS/gH:0,acpm=gM>0?gC/gM:0,amd=totalDays>0?gM/totalDays:0;
   var rowsHtml=roster.map(function(d){
@@ -99,7 +101,8 @@ function renderRangeStats(){
 }
 function dlRangeReport(){
   var from=document.getElementById('rsFrom')?.value,to=document.getElementById('rsTo')?.value;
-  var filtered=manifests.slice();
+  var adminNames=getAdminDriverNames();
+  var filtered=manifests.filter(function(m){return !adminNames.has(m.driverName);});
   if(from)filtered=filtered.filter(function(m){return m.date>=from;});
   if(to)filtered=filtered.filter(function(m){return m.date<=to;});
   if(!filtered.length){showToast('No data to download');return;}
@@ -107,7 +110,7 @@ function dlRangeReport(){
   var dateLabel=from&&to?from+' to '+to:from?'From '+from:to?'Through '+to:'All Time';
   var gD=0,gP=0,gS=0,gW=0,gM=0,gH=0,gC=0;
   var csv='EI Cartage Report - '+dateLabel+'\n\nDriver,Unit,TTL Deliveries,TTL Pick Ups,TTL Shipments,TTL Weight (lbs),TTL Miles,TTL Hours,Charges\n';
-  getDriverRoster().forEach(function(drv){var name=drv.name,unit=drv.unit,d=dm[name],r=rate(name);if(!d)return;var c=d.hrs*r;csv+=name+','+unit+','+d.del+','+d.pu+','+d.ship+','+d.wt+','+d.mi+','+d.hrs.toFixed(2)+',$'+c.toFixed(2)+'\n';gD+=d.del;gP+=d.pu;gS+=d.ship;gW+=d.wt;gM+=d.mi;gH+=d.hrs;gC+=c;});
+  getDriverRoster().filter(function(d){return !d.isAdmin;}).forEach(function(drv){var name=drv.name,unit=drv.unit,d=dm[name],r=rate(name);if(!d)return;var c=d.hrs*r;csv+=name+','+unit+','+d.del+','+d.pu+','+d.ship+','+d.wt+','+d.mi+','+d.hrs.toFixed(2)+',$'+c.toFixed(2)+'\n';gD+=d.del;gP+=d.pu;gS+=d.ship;gW+=d.wt;gM+=d.mi;gH+=d.hrs;gC+=c;});
   csv+='\nTOTAL,,'+gD+','+gP+','+gS+','+gW+','+gM+','+gH.toFixed(2)+',$'+gC.toFixed(2)+'\n';
   var acps=gS>0?gC/gS:0,acpl=gW>0?gC/gW:0,asph=gH>0?gS/gH:0,acpm=gM>0?gC/gM:0;
   csv+='\nAvg Cost/Shipment,$'+acps.toFixed(2)+'\nAvg Cost/lb,$'+acpl.toFixed(4)+'\nShipments/Hr,'+asph.toFixed(2)+'\nAvg Cost/Mile,$'+acpm.toFixed(2)+'\n';
@@ -186,7 +189,7 @@ function renderCustomerDash(){
   _custMon=sunday;_custFriday=friday;
   if(ml)ml.textContent=fs(sunday)+' — '+fs(friday);
 
-  var roster=getDriverRoster();
+  var roster=getDriverRoster().filter(function(d){return !d.isAdmin;});
   var wm=manifests.filter(function(m){return m.date>=sunday&&m.date<=friday;});
   var dm={};
   wm.forEach(function(m){
@@ -371,7 +374,8 @@ function custExportDriver(driverName, mon, friday){
 }
 
 function custExportAll(){var mon=_custMon,friday=_custFriday;
-  var wm=manifests.filter(function(m){return m.date>=mon&&m.date<=friday;});
+  var adminNames=getAdminDriverNames();
+  var wm=manifests.filter(function(m){return m.date>=mon&&m.date<=friday&&!adminNames.has(m.driverName);});
   var rows=['Driver,Unit,Date,Type,Pro #/Ref #,Consignee/Shipper,City,Pieces,Weight (lbs),Drop Location'];
   var rosterMap={};
   getDriverRoster().forEach(function(d){rosterMap[d.name]=d.unit;});
@@ -438,7 +442,7 @@ function renderSum(){
   var friday=friDt.toISOString().split('T')[0];
   var sunDt=new Date(mon+'T12:00:00');sunDt.setDate(sunDt.getDate()-1);
   var sunday=sunDt.toISOString().split('T')[0];
-  var roster=getDriverRoster();
+  var roster=getDriverRoster().filter(function(d){return !d.isAdmin;});
   var wm=manifests.filter(function(m){return m.date>=sunday&&m.date<=friday;});
   var dm={};
   wm.forEach(function(m){var key=m.isSubstitute&&m.subFor?m.subFor:m.driverName;if(!dm[key])dm[key]=[];dm[key].push(m);});
@@ -506,7 +510,7 @@ function dlWeekly(){
   var friday=friDt.toISOString().split('T')[0];
   var sunDt=new Date(mon+'T12:00:00');sunDt.setDate(sunDt.getDate()-1);
   var sunday=sunDt.toISOString().split('T')[0];
-  var roster=getDriverRoster();
+  var roster=getDriverRoster().filter(function(d){return !d.isAdmin;});
   var wm=manifests.filter(function(m){return m.date>=sunday&&m.date<=friday;});
   var dm={};
   wm.forEach(function(m){var key=m.isSubstitute&&m.subFor?m.subFor:m.driverName;if(!dm[key])dm[key]=[];dm[key].push(m);});
