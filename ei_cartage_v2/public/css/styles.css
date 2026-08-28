@@ -145,19 +145,19 @@ html{overflow-x:hidden;max-width:100vw;}body{font-family:'Barlow',sans-serif;bac
 .sum-report-head { background: var(--accent); color: white; padding: 16px 18px; }
 .srh-title { font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 800; letter-spacing: 0.5px; }
 .srh-week { font-size: 13px; color: rgba(255,255,255,0.75); margin-top: 3px; }
-.sum-tbl { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 680px; }
-.sum-tbl th { background: #E31837; color: rgba(255,255,255,0.7); padding: 12px 10px; text-align: right; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border-right: 1px solid rgba(255,255,255,0.08); white-space: nowrap; }
+.sum-tbl { width: 100%; border-collapse: collapse; font-size: 16px; min-width: 680px; table-layout: fixed; }
+.sum-tbl th { background: #E31837; color: rgba(255,255,255,0.7); padding: 12px 6px; text-align: right; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; border-right: 1px solid rgba(255,255,255,0.08); white-space: normal; line-height: 1.25; }
 .sum-tbl th:first-child, .sum-tbl th:nth-child(2) { text-align: left; }
-.sum-tbl td { padding: 10px 10px; text-align: right; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); font-family: 'Barlow Condensed', sans-serif; font-size: 13px; }
-.sum-tbl td:first-child, .sum-tbl td:nth-child(2) { text-align: left; font-family: 'Barlow', sans-serif; }
-.sum-tbl td:nth-child(2) { color: var(--text2); font-size: 13px; }
+.sum-tbl td { padding: 10px 6px; text-align: right; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); font-family: 'Barlow Condensed', sans-serif; font-size: 15px; }
+.sum-tbl td:first-child, .sum-tbl td:nth-child(2) { text-align: left; font-family: 'Barlow', sans-serif; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sum-tbl td:nth-child(2) { color: var(--text2); font-size: 14px; }
 .sum-tbl .data-row td { background: var(--surface); }
 .sum-tbl .data-row:hover td { background: var(--accent-light); }
 .sum-tbl .zero-row td { background: var(--surface2); color: var(--muted); }
-.sum-tbl .total-row td { background: #E31837; color: white; font-weight: 700; font-size: 14px; border-top: 2px solid var(--accent2); }
-.sum-tbl .total-row td:first-child, .sum-tbl .total-row td:nth-child(2) { font-family: 'Barlow Condensed', sans-serif; font-size: 14px; }
+.sum-tbl .total-row td { background: #E31837; color: white; font-weight: 700; font-size: 15px; border-top: 2px solid var(--accent2); }
+.sum-tbl .total-row td:first-child, .sum-tbl .total-row td:nth-child(2) { font-family: 'Barlow Condensed', sans-serif; font-size: 15px; }
 .chg-cell { color: var(--accent); font-weight: 700; }
-.sum-tbl .total-row .chg-cell { color: #f5a623; font-size: 16px; }
+.sum-tbl .total-row .chg-cell { color: #f5a623; font-size: 17px; }
 .sum-stats { border-top: 2px solid var(--border); padding: 16px 18px; display: flex; flex-direction: column; gap: 0; }
 .ss-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
 .ss-row:last-child { border-bottom: none; }

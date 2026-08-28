@@ -483,6 +483,7 @@ function renderSum(){
     +'<div class="sum-report">'
     +'<div class="sum-report-head"><div class="srh-title">Expeditors Cartage Program</div><div class="srh-week">Week Ending '+fs(friday)+'</div></div>'
     +'<div style="overflow-x:auto"><table class="sum-tbl">'
+    +'<colgroup><col style="width:7%"><col style="width:15%"><col style="width:9%"><col style="width:9%"><col style="width:9%"><col style="width:11%"><col style="width:8%"><col style="width:8%"><col style="width:13%"><col style="width:11%"></colgroup>'
     +'<thead><tr><th>Unit</th><th>Driver</th><th>Deliveries</th><th>Pick Ups</th><th>Shipments</th><th>Weight (lbs)</th><th>Miles</th><th>Hours</th><th>Charges</th><th>$/Lb</th></tr></thead>'
     +'<tbody>'+rows+'</tbody>'
     +'<tfoot>'+jfRow+'<tr class="total-row"><td colspan="2"><strong>TOTAL</strong></td><td>'+gD+'</td><td>'+gP+'</td><td>'+gS+'</td><td>'+grandW.toLocaleString()+'</td><td>'+gM+'</td><td>'+gH.toFixed(2)+'</td><td class="chg-cell">$'+grandC.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td><td class="chg-cell">$'+(grandW>0?(grandC/grandW).toFixed(4):'0.0000')+'</td></tr></tfoot>'
