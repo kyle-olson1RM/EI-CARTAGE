@@ -454,16 +454,50 @@ async function appM(id){
   var m=manifests.find(function(x){return x.id===id;});
   if(!m)return;
   var newStatus=m.status==='reviewed'?'pending':'reviewed';
+  // Marking reviewed means any flags on this manifest have been addressed -
+  // clear them so they stop showing. Un-reviewing doesn't resurrect them.
+  var clearingFlags=newStatus==='reviewed'&&((m.flags&&m.flags.length)||(m.flaggedStops&&m.flaggedStops.length));
   var result=await refreshThenMutateManifests(function(fresh){
     var idx=fresh.findIndex(function(x){return x.id===id;});
-    if(idx>=0)fresh[idx].status=newStatus;
+    if(idx>=0){
+      fresh[idx].status=newStatus;
+      if(newStatus==='reviewed'){fresh[idx].flags=[];fresh[idx].flaggedStops=[];}
+    }
     return fresh;
   });
   if(!result.ok){showToast('\u26a0 Could not save — check connection and try again',4000);return;}
   m.status=newStatus;
+  if(newStatus==='reviewed'){m.flags=[];m.flaggedStops=[];}
   var isReviewed=newStatus==='reviewed';
+
+  if(clearingFlags){
+    // Flags affect the header warning icon, per-row highlighting, and
+    // tooltip text all at once, so a full re-render is the reliable way to
+    // clear them everywhere. Re-open whichever driver group was open so the
+    // manager doesn't lose their place, and refresh the modal if it's open
+    // for this same manifest.
+    var btnEl=document.querySelector('[data-mid="'+id+'"].ea-btn.ea-ok');
+    var openGroup=btnEl?btnEl.closest('.driver-group'):null;
+    var openGid=openGroup?openGroup.dataset.gid:null;
+    var modalShowingThis=!!document.querySelector('#modOv.open [data-mid="'+id+'"].mbtn-ok');
+    renderCards();
+    if(openGid){
+      var reGroup=document.querySelector('.driver-group[data-gid="'+CSS.escape(openGid)+'"]');
+      if(reGroup){
+        var body=reGroup.querySelector('.dg-body');
+        var arrow=reGroup.querySelector('.dg-arrow');
+        if(body)body.style.display='block';
+        if(arrow)arrow.style.transform='rotate(180deg)';
+      }
+    }
+    if(modalShowingThis)openMod(id);
+    updateMgrStats();
+    showToast('Marked reviewed — flags cleared');
+    return;
+  }
+
+  // No flags to clear: keep the light-weight in-place patch instead of a full re-render
   var btnLabel=isReviewed?'Mark Pending':'Mark Reviewed';
-  // Update card action button + its own row badge
   var btn=document.querySelector('[data-mid="'+id+'"].ea-btn.ea-ok');
   if(btn)btn.textContent=btnLabel;
   var dayEntry=btn?btn.closest('.day-entry'):null;
