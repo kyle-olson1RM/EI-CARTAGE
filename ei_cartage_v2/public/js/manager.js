@@ -100,8 +100,8 @@ function renderCards(){
   list.forEach(function(m){
     var r=rate(m.driverName);
     pgD+=m.ttlDeliveries||0;pgP+=m.ttlPickups||0;pgS+=m.ttlShipments||0;
-    pgW+=m.ttlWeight||0;pgM+=m.totalMiles||0;pgH+=m.totalHours||0;
-    pgC+=(m.totalHours||0)*r;
+    pgW+=m.ttlWeight||0;pgM+=m.totalMiles||0;pgH+=getEffectiveHours(m);
+    pgC+=getEffectiveHours(m)*r;
   });
   // Add J Files for this week
   var allJFiles=getJFiles();
@@ -136,7 +136,7 @@ function renderCards(){
     var r=rate(name);
     // Driver totals
     var totDel=0,totPU=0,totWt=0,totMi=0,totHrs=0;
-    entries.forEach(function(m){totDel+=m.ttlDeliveries||0;totPU+=m.ttlPickups||0;totWt+=m.ttlWeight||0;totMi+=m.totalMiles||0;totHrs+=m.totalHours||0;});
+    entries.forEach(function(m){totDel+=m.ttlDeliveries||0;totPU+=m.ttlPickups||0;totWt+=m.ttlWeight||0;totMi+=m.totalMiles||0;totHrs+=getEffectiveHours(m);});
     var totChg=totHrs*r;
     var anyPending=entries.some(function(m){return m.status==='pending';});
     var anyFlag=entries.some(function(m){return m.flags&&m.flags.length>0;});
@@ -153,7 +153,7 @@ function renderCards(){
     // Build daily rows for this driver
     var dayRows=entries.map(function(m){
       var ds=new Date(m.date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
-      var chg=(m.totalHours||0)*r;
+      var chg=getEffectiveHours(m)*r;
       var acps=m.ttlShipments>0?chg/m.ttlShipments:0;
       var flaggedDelSet=new Set((m.flaggedStops||[]).filter(function(f){return f.type==='d';}).map(function(f){return f.idx;}));
       var delRows=(m.deliveries||[]).map(function(d,i){
@@ -183,7 +183,7 @@ function renderCards(){
             '<div style="font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:700">'+m.dayOfWeek+' &middot; '+ds+
               (m.isSubstitute?' <span class="mbadge" style="background:var(--warn-light);color:var(--warn);font-size:10px;vertical-align:middle" title="'+_escAttr(m.driverName)+' covered this shift for '+_escAttr(m.subFor||'?')+'">SUB: '+_escAttr(m.driverName)+'</span>':'')+
             '</div>'+
-            '<div style="font-size:11px;color:var(--muted);margin-top:2px">Truck '+( m.truckNum||'&mdash;')+' &middot; '+m.startTime+' &rarr; '+m.endTime+' &middot; '+m.totalHours+' hrs</div>'+
+            '<div style="font-size:11px;color:var(--muted);margin-top:2px">Truck '+( m.truckNum||'&mdash;')+' &middot; '+m.startTime+' &rarr; '+getEffectiveEndTime(m)+' &middot; '+getEffectiveHours(m).toFixed(2)+' hrs</div>'+
           '</div>'+
           '<div style="display:flex;gap:10px;align-items:center">'+
             '<span style="font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;color:var(--accent)">$'+chg.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</span>'+
@@ -194,7 +194,7 @@ function renderCards(){
           '<div class="cs" style="padding:8px;border-right:1px solid var(--border)"><div class="cs-val">'+m.ttlDeliveries+'</div><div class="cs-lbl">Del</div></div>'+
           '<div class="cs" style="padding:8px;border-right:1px solid var(--border)"><div class="cs-val">'+m.ttlPickups+'</div><div class="cs-lbl">PU</div></div>'+
           '<div class="cs" style="padding:8px;border-right:1px solid var(--border)"><div class="cs-val">'+((m.ttlWeight||0).toLocaleString())+'</div><div class="cs-lbl">lbs</div></div>'+
-          '<div class="cs" style="padding:8px;border-right:1px solid var(--border)"><div class="cs-val">'+(m.totalMiles||0)+'</div><div class="cs-lbl">Miles</div></div>'+'<div class="cs" style="padding:8px;border-right:1px solid var(--border)"><div class="cs-val">'+(m.totalHours||0).toFixed(2)+'</div><div class="cs-lbl">Hours</div></div>'+
+          '<div class="cs" style="padding:8px;border-right:1px solid var(--border)"><div class="cs-val">'+(m.totalMiles||0)+'</div><div class="cs-lbl">Miles</div></div>'+'<div class="cs" style="padding:8px;border-right:1px solid var(--border)"><div class="cs-val">'+getEffectiveHours(m).toFixed(2)+'</div><div class="cs-lbl">Hours</div></div>'+
           '<div class="cs" style="padding:8px"><div class="cs-val">$'+acps.toFixed(2)+'</div><div class="cs-lbl">$/Ship</div></div>'+
         '</div>'+
         detailTbls+
@@ -247,7 +247,8 @@ function renderCards(){
 function openMod(id){
   var m=manifests.find(function(x){return x.id===id;});
   if(!m)return;
-  var r=rate(m.driverName),chg=(m.totalHours||0)*r;
+  var r=rate(m.driverName),chg=getEffectiveHours(m)*r;
+  var minApplied=getEffectiveHours(m)>(m.totalHours||0);
   var ds=new Date(m.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
   var fh=m.flags&&m.flags.length>0?m.flags.join(' &middot; '):'';
 
@@ -304,14 +305,14 @@ function openMod(id){
     '<div class="ms"><div class="ms-v">'+(m.ttlShipments||0)+'</div><div class="ms-l">Shipments</div></div>'+
     '<div class="ms"><div class="ms-v">'+(m.ttlWeight||0).toLocaleString()+'</div><div class="ms-l">lbs</div></div>'+
     '<div class="ms"><div class="ms-v">'+(m.totalMiles||0)+'</div><div class="ms-l">Miles</div></div>'+
-    '<div class="ms"><div class="ms-v">'+(m.totalHours||0).toFixed(2)+'</div><div class="ms-l">Hours</div></div>'+
+    '<div class="ms"><div class="ms-v">'+getEffectiveHours(m).toFixed(2)+'</div><div class="ms-l">Hours'+(minApplied?' <span style="color:var(--warn)" title="8-hour minimum applied">&#9432;</span>':'')+'</div></div>'+
     '<div class="ms"><div class="ms-v ms-chg">$'+chg.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div><div class="ms-l">Charges</div></div>'+
   '</div>';
 
   html+='<div class="mod-times">'+
     '<div><span>Start:</span> '+(m.startTime||'&mdash;')+'</div>'+
-    '<div><span>End:</span> '+(m.endTime||'&mdash;')+'</div>'+
-    '<div><span>Miles:</span> '+(m.totalMiles||0)+'</div>'+'<div><span>Hours:</span> '+(m.totalHours||0).toFixed(2)+'</div>'+
+    '<div><span>End:</span> '+(getEffectiveEndTime(m)||'&mdash;')+(minApplied?' <span style="color:var(--warn);font-size:11px">(8-hr min, actual '+(m.endTime||'&mdash;')+')</span>':'')+'</div>'+
+    '<div><span>Miles:</span> '+(m.totalMiles||0)+'</div>'+'<div><span>Hours:</span> '+getEffectiveHours(m).toFixed(2)+'</div>'+
   '</div>';
 
   if(delRows){

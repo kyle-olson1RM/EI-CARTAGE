@@ -232,3 +232,28 @@ function rate(driverName){
   var unit=UNIT_MAP[driverName]||'';
   return unit.toUpperCase().startsWith('ST')?TRUCK_RATES.ST:TRUCK_RATES.TT;
 }
+
+// ── 8-HOUR MINIMUM SHIFT ────────────────────────────────────────────────────
+// Drivers are guaranteed a minimum of 8 billed hours per shift. m.totalHours
+// (computed at submission as clock time minus a 0.5hr break) reflects what
+// was actually worked; these helpers derive the billed/displayed values used
+// everywhere on the manager side (dashboard, Summary, exports, print) without
+// altering the driver's actual submitted start/end time on record.
+var MIN_SHIFT_HOURS = 8;
+function getEffectiveHours(m){
+  var h = m.totalHours||0;
+  return h < MIN_SHIFT_HOURS ? MIN_SHIFT_HOURS : h;
+}
+// Synthetic end time that, run back through the same (hours = span - 0.5hr
+// break) formula, yields exactly the 8-hour minimum. Only diverges from the
+// real submitted end time when the actual shift fell short.
+function getEffectiveEndTime(m){
+  var h = m.totalHours||0;
+  if(h >= MIN_SHIFT_HOURS || !m.startTime) return m.endTime;
+  var sArr = m.startTime.split(':').map(Number);
+  if(sArr.length<2 || isNaN(sArr[0]) || isNaN(sArr[1])) return m.endTime;
+  var sMin = sArr[0]*60+sArr[1];
+  var eMin = Math.round(sMin + (MIN_SHIFT_HOURS+0.5)*60) % 1440;
+  var eh = Math.floor(eMin/60), em = eMin%60;
+  return String(eh).padStart(2,'0')+':'+String(em).padStart(2,'0');
+}
