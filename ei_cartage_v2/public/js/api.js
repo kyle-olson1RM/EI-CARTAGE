@@ -134,6 +134,39 @@ async function refreshThenMutateManifests(mutatorFn) {
   }
 }
 
+// Same refresh-then-merge safety as refreshThenMutateManifests, for J-Files.
+// J-Files previously saved via a naive read-local-cache -> push -> blind
+// overwrite, with no refresh-before-write - a stale cache or a failed
+// network push (silently swallowed) could clobber another device's entry
+// or leave a save looking successful locally when the server never got it.
+async function refreshThenMutateJFiles(mutatorFn) {
+  try {
+    const fresh = JSON.parse(await apiRefresh('ei_jfiles') || cacheGet('ei_jfiles') || '[]');
+    const updated = mutatorFn(fresh) || fresh;
+    var isServer = window.location.protocol !== 'file:' &&
+                   window.location.hostname !== '' &&
+                   window.location.hostname !== 'localhost' &&
+                   window.location.hostname !== '127.0.0.1';
+    if (isServer) {
+      var res = await fetch('/api/store/' + encodeURIComponent('ei_jfiles'), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ value: JSON.stringify(updated) })
+      });
+      if (!res.ok) {
+        console.error('refreshThenMutateJFiles write failed:', res.status, await res.text());
+        return { ok: false, jfiles: updated };
+      }
+    }
+    _cache['ei_jfiles'] = JSON.stringify(updated);
+    try { localStorage.setItem('ei_jfiles', JSON.stringify(updated)); } catch(e) {}
+    return { ok: true, jfiles: updated };
+  } catch(e) {
+    console.error('refreshThenMutateJFiles error:', e.message);
+    return { ok: false, jfiles: null };
+  }
+}
+
 async function apiDel(key) {
   delete _cache[key];
   try {

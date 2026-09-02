@@ -257,19 +257,19 @@
 
 
   <!-- API / Storage Layer -->
-  <script src="/js/config.js?v62"></script>
-  <script src="/js/api.js?v62"></script>
-  <script src="/js/drivers.js?v62"></script>
+  <script src="/js/config.js?v64"></script>
+  <script src="/js/api.js?v64"></script>
+  <script src="/js/drivers.js?v64"></script>
 
   <!-- Feature Modules -->
-  <script src="/js/auth.js?v62"></script>
-  <script src="/js/draft.js?v62"></script>
-  <script src="/js/form.js?v62"></script>
-  <script src="/js/manager.js?v62"></script>
-  <script src="/js/summary.js?v62"></script>
+  <script src="/js/auth.js?v64"></script>
+  <script src="/js/draft.js?v64"></script>
+  <script src="/js/form.js?v64"></script>
+  <script src="/js/manager.js?v64"></script>
+  <script src="/js/summary.js?v64"></script>
 
   <!-- App Init (load last) -->
-  <script src="/js/app.js?v62"></script>
+  <script src="/js/app.js?v64"></script>
 
 
 
@@ -627,7 +627,7 @@
           <div class="field"><label>Shipper</label><input type="text" id="jfShipper" placeholder="Shipper" autocapitalize="characters" style="font-size:13px;height:38px;padding:0 8px"></div>
           <div class="field"><label>Consignee</label><input type="text" id="jfConsignee" placeholder="Consignee" autocapitalize="characters" style="font-size:13px;height:38px;padding:0 8px"></div>
         </div>
-        <button onclick="addJFile()" style="width:100%;padding:9px;border-radius:6px;border:none;background:var(--accent);color:white;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;cursor:pointer;touch-action:manipulation">+ Add J File</button>
+        <button id="jfAddBtn" onclick="addJFile()" style="width:100%;padding:9px;border-radius:6px;border:none;background:var(--accent);color:white;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;cursor:pointer;touch-action:manipulation">+ Add J File</button>
       </div>
       <!-- J Files list -->
       <div id="jfilesList" style="max-height:35vh;overflow-y:auto"></div>

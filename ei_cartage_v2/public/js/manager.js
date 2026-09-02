@@ -690,14 +690,11 @@ function saveJFiles(jfiles){
 }
 
 function showJFiles(){
-  var today = localDateStr();
-  var dateEl = document.getElementById('jfDate');
-  if(dateEl && !dateEl.value) dateEl.value = today;
   renderJFilesList();
   document.getElementById('jfilesOv').classList.add('open');
 }
 
-function addJFile(){
+async function addJFile(){
   var date      = document.getElementById('jfDate')?.value;
   var ref       = document.getElementById('jfRef')?.value.trim().toUpperCase();
   var expRef    = document.getElementById('jfExpRef')?.value.trim().toUpperCase();
@@ -711,38 +708,63 @@ function addJFile(){
   if(!ref && !expRef){ showToast('Please enter at least one reference #',3000); return; }
   if(!price){ showToast('Please enter a price',3000); return; }
 
-  var jfiles = getJFiles();
-  jfiles.push({
-    id: Date.now().toString(),
-    date, ref, expRef, price, pcs, wt, shipper, consignee
+  // Lock the button while the save is in flight so an accidental double-tap
+  // (or a slow connection) can't submit the same entry twice.
+  var btn = document.getElementById('jfAddBtn');
+  if(btn){ if(btn.disabled) return; btn.disabled=true; btn.textContent='Adding\u2026'; }
+
+  var cancelled=false;
+  var result = await refreshThenMutateJFiles(function(fresh){
+    // Flag anything that looks like the same entry already on file (same date,
+    // price, and a matching ref or exp ref) and confirm before adding another -
+    // this is the exact "did I already enter this?" moment causing duplicates.
+    var dupe = fresh.find(function(j){
+      return j.date===date && j.price===price && ((ref&&j.ref===ref)||(expRef&&j.expRef===expRef));
+    });
+    if(dupe){
+      var proceed=confirm('A J File already exists for '+dupe.date+' \u2014 $'+dupe.price.toFixed(2)+' ('+(dupe.ref||dupe.expRef||'no ref')+'). Add this one anyway?');
+      if(!proceed){ cancelled=true; return fresh; }
+    }
+    fresh.push({id:Date.now().toString()+'_'+Math.random().toString(36).slice(2,7), date, ref, expRef, price, pcs, wt, shipper, consignee});
+    return fresh;
   });
-  saveJFiles(jfiles);
+
+  if(btn){ btn.disabled=false; btn.textContent='+ Add J File'; }
+  if(cancelled) return; // declined the duplicate warning - nothing was saved
+  if(!result.ok){ showToast('\u26a0 Could not save — check connection and try again',4000); return; }
 
   // Clear form
-  ['jfRef','jfExpRef','jfPrice','jfPcs','jfWt','jfShipper','jfConsignee']
+  ['jfDate','jfRef','jfExpRef','jfPrice','jfPcs','jfWt','jfShipper','jfConsignee']
     .forEach(function(id){ var el=document.getElementById(id); if(el)el.value=''; });
 
+  showToast('\u2713 J File added');
   renderJFilesList();
   showToast('\u2713 J File added');
 }
 
-function deleteJFile(id){
+async function deleteJFile(id){
   if(!confirm('Remove this J File?')) return;
-  var jfiles = getJFiles().filter(function(j){ return j.id !== id; });
-  saveJFiles(jfiles);
+  var result = await refreshThenMutateJFiles(function(fresh){
+    return fresh.filter(function(j){ return j.id !== id; });
+  });
+  if(!result.ok){ showToast('\u26a0 Could not delete — check connection and try again',4000); return; }
   renderJFilesList();
 }
 
 function renderJFilesList(){
   var el = document.getElementById('jfilesList');
   if(!el) return;
-  var jfiles = getJFiles();
+  var range = getMgrWeekRange();
+  var allJfiles = getJFiles();
+  var jfiles = range.from ? allJfiles.filter(function(j){return j.date>=range.from&&j.date<=range.to;}) : allJfiles;
+  var weekLabel = range.from ? (fs(range.from)+' \u2013 '+fs(range.to)) : 'All Weeks';
+  var headerNote = '<div style="font-size:11px;color:var(--muted);margin-bottom:6px">Showing: <strong>'+weekLabel+'</strong> (matches the week selected on the dashboard)</div>';
   if(!jfiles.length){
-    el.innerHTML = '<div style="color:var(--muted);font-size:13px;text-align:center;padding:12px">No J Files added yet</div>';
+    el.innerHTML = headerNote+'<div style="color:var(--muted);font-size:13px;text-align:center;padding:12px">No J Files for this week</div>';
     return;
   }
   var total = jfiles.reduce(function(s,j){ return s+j.price; }, 0);
-  el.innerHTML = '<div style="font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:8px">'+jfiles.length+' J Files — $'+total.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div>'
+  el.innerHTML = headerNote+'<div style="font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:8px">'+jfiles.length+' J Files — $'+total.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div>'
     + jfiles.map(function(j){
       return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px">'
         +'<div style="flex:1;font-size:13px">'
