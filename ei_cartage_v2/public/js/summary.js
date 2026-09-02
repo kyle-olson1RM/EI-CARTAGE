@@ -73,12 +73,20 @@ function printSummary(){
     table.querySelectorAll('tr.zero-row').forEach(function(tr){ tr.remove(); });
     var headerCells = table.querySelectorAll('thead tr th');
     if(headerCells[1]) headerCells[1].remove(); // Driver header
-    table.querySelectorAll('tbody tr').forEach(function(tr){
+    // Every remaining row either leads with a plain Unit cell + Driver cell
+    // (regular driver rows), or a colspan="2" label cell already spanning
+    // Unit+Driver (the J Files line and the TOTAL line). Handle both by
+    // shape rather than by tbody/tfoot position, since J Files now lives
+    // in the body (between the TT and ST groups) rather than the footer.
+    table.querySelectorAll('tbody tr, tfoot tr').forEach(function(tr){
       var cells = tr.querySelectorAll('td');
-      if(cells[1]) cells[1].remove(); // Driver cell
+      var first = cells[0];
+      if(first && first.hasAttribute('colspan')){
+        first.setAttribute('colspan','1'); // was Unit+Driver, now just Unit
+      } else if(cells[1]){
+        cells[1].remove(); // drop the Driver name cell
+      }
     });
-    // Total/J-Files rows lead with a colspan="2" cell (originally Unit+Driver) - now just Unit
-    table.querySelectorAll('tfoot tr td[colspan]').forEach(function(td){ td.setAttribute('colspan','1'); });
   }
 
   var win=window.open('','_blank','width=1100,height=800');
@@ -467,7 +475,7 @@ function renderSum(){
   var dm={};
   wm.forEach(function(m){var key=m.isSubstitute&&m.subFor?m.subFor:m.driverName;if(!dm[key])dm[key]=[];dm[key].push(m);});
   var gD=0,gP=0,gS=0,gW=0,gM=0,gH=0,gC=0;
-  var rows=roster.map(function(drv){
+  function buildSumRow(drv){
     var name=drv.name,unit=drv.unit,r=rate(name);
     var d=dm[name];
     if(!d)return '<tr class="zero-row"><td><strong>'+unit+'</strong></td><td>'+name+'</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0.00</td><td>$0.00</td><td>$0.0000</td></tr>';
@@ -477,7 +485,15 @@ function renderSum(){
     var wCpl=wW>0?wC/wW:0;
     gD+=wD;gP+=wP;gS+=wS;gW+=wW;gM+=wM;gH+=wH;gC+=wC;
     return '<tr class="data-row"><td><strong>'+unit+'</strong></td><td>'+name+'</td><td>'+wD+'</td><td>'+wP+'</td><td>'+wS+'</td><td>'+wW.toLocaleString()+'</td><td>'+wM+'</td><td>'+wH.toFixed(2)+'</td><td class="chg-cell">$'+wC.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td><td class="chg-cell">$'+wCpl.toFixed(4)+'</td></tr>';
-  }).join('');
+  }
+  // Split into TT / ST groups so J Files can sit between them as a single
+  // one-time row, instead of living in <tfoot> - which browsers repeat at
+  // the bottom of every printed page once the table spans more than one,
+  // making it (and the total) appear to print twice.
+  var ttRoster=roster.filter(function(d){return _unitType(d.unit)==='TT';});
+  var stRoster=roster.filter(function(d){return _unitType(d.unit)==='ST';});
+  var ttRows=ttRoster.map(buildSumRow).join('');
+  var stRows=stRoster.map(buildSumRow).join('');
 
   // J Files for this week
   var jfiles=[];try{jfiles=JSON.parse(cacheGet('ei_jfiles')||'[]');}catch(e){}
@@ -509,8 +525,8 @@ function renderSum(){
     +'<div style="overflow-x:auto"><table class="sum-tbl">'
     +'<colgroup><col style="width:7%"><col style="width:15%"><col style="width:9%"><col style="width:9%"><col style="width:9%"><col style="width:11%"><col style="width:8%"><col style="width:8%"><col style="width:13%"><col style="width:11%"></colgroup>'
     +'<thead><tr><th>Unit</th><th>Driver</th><th>Deliveries</th><th>Pick Ups</th><th>Shipments</th><th>Weight (lbs)</th><th>Miles</th><th>Hours</th><th>Charges</th><th>$/Lb</th></tr></thead>'
-    +'<tbody>'+rows+'</tbody>'
-    +'<tfoot>'+jfRow+'<tr class="total-row"><td colspan="2"><strong>TOTAL</strong></td><td>'+gD+'</td><td>'+gP+'</td><td>'+gS+'</td><td>'+grandW.toLocaleString()+'</td><td>'+gM+'</td><td>'+gH.toFixed(2)+'</td><td class="chg-cell">$'+grandC.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td><td class="chg-cell">$'+(grandW>0?(grandC/grandW).toFixed(4):'0.0000')+'</td></tr></tfoot>'
+    +'<tbody>'+ttRows+jfRow+stRows+'</tbody>'
+    +'<tfoot><tr class="total-row"><td colspan="2"><strong>TOTAL</strong></td><td>'+gD+'</td><td>'+gP+'</td><td>'+gS+'</td><td>'+grandW.toLocaleString()+'</td><td>'+gM+'</td><td>'+gH.toFixed(2)+'</td><td class="chg-cell">$'+grandC.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td><td class="chg-cell">$'+(grandW>0?(grandC/grandW).toFixed(4):'0.0000')+'</td></tr></tfoot>'
     +'</table></div>'
     +'<div class="sum-stats">'
     +'<div class="ss-row"><div class="ss-lbl">Average Cost Per Shipment</div><div class="ss-val">$'+acps.toFixed(2)+'</div></div>'
