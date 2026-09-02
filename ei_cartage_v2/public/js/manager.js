@@ -547,6 +547,11 @@ function toggleGroup(el){
   body.style.display=open?'none':'block';
   if(arrow)arrow.style.transform=open?'':'rotate(180deg)';
 }
+// Collapses every currently-expanded driver-group card back down at once.
+function collapseAllGroups(){
+  document.querySelectorAll('.driver-group .dg-body').forEach(function(body){body.style.display='none';});
+  document.querySelectorAll('.driver-group .dg-arrow').forEach(function(arrow){arrow.style.transform='';});
+}
 
 function toggleCard(el){
   var card=el.closest('.mcard');
