@@ -124,11 +124,17 @@ function updateTotals(){
   document.getElementById('pPcs').textContent=pP.toLocaleString();
   document.getElementById('pWt').textContent=pW.toLocaleString();
   var pl=document.getElementById('puLbl');if(pl)pl.textContent=totalPUStops+' stop'+(totalPUStops!==1?'s':'');
-  document.getElementById('tDel').textContent=delIds.length;document.getElementById('tPU').textContent=puIds.length;// Count unique MAWBs for live display
+  document.getElementById('tDel').textContent=totalDelStops;document.getElementById('tPU').textContent=totalPUStops;// Count unique MAWBs for live display
   var liveRefs=[];
-  delIds.forEach(function(id){var v=document.getElementById('dref_'+id)?.value.trim().toUpperCase();if(v)liveRefs.push(v);});
-  puIds.forEach(function(id){var v=document.getElementById('pref_'+id)?.value.trim().toUpperCase();if(v)liveRefs.push(v);});
-  var liveMAWBs=liveRefs.length>0?[...new Set(liveRefs)].length:delIds.length+puIds.length;
+  delIds.forEach(function(id){
+    var v=document.getElementById('dref_'+id)?.value.trim().toUpperCase();if(v)liveRefs.push(v);
+    (delSubDrops[id]||[]).forEach(function(sid){var sv=document.getElementById('sdref_'+sid)?.value.trim().toUpperCase();if(sv)liveRefs.push(sv);});
+  });
+  puIds.forEach(function(id){
+    var v=document.getElementById('pref_'+id)?.value.trim().toUpperCase();if(v)liveRefs.push(v);
+    (puSubDrops[id]||[]).forEach(function(sid){var sv=document.getElementById('sdref_'+sid)?.value.trim().toUpperCase();if(sv)liveRefs.push(sv);});
+  });
+  var liveMAWBs=liveRefs.length>0?[...new Set(liveRefs)].length:totalDelStops+totalPUStops;
   document.getElementById('tShip').textContent=liveMAWBs;
   document.getElementById('tWt').textContent=(dW+pW).toLocaleString();
   const sm=parseInt(document.getElementById('fSMi').value)||0,em=parseInt(document.getElementById('fEMi').value)||0;
@@ -337,6 +343,8 @@ function submitManifest(){
 
   // Show end of shift popup
   var dels=delIds.length,pus=puIds.length;
+  delIds.forEach(function(id){dels+=(delSubDrops[id]||[]).length;});
+  puIds.forEach(function(id){pus+=(puSubDrops[id]||[]).length;});
   var totWt=0,totPcs=0;
   delIds.forEach(function(id){
     totPcs+=parseInt(document.getElementById('dp_'+id)?.value)||0;
@@ -554,7 +562,9 @@ function addPUStop(){
 
 function _updateStopsLbl(){
   var delCount = delIds.length;
+  delIds.forEach(function(id){delCount+=(delSubDrops[id]||[]).length;});
   var puCount = puIds.length;
+  puIds.forEach(function(id){puCount+=(puSubDrops[id]||[]).length;});
   var dl = document.getElementById('delLbl');
   var pl = document.getElementById('puLbl');
   if(dl) dl.textContent = delCount + ' stop' + (delCount!==1?'s':'');
