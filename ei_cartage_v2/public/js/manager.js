@@ -715,14 +715,16 @@ async function addJFile(){
 
   var cancelled=false;
   var result = await refreshThenMutateJFiles(function(fresh){
-    // Flag anything that looks like the same entry already on file (same date,
-    // price, and a matching ref or exp ref) and confirm before adding another -
-    // this is the exact "did I already enter this?" moment causing duplicates.
+    // A repeated Ref # or Exp Ref # almost always means either a genuine
+    // re-entry or a typo that landed on an existing reference - flag it
+    // regardless of date/price so it's easy to spot exactly where the
+    // mismatch is, rather than only catching exact date+price repeats.
     var dupe = fresh.find(function(j){
-      return j.date===date && j.price===price && ((ref&&j.ref===ref)||(expRef&&j.expRef===expRef));
+      return (ref && j.ref===ref) || (expRef && j.expRef===expRef);
     });
     if(dupe){
-      var proceed=confirm('A J File already exists for '+dupe.date+' \u2014 $'+dupe.price.toFixed(2)+' ('+(dupe.ref||dupe.expRef||'no ref')+'). Add this one anyway?');
+      var matchedOn = (ref && dupe.ref===ref) ? 'Ref # "'+ref+'"' : 'Exp Ref # "'+expRef+'"';
+      var proceed=confirm(matchedOn+' is already used on a J File dated '+dupe.date+' \u2014 $'+dupe.price.toFixed(2)+' ('+(dupe.ref||'\u2014')+' / '+(dupe.expRef||'\u2014')+'). Add this one anyway?');
       if(!proceed){ cancelled=true; return fresh; }
     }
     fresh.push({id:Date.now().toString()+'_'+Math.random().toString(36).slice(2,7), date, ref, expRef, price, pcs, wt, shipper, consignee});
@@ -764,11 +766,20 @@ function renderJFilesList(){
     return;
   }
   var total = jfiles.reduce(function(s,j){ return s+j.price; }, 0);
+  // Count how many times each ref/expRef appears across ALL J Files (not just
+  // this week), so a duplicate entered under a different week still gets
+  // flagged when you're browsing this one.
+  var refCounts={},expRefCounts={};
+  allJfiles.forEach(function(j){
+    if(j.ref) refCounts[j.ref]=(refCounts[j.ref]||0)+1;
+    if(j.expRef) expRefCounts[j.expRef]=(expRefCounts[j.expRef]||0)+1;
+  });
   el.innerHTML = headerNote+'<div style="font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:8px">'+jfiles.length+' J Files — $'+total.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div>'
     + jfiles.map(function(j){
-      return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px">'
+      var isDupe=(j.ref&&refCounts[j.ref]>1)||(j.expRef&&expRefCounts[j.expRef]>1);
+      return '<div style="background:var(--surface);border:1.5px solid '+(isDupe?'var(--danger)':'var(--border)')+';border-radius:6px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px">'
         +'<div style="flex:1;font-size:13px">'
-          +'<div style="font-weight:700;color:var(--accent)">'+j.date+' &nbsp;·&nbsp; $'+j.price.toFixed(2)+'</div>'
+          +'<div style="font-weight:700;color:var(--accent)">'+j.date+' &nbsp;·&nbsp; $'+j.price.toFixed(2)+(isDupe?' &nbsp;<span style="color:var(--danger);font-size:11px;font-weight:700">&#9888; DUPLICATE REF</span>':'')+'</div>'
           +'<div style="color:var(--text2);margin-top:2px">'+(j.ref||'—')+' / '+(j.expRef||'—')+'</div>'
           +'<div style="color:var(--muted);font-size:12px;margin-top:2px">'+(j.shipper||'—')+' → '+(j.consignee||'—')+' &nbsp;·&nbsp; '+j.pcs+' pcs &nbsp;·&nbsp; '+j.wt+' lbs</div>'
         +'</div>'
