@@ -184,6 +184,7 @@
     <button class="hdr-back" onclick="goHome()">&#8592; Back</button>
     <h1>Manager Dashboard</h1>
     <div style="display:flex;gap:8px;align-items:center">
+      <button onclick="collapseAllGroups()" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);color:white;padding:7px 13px;border-radius:4px;cursor:pointer;font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;letter-spacing:.5px;white-space:nowrap">&#9650; Collapse All</button>
       <button onclick="showSumForWeek(mgrWeeks[mgrWeekIdx])" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);color:white;padding:7px 13px;border-radius:4px;cursor:pointer;font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;letter-spacing:.5px;white-space:nowrap">&#128202; Summary</button>
       <button style="background:rgba(255,255,255,.15);border:none;color:white;padding:7px 12px;border-radius:4px;cursor:pointer;font-size:16px;" onclick="refreshMgr()">&#8635;</button>
     </div>
@@ -212,7 +213,6 @@
       <select class="fsel" id="fStat" onchange="renderCards()"><option value="">All Status</option><option value="pending">Pending</option><option value="reviewed">Reviewed</option></select>
       <select class="fsel" id="fDy" onchange="renderCards()"><option value="">All Days</option><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option></select>
       <select class="fsel" id="fUnit" onchange="renderCards()"><option value="">All Units</option><option>TT</option><option>ST</option></select>
-      <button onclick="collapseAllGroups()" style="height:38px;padding:0 14px;border-radius:6px;border:1.5px solid var(--border2);background:var(--surface);color:var(--text2);font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;cursor:pointer;white-space:nowrap;touch-action:manipulation">&#9650; Collapse All</button>
     </div>
 
     <div id="mCards"></div>
@@ -258,19 +258,19 @@
 
 
   <!-- API / Storage Layer -->
-  <script src="/js/config.js?v66"></script>
-  <script src="/js/api.js?v66"></script>
-  <script src="/js/drivers.js?v66"></script>
+  <script src="/js/config.js?v67"></script>
+  <script src="/js/api.js?v67"></script>
+  <script src="/js/drivers.js?v67"></script>
 
   <!-- Feature Modules -->
-  <script src="/js/auth.js?v66"></script>
-  <script src="/js/draft.js?v66"></script>
-  <script src="/js/form.js?v66"></script>
-  <script src="/js/manager.js?v66"></script>
-  <script src="/js/summary.js?v66"></script>
+  <script src="/js/auth.js?v67"></script>
+  <script src="/js/draft.js?v67"></script>
+  <script src="/js/form.js?v67"></script>
+  <script src="/js/manager.js?v67"></script>
+  <script src="/js/summary.js?v67"></script>
 
   <!-- App Init (load last) -->
-  <script src="/js/app.js?v66"></script>
+  <script src="/js/app.js?v67"></script>
 
 
 

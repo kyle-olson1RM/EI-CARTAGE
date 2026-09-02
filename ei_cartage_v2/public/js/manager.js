@@ -201,7 +201,7 @@ function renderCards(){
         '<div style="display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--border)">'+
           '<button class="ea-btn" title="Edit" data-mid="'+m.id+'" onclick="editManifest(this.dataset.mid)" style="background:var(--accent-light);color:var(--accent);border-color:var(--accent)">&#9998;</button>'+
           '<button class="ea-btn ea-del" title="Delete manifest" data-mid="'+m.id+'" onclick="delM(this.dataset.mid)">&#128465;</button>'+
-          '<button class="ea-btn ea-ok" style="font-size:13px;height:36px" data-mid="'+m.id+'" onclick="appM(this.dataset.mid)">'+(m.status==='reviewed'?'Mark Pending':'Mark Reviewed')+'</button>'+
+          '<button class="ea-btn ea-ok-btn '+(m.status==='reviewed'?'ea-ok-reviewed':'ea-ok')+'" style="font-size:13px;height:36px" data-mid="'+m.id+'" onclick="appM(this.dataset.mid)">'+(m.status==='reviewed'?'Mark Pending':'Mark Reviewed')+'</button>'+
         '</div>'+
       '</div>';
     }).join('');
@@ -331,7 +331,7 @@ function openMod(id){
   html+='<div class="modal-actions">';
   html+='<button class="mbtn" data-mid="'+id+'" onclick="editManifest(this.dataset.mid)" style="background:var(--accent-light);color:var(--accent);border:1.5px solid var(--accent)">&#9998; Edit</button>';
   html+='<button class="mbtn mbtn-del" data-mid="'+id+'" onclick="delM(this.dataset.mid)">&#128465; Delete</button>';
-  html+='<button class="mbtn mbtn-ok" data-mid="'+id+'" onclick="appM(this.dataset.mid)">'+(m.status==='reviewed'?'Mark Pending':'Mark Reviewed')+'</button>';
+  html+='<button class="mbtn mbtn-ok-btn '+(m.status==='reviewed'?'mbtn-ok-reviewed':'mbtn-ok')+'" data-mid="'+id+'" onclick="appM(this.dataset.mid)">'+(m.status==='reviewed'?'Mark Pending':'Mark Reviewed')+'</button>';
   html+='</div>';
 
   document.getElementById('modContent').innerHTML=html;
@@ -481,10 +481,10 @@ async function appM(id){
     // clear them everywhere. Re-open whichever driver group was open so the
     // manager doesn't lose their place, and refresh the modal if it's open
     // for this same manifest.
-    var btnEl=document.querySelector('[data-mid="'+id+'"].ea-btn.ea-ok');
+    var btnEl=document.querySelector('[data-mid="'+id+'"].ea-btn.ea-ok-btn');
     var openGroup=btnEl?btnEl.closest('.driver-group'):null;
     var openGid=openGroup?openGroup.dataset.gid:null;
-    var modalShowingThis=!!document.querySelector('#modOv.open [data-mid="'+id+'"].mbtn-ok');
+    var modalShowingThis=!!document.querySelector('#modOv.open [data-mid="'+id+'"].mbtn-ok-btn');
     renderCards();
     if(openGid){
       var reGroup=document.querySelector('.driver-group[data-gid="'+CSS.escape(openGid)+'"]');
@@ -503,14 +503,22 @@ async function appM(id){
 
   // No flags to clear: keep the light-weight in-place patch instead of a full re-render
   var btnLabel=isReviewed?'Mark Pending':'Mark Reviewed';
-  var btn=document.querySelector('[data-mid="'+id+'"].ea-btn.ea-ok');
-  if(btn)btn.textContent=btnLabel;
+  var btn=document.querySelector('[data-mid="'+id+'"].ea-btn.ea-ok-btn');
+  if(btn){
+    btn.textContent=btnLabel;
+    btn.classList.toggle('ea-ok',!isReviewed);
+    btn.classList.toggle('ea-ok-reviewed',isReviewed);
+  }
   var dayEntry=btn?btn.closest('.day-entry'):null;
   var badge=dayEntry?dayEntry.querySelector('.mbadge'):null;
   if(badge){badge.className='mbadge '+(isReviewed?'br':'bp');badge.textContent=newStatus.toUpperCase();}
   // Update modal button if open
-  var mBtn=document.querySelector('[data-mid="'+id+'"].mbtn-ok');
-  if(mBtn)mBtn.textContent=btnLabel;
+  var mBtn=document.querySelector('[data-mid="'+id+'"].mbtn-ok-btn');
+  if(mBtn){
+    mBtn.textContent=btnLabel;
+    mBtn.classList.toggle('mbtn-ok',!isReviewed);
+    mBtn.classList.toggle('mbtn-ok-reviewed',isReviewed);
+  }
   // Recompute the driver-group header badge from scratch (handles un-reviewing too,
   // not just the all-reviewed case)
   var group=btn?btn.closest('.driver-group'):null;

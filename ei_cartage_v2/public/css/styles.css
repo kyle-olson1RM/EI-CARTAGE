@@ -137,7 +137,7 @@ html{overflow-x:hidden;max-width:100vw;}body{font-family:'Barlow',sans-serif;bac
 .det-tbl tr:last-child td{border-bottom:none;}
 .modal-actions{display:flex;gap:10px;margin-top:18px;}
 .mbtn{flex:1;height:46px;border-radius:6px;border:none;cursor:pointer;font-family:Barlow Condensed,sans-serif;font-size:17px;font-weight:700;letter-spacing:.5px;}
-.mbtn-ok{background:var(--success);color:white;}.mbtn-del{background:var(--danger-light);color:var(--danger);}
+.mbtn-ok{background:var(--success);color:white;}.mbtn-ok-reviewed{background:var(--warn);color:white;}.mbtn-del{background:var(--danger-light);color:var(--danger);}
 
 
 /* SUMMARY REPORT — matches spreadsheet layout */
@@ -187,6 +187,7 @@ html{overflow-x:hidden;max-width:100vw;}body{font-family:'Barlow',sans-serif;bac
 .expand-actions{display:flex;gap:10px;padding:12px 14px;}
 .ea-btn{flex:1;height:42px;border-radius:6px;border:none;cursor:pointer;font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:700;letter-spacing:.5px;}
 .ea-ok{background:var(--success);color:white;}
+.ea-ok-reviewed{background:var(--warn);color:white;}
 .ea-del{background:var(--danger-light);color:var(--danger);}
 
 .date-range-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px;background:var(--surface);padding:10px 12px;border-radius:8px;box-shadow:var(--shadow);}
