@@ -211,7 +211,7 @@ function renderCards(){
         '<div class="avatar">'+init+'</div>'+
         '<div style="flex:1">'+
           '<div class="mcard-driver">'+name+' <span style="font-size:12px;font-weight:700;color:'+(unit.toUpperCase().startsWith('ST')?'var(--success)':'var(--accent)')+';margin-left:6px;background:'+(unit.toUpperCase().startsWith('ST')?'var(--success-light)':'var(--accent-light)')+';padding:1px 6px;border-radius:3px">'+(unit.toUpperCase().startsWith('ST')?'ST':'TT')+'</span> <span style="font-size:11px;color:var(--muted);font-weight:400">'+unit+'</span></div>'+
-          '<div class="mcard-meta">'+entries.length+' day'+(entries.length!==1?'s':'')+' &middot; '+totDel+' del &middot; '+totPU+' PU &middot; '+totWt.toLocaleString()+' lbs &middot; '+totMi+' mi</div>'+
+          '<div class="mcard-meta">'+entries.length+' day'+(entries.length!==1?'s':'')+' &middot; '+totDel+' del &middot; '+totPU+' PU &middot; '+totWt.toLocaleString()+' lbs &middot; '+totMi+' mi &middot; '+totHrs.toFixed(2)+' hrs</div>'+
         '</div>'+
         '<div style="display:flex;align-items:center;gap:8px">'+
           (anyFlag?'<span class="flag-icon" style="font-size:16px;cursor:pointer" onclick="showFlagPopup(this)" data-gid="'+name+'">&#9888;</span>':'')+
