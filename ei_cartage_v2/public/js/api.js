@@ -233,6 +233,21 @@ function rate(driverName){
   return unit.toUpperCase().startsWith('ST')?TRUCK_RATES.ST:TRUCK_RATES.TT;
 }
 
+// Returns a driver's current unit (e.g. "ST 6") for display/filtering.
+// Checks the live roster first - the same source rate() uses for billing -
+// and only falls back to the hardcoded UNIT_MAP for drivers not on the
+// roster at all. UNIT_MAP is a deploy-time snapshot that goes stale the
+// moment anyone is added, moved, or renamed through the roster UI, so using
+// it alone for display caused drivers not in that snapshot to show as TT
+// (the ternary's default) even when the roster - and their actual billing -
+// correctly had them as ST.
+function getDriverUnit(driverName){
+  var roster=(typeof getDriverRoster==='function')?getDriverRoster():[];
+  var driver=roster.find(function(d){return d.name===driverName;});
+  if(driver&&driver.unit) return driver.unit;
+  return UNIT_MAP[driverName]||'';
+}
+
 // ── 8-HOUR MINIMUM SHIFT ────────────────────────────────────────────────────
 // Drivers are guaranteed a minimum of 8 billed hours per shift. m.totalHours
 // (computed at submission as clock time minus a 0.5hr break) reflects what

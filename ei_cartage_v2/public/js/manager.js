@@ -73,7 +73,7 @@ function renderCards(){
     if(fd&&m.driverName!==fd)return false;
     if(fs&&m.status!==fs)return false;
     if(fdy&&m.dayOfWeek!==fdy)return false;
-    if(funit){var u=UNIT_MAP[m.driverName]||'';if(!u.startsWith(funit))return false;}
+    if(funit){var u=getDriverUnit(m.driverName);if(!u.toUpperCase().startsWith(funit))return false;}
     if(ffrom&&m.date<ffrom)return false;
     if(fto&&m.date>fto)return false;
     return true;
@@ -132,7 +132,7 @@ function renderCards(){
   var driverCardsHtml=driverNames.map(function(name){
     var entries=groups[name];
     var init=name.split(' ').map(function(w){return w[0];}).join('').slice(0,2);
-    var unit=UNIT_MAP[name]||'';
+    var unit=getDriverUnit(name);
     var r=rate(name);
     // Driver totals
     var totDel=0,totPU=0,totWt=0,totMi=0,totHrs=0;
