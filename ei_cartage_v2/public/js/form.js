@@ -260,8 +260,25 @@ function startNewManifest(){
     }
   }
   document.getElementById('fDate').value=localDateStr();
-  // Pre-fill start time with current time
-  setTimeNow('fStart');
+  // Pre-fill start time: use the driver's configured default start time if
+  // they have one set on the roster AND today is one of the days it applies
+  // to, otherwise fall back to the current time. Either way it's just a
+  // starting point - they can still change it.
+  var defaultStart='';
+  if(session&&session.name&&typeof getDriverRoster==='function'){
+    var rosterEntry=getDriverRoster().find(function(d){return d.name===session.name;});
+    if(rosterEntry&&rosterEntry.startTime){
+      var todayDow=DAYS[new Date(localDateStr()+'T12:00:00').getDay()];
+      var appliesOn=(rosterEntry.startDays&&rosterEntry.startDays.length)?rosterEntry.startDays:DAYS; // no startDays saved = every day (older entries)
+      if(appliesOn.indexOf(todayDow)>=0) defaultStart=rosterEntry.startTime;
+    }
+  }
+  if(defaultStart){
+    var startEl=document.getElementById('fStart');
+    if(startEl) startEl.value=defaultStart;
+  } else {
+    setTimeNow('fStart');
+  }
   onDateChange();calcHours();
   ss('driverForm');
 }

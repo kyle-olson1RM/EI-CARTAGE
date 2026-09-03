@@ -8,6 +8,47 @@ function _escAttr(s){
   return String(s==null?'':s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
+// ── DAY-OF-WEEK TOGGLE (which days a driver's default start time applies to) ──
+var _DOW=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+var _DOW_ABBR={'Sunday':'Su','Monday':'Mo','Tuesday':'Tu','Wednesday':'We','Thursday':'Th','Friday':'Fr','Saturday':'Sa'};
+// selectedDays: array of day names, or null/undefined to mean "every day" (default)
+function _dayToggleHtml(hiddenId,selectedDays){
+  var sel=(selectedDays&&selectedDays.length)?selectedDays:_DOW.slice();
+  var btns=_DOW.map(function(d){
+    var active=sel.indexOf(d)>=0;
+    return '<button type="button" class="day-btn" data-day="'+d+'" data-target="'+hiddenId+'" data-active="'+(active?'1':'0')+'" onclick="_toggleDayBtn(this)" style="width:28px;height:28px;border-radius:4px;border:1.5px solid '+(active?'var(--accent)':'var(--border)')+';background:'+(active?'var(--accent)':'white')+';color:'+(active?'white':'var(--text2)')+';font-size:10px;font-weight:700;cursor:pointer;padding:0;touch-action:manipulation">'+_DOW_ABBR[d]+'</button>';
+  }).join('');
+  return '<div class="daytoggle" style="display:flex;gap:3px;align-items:center;flex-wrap:wrap">'
+    +btns
+    +'<button type="button" data-target="'+hiddenId+'" onclick="_selectAllDaysBtn(this)" style="height:28px;padding:0 8px;border-radius:4px;border:1.5px solid var(--accent);background:white;color:var(--accent);font-size:10px;font-weight:700;cursor:pointer;margin-left:4px;touch-action:manipulation">All</button>'
+    +'<input type="hidden" id="'+hiddenId+'" value="'+sel.join(',')+'">'
+    +'</div>';
+}
+function _toggleDayBtn(btn){
+  var willBeActive=btn.dataset.active!=='1';
+  btn.dataset.active=willBeActive?'1':'0';
+  btn.style.background=willBeActive?'var(--accent)':'white';
+  btn.style.borderColor=willBeActive?'var(--accent)':'var(--border)';
+  btn.style.color=willBeActive?'white':'var(--text2)';
+  _syncDayHidden(btn.dataset.target);
+}
+function _selectAllDaysBtn(btn){
+  var hiddenId=btn.dataset.target;
+  document.querySelectorAll('.day-btn[data-target="'+hiddenId+'"]').forEach(function(b){
+    b.dataset.active='1';
+    b.style.background='var(--accent)';b.style.borderColor='var(--accent)';b.style.color='white';
+  });
+  _syncDayHidden(hiddenId);
+}
+function _syncDayHidden(hiddenId){
+  var hidden=document.getElementById(hiddenId);if(!hidden)return;
+  var selected=[];
+  document.querySelectorAll('.day-btn[data-target="'+hiddenId+'"]').forEach(function(b){
+    if(b.dataset.active==='1') selected.push(b.dataset.day);
+  });
+  hidden.value=selected.join(',');
+}
+
 // ── DRIVER ROSTER ─────────────────────────────────────────────────────────────
 function getDriverRoster(){
   try{
@@ -143,19 +184,23 @@ function renderDriverList(){
   if(!el)return;
   if(!roster.length){el.innerHTML='<div style="text-align:center;padding:24px;color:var(--muted)">No drivers yet.</div>';return;}
   var sorted=sortRoster(roster);
-  el.innerHTML='<div style="display:flex;align-items:center;gap:10px;padding:6px 0 8px;border-bottom:2px solid var(--border2)"><div style="width:60px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)">Unit</div><div style="width:80px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)">Driver #</div><div style="flex:1;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)">Name</div><div style="width:65px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);text-align:right">Rate</div><div style="width:60px"></div></div>'+
+  el.innerHTML='<div style="display:flex;align-items:center;gap:10px;padding:6px 0 8px;border-bottom:2px solid var(--border2)"><div style="width:60px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)">Unit</div><div style="width:80px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)">Driver #</div><div style="flex:1;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)">Name</div><div style="width:65px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);text-align:right">Rate</div><div style="width:70px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);text-align:right">Start</div><div style="width:60px"></div></div>'+
   sorted.map(function(d){
     var origIdx=roster.indexOf(d);
     var unitDisplay=d.isAdmin?'<span style="font-size:10px;padding:2px 6px;border-radius:3px;background:var(--surface2);color:var(--muted);font-weight:700;letter-spacing:.3px">ADMIN</span>':d.unit;
     var rateDisplay=d.isAdmin?'&mdash;':('$'+d.rate+'/hr');
-    return '<div class="dl-row" id="dlrow_'+origIdx+'" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)"><div style="width:60px;font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:700;color:var(--accent)">'+unitDisplay+'</div><div style="width:80px;font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:600;color:var(--text2)">'+(d.driverNum?'#'+d.driverNum:'&mdash;')+'</div><div style="flex:1;font-size:14px;font-weight:500">'+d.name+(d.isAdmin?' <span style="font-size:10px;color:var(--muted);font-weight:400">(test only \u2014 hidden from reports)</span>':'')+'</div><div style="width:65px;font-family:Barlow Condensed,sans-serif;font-size:14px;color:var(--text2);text-align:right">'+rateDisplay+'</div><button onclick="editDriver('+origIdx+')" style="height:34px;padding:0 14px;border-radius:5px;border:1.5px solid var(--accent);background:var(--accent-light);color:var(--accent);font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;cursor:pointer;touch-action:manipulation">Edit</button></div>';
+    var startDisplay=d.startTime||'&mdash;';
+    return '<div class="dl-row" id="dlrow_'+origIdx+'" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)"><div style="width:60px;font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:700;color:var(--accent)">'+unitDisplay+'</div><div style="width:80px;font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:600;color:var(--text2)">'+(d.driverNum?'#'+d.driverNum:'&mdash;')+'</div><div style="flex:1;font-size:14px;font-weight:500">'+d.name+(d.isAdmin?' <span style="font-size:10px;color:var(--muted);font-weight:400">(test only \u2014 hidden from reports)</span>':'')+'</div><div style="width:65px;font-family:Barlow Condensed,sans-serif;font-size:14px;color:var(--text2);text-align:right">'+rateDisplay+'</div><div style="width:70px;font-family:Barlow Condensed,sans-serif;font-size:14px;color:var(--text2);text-align:right">'+startDisplay+'</div><button onclick="editDriver('+origIdx+')" style="height:34px;padding:0 14px;border-radius:5px;border:1.5px solid var(--accent);background:var(--accent-light);color:var(--accent);font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;cursor:pointer;touch-action:manipulation">Edit</button></div>';
   }).join('');
 }
 function editDriver(i){
   var roster=getDriverRoster(),d=roster[i],row=document.getElementById('dlrow_'+i);if(!row)return;
   var isAdmin=!!d.isAdmin;
   var curType=_unitType(d.unit);
-  row.innerHTML='<div style="display:grid;grid-template-columns:88px 80px 1fr 80px auto auto auto;gap:8px;align-items:start;width:100%;padding:6px 0"><div><select id="edit_type_'+i+'" onchange="_editTypeChanged('+i+')" '+(isAdmin?'disabled':'')+' style="width:100%;height:40px;padding:0 4px;border:1.5px solid var(--accent);border-radius:5px;font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;color:var(--accent)"><option value="TT"'+(curType==='TT'?' selected':'')+'>TT</option><option value="ST"'+(curType==='ST'?' selected':'')+'>ST</option></select><div style="font-size:9px;color:var(--muted);margin-top:2px;white-space:nowrap">Now: <b id="edit_unit_lbl_'+i+'">'+_escAttr(d.unit)+'</b></div><label style="display:flex;align-items:center;gap:3px;font-size:9px;color:var(--muted);margin-top:4px;white-space:nowrap;cursor:pointer"><input type="checkbox" id="edit_admin_'+i+'" onchange="_editAdminToggled('+i+')" '+(isAdmin?'checked':'')+'> Admin/test</label></div><input type="text" id="edit_dnum_'+i+'" value="'+_escAttr(d.driverNum||'')+'" placeholder="e.g. 751" inputmode="tel" style="height:40px;padding:0 8px;border:1.5px solid var(--accent);border-radius:5px;font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:600;width:100%"><input type="text" id="edit_name_'+i+'" value="'+_escAttr(d.name||'')+'" placeholder="Driver name" style="height:40px;padding:0 10px;border:1.5px solid var(--accent);border-radius:5px;font-size:14px;font-family:Barlow,sans-serif;width:100%"><input type="number" id="edit_rate_'+i+'" value="'+_escAttr(d.rate||92)+'" placeholder="92" '+(isAdmin?'disabled':'')+' style="height:40px;padding:0 8px;border:1.5px solid var(--accent);border-radius:5px;font-size:14px;font-family:Barlow Condensed,sans-serif;font-weight:600;width:100%"><button onclick="saveDriverEdit('+i+')" style="height:40px;padding:0 14px;border-radius:5px;border:none;background:var(--success);color:white;font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;touch-action:manipulation">Save</button><button onclick="renderDriverList()" style="height:40px;padding:0 10px;border-radius:5px;border:1.5px solid var(--border2);background:var(--surface2);color:var(--text2);font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;cursor:pointer;touch-action:manipulation">Cancel</button><button onclick="removeDriverRow('+i+')" style="height:40px;padding:0 10px;border-radius:5px;border:1.5px solid var(--danger);background:var(--danger-light);color:var(--danger);font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;cursor:pointer;touch-action:manipulation">&#128465;</button></div>';
+  var daysHiddenId='edit_days_'+i;
+  row.innerHTML='<div style="width:100%;padding:6px 0"><div style="display:grid;grid-template-columns:88px 80px 1fr 80px 90px auto auto auto;gap:8px;align-items:start;margin-bottom:8px"><div><select id="edit_type_'+i+'" onchange="_editTypeChanged('+i+')" '+(isAdmin?'disabled':'')+' style="width:100%;height:40px;padding:0 4px;border:1.5px solid var(--accent);border-radius:5px;font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;color:var(--accent)"><option value="TT"'+(curType==='TT'?' selected':'')+'>TT</option><option value="ST"'+(curType==='ST'?' selected':'')+'>ST</option></select><div style="font-size:9px;color:var(--muted);margin-top:2px;white-space:nowrap">Now: <b id="edit_unit_lbl_'+i+'">'+_escAttr(d.unit)+'</b></div><label style="display:flex;align-items:center;gap:3px;font-size:9px;color:var(--muted);margin-top:4px;white-space:nowrap;cursor:pointer"><input type="checkbox" id="edit_admin_'+i+'" onchange="_editAdminToggled('+i+')" '+(isAdmin?'checked':'')+'> Admin/test</label></div><input type="text" id="edit_dnum_'+i+'" value="'+_escAttr(d.driverNum||'')+'" placeholder="e.g. 751" inputmode="tel" style="height:40px;padding:0 8px;border:1.5px solid var(--accent);border-radius:5px;font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:600;width:100%"><input type="text" id="edit_name_'+i+'" value="'+_escAttr(d.name||'')+'" placeholder="Driver name" style="height:40px;padding:0 10px;border:1.5px solid var(--accent);border-radius:5px;font-size:14px;font-family:Barlow,sans-serif;width:100%"><input type="number" id="edit_rate_'+i+'" value="'+_escAttr(d.rate||92)+'" placeholder="92" '+(isAdmin?'disabled':'')+' style="height:40px;padding:0 8px;border:1.5px solid var(--accent);border-radius:5px;font-size:14px;font-family:Barlow Condensed,sans-serif;font-weight:600;width:100%"><div><input type="time" id="edit_start_'+i+'" value="'+_escAttr(d.startTime||'')+'" style="height:40px;padding:0 6px;border:1.5px solid var(--accent);border-radius:5px;font-size:13px;font-family:Barlow Condensed,sans-serif;font-weight:600;width:100%"><div style="font-size:8px;color:var(--muted);margin-top:2px;white-space:nowrap">Default start</div></div><button onclick="saveDriverEdit('+i+')" style="height:40px;padding:0 14px;border-radius:5px;border:none;background:var(--success);color:white;font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;cursor:pointer;white-space:nowrap;touch-action:manipulation">Save</button><button onclick="renderDriverList()" style="height:40px;padding:0 10px;border-radius:5px;border:1.5px solid var(--border2);background:var(--surface2);color:var(--text2);font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;cursor:pointer;touch-action:manipulation">Cancel</button><button onclick="removeDriverRow('+i+')" style="height:40px;padding:0 10px;border-radius:5px;border:1.5px solid var(--danger);background:var(--danger-light);color:var(--danger);font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;cursor:pointer;touch-action:manipulation">&#128465;</button></div>'
+    +'<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);white-space:nowrap">Applies on:</span>'+_dayToggleHtml(daysHiddenId,d.startDays)+'</div>'
+    +'</div>';
   setTimeout(function(){document.getElementById('edit_name_'+i)?.focus();},50);
 }
 // Toggling the Admin/test checkbox during edit disables the Type/Rate fields
@@ -199,26 +244,29 @@ function saveDriverEdit(i){
   var newType=document.getElementById('edit_type_'+i)?.value||'TT';
   var driverNum=document.getElementById('edit_dnum_'+i)?.value.trim(),name=document.getElementById('edit_name_'+i)?.value.trim();
   var rate=isAdminNow?0:(parseFloat(document.getElementById('edit_rate_'+i)?.value)||TRUCK_RATES[newType]||92);
+  var startTime=document.getElementById('edit_start_'+i)?.value||'';
+  var startDaysRaw=document.getElementById('edit_days_'+i)?.value||'';
+  var startDays=startDaysRaw?startDaysRaw.split(','):_DOW.slice();
   if(!name){showToast('Driver name required');return;}
   var roster=getDriverRoster();
   var wasAdmin=!!roster[i].isAdmin;
   var oldType=_unitType(roster[i].unit);
   if(isAdminNow&&!wasAdmin){
     // Becoming admin/test: drop out of whichever type group they were in and close that gap
-    roster[i]={unit:'ADMIN',driverNum:driverNum,name:name,rate:0,isAdmin:true};
+    roster[i]={unit:'ADMIN',driverNum:driverNum,name:name,rate:0,isAdmin:true,startTime:startTime,startDays:startDays};
     _renumberType(roster,oldType);
   } else if(!isAdminNow&&wasAdmin){
     // Leaving admin/test: join the selected type's sequence at the next open number
     var num=_nextUnitNum(roster,newType);
-    roster[i]={unit:newType+' '+num,driverNum:driverNum,name:name,rate:rate,isAdmin:false};
+    roster[i]={unit:newType+' '+num,driverNum:driverNum,name:name,rate:rate,isAdmin:false,startTime:startTime,startDays:startDays};
   } else if(isAdminNow&&wasAdmin){
-    roster[i]={unit:'ADMIN',driverNum:driverNum,name:name,rate:0,isAdmin:true};
+    roster[i]={unit:'ADMIN',driverNum:driverNum,name:name,rate:0,isAdmin:true,startTime:startTime,startDays:startDays};
   } else if(newType!==oldType){
     var num2=_nextUnitNum(roster,newType);
-    roster[i]={unit:newType+' '+num2,driverNum:driverNum,name:name,rate:rate,isAdmin:false};
+    roster[i]={unit:newType+' '+num2,driverNum:driverNum,name:name,rate:rate,isAdmin:false,startTime:startTime,startDays:startDays};
     _renumberType(roster,oldType);
   } else {
-    roster[i]={unit:roster[i].unit,driverNum:driverNum,name:name,rate:rate,isAdmin:false};
+    roster[i]={unit:roster[i].unit,driverNum:driverNum,name:name,rate:rate,isAdmin:false,startTime:startTime,startDays:startDays};
   }
   saveDriverRoster(roster);renderDriverList();showToast('\u2713 Driver updated');
 }
@@ -270,12 +318,14 @@ function _addAnotherNewDriverRow(){
       '<span id="newrow_unit_'+rid+'" style="font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;color:var(--accent)"></span>'+
       '<button type="button" onclick="_removeNewDriverRow('+rid+')" id="newrow_rm_'+rid+'" style="background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:2px 6px;touch-action:manipulation">&#215;</button>'+
     '</div>'+
-    '<div style="display:grid;grid-template-columns:64px 1fr 84px 84px;gap:8px;margin-bottom:8px">'+
+    '<div style="display:grid;grid-template-columns:64px 1fr 84px 84px 90px;gap:8px;margin-bottom:8px">'+
       '<div><label style="display:block;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px">Type</label><select id="newrow_type_'+rid+'" onchange="_onRowTypeChange('+rid+')" style="width:100%;height:40px;padding:0 4px;border:1.5px solid var(--border);border-radius:5px;font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700"><option value="TT"'+(defaultType==='TT'?' selected':'')+'>TT</option><option value="ST"'+(defaultType==='ST'?' selected':'')+'>ST</option></select></div>'+
       '<div><label style="display:block;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px">Driver Name</label><input type="text" id="new_name_'+rid+'" placeholder="First Last" autocapitalize="words" oninput="capWords(this)" style="width:100%;height:40px;padding:0 10px;border:1.5px solid var(--border);border-radius:5px;font-size:14px;font-family:Barlow,sans-serif"></div>'+
       '<div><label style="display:block;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px">Driver #</label><input type="text" id="new_dnum_'+rid+'" placeholder="e.g. 751" inputmode="tel" style="width:100%;height:40px;padding:0 8px;border:1.5px solid var(--border);border-radius:5px;font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:600"></div>'+
       '<div><label style="display:block;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px">Rate ($/hr)</label><input type="number" id="new_rate_'+rid+'" inputmode="decimal" value="'+(TRUCK_RATES[defaultType]||92)+'" style="width:100%;height:40px;padding:0 8px;border:1.5px solid var(--border);border-radius:5px;font-size:14px;font-family:Barlow Condensed,sans-serif;font-weight:600"></div>'+
+      '<div><label style="display:block;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:4px">Default Start</label><input type="time" id="new_start_'+rid+'" style="width:100%;height:40px;padding:0 6px;border:1.5px solid var(--border);border-radius:5px;font-size:13px;font-family:Barlow Condensed,sans-serif;font-weight:600"></div>'+
     '</div>'+
+    '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px"><span style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);white-space:nowrap">Applies on:</span>'+_dayToggleHtml('new_days_'+rid,null)+'</div>'+
     '<label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);cursor:pointer"><input type="checkbox" id="newrow_admin_'+rid+'" onchange="_onRowAdminToggle('+rid+')"> Admin/test driver &mdash; no truck, hidden from Summary &amp; Manager dashboard</label>';
   rows.appendChild(div);
   _refreshNewDriverRowPreviews();
@@ -336,12 +386,15 @@ function confirmAddDriver(){
     if(!name)return; // skip any blank rows rather than blocking the whole batch
     var isAdmin=!!document.getElementById('newrow_admin_'+rid)?.checked;
     var driverNum=document.getElementById('new_dnum_'+rid)?.value.trim();
+    var startTime=document.getElementById('new_start_'+rid)?.value||'';
+    var startDaysRaw=document.getElementById('new_days_'+rid)?.value||'';
+    var startDays=startDaysRaw?startDaysRaw.split(','):_DOW.slice();
     if(isAdmin){
-      entries.push({isAdmin:true,driverNum:driverNum,name:name,rate:0});
+      entries.push({isAdmin:true,driverNum:driverNum,name:name,rate:0,startTime:startTime,startDays:startDays});
     } else {
       var type=document.getElementById('newrow_type_'+rid)?.value||'TT';
       var rate=parseFloat(document.getElementById('new_rate_'+rid)?.value)||TRUCK_RATES[type]||92;
-      entries.push({isAdmin:false,type:type,driverNum:driverNum,name:name,rate:rate});
+      entries.push({isAdmin:false,type:type,driverNum:driverNum,name:name,rate:rate,startTime:startTime,startDays:startDays});
     }
   });
   if(!entries.length){showToast('Enter at least one driver name');return;}
@@ -352,9 +405,9 @@ function confirmAddDriver(){
   var counters={TT:_nextUnitNum(roster,'TT'),ST:_nextUnitNum(roster,'ST')};
   entries.forEach(function(e){
     if(e.isAdmin){
-      roster.push({unit:'ADMIN',driverNum:e.driverNum,name:e.name,rate:0,isAdmin:true});
+      roster.push({unit:'ADMIN',driverNum:e.driverNum,name:e.name,rate:0,isAdmin:true,startTime:e.startTime,startDays:e.startDays});
     } else {
-      roster.push({unit:e.type+' '+counters[e.type],driverNum:e.driverNum,name:e.name,rate:e.rate,isAdmin:false});
+      roster.push({unit:e.type+' '+counters[e.type],driverNum:e.driverNum,name:e.name,rate:e.rate,isAdmin:false,startTime:e.startTime,startDays:e.startDays});
       counters[e.type]++;
     }
   });
