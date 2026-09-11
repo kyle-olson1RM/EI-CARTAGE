@@ -113,6 +113,44 @@ app.post('/api/verify', async (req, res) => {
   }
 });
 
+// Safety net added after the Sept 2026 data-loss incident: for the two
+// array-shaped keys that hold the operational record (manifests, J-Files),
+// refuse a write that would drop most of the existing records in one shot.
+// The incident that erased ei_manifests from 257 records down to 1 was a
+// client-side bug (a failed refresh got treated as "empty," so the merge
+// wrote a near-empty array back over everything) — the client-side fix is
+// in api.js, but a client bug should never *also* be able to erase most of
+// a dataset in a single write without the server pushing back. Legitimate
+// single-record deletes/edits are always far under this threshold; a
+// client that genuinely needs to shrink the dataset a lot can send the
+// x-allow-shrink header to bypass this check.
+const SHRINK_GUARDED_KEYS = new Set(['ei_manifests', 'ei_jfiles']);
+
+async function guardAgainstDataLoss(key, newValueStr, req) {
+  if (!SHRINK_GUARDED_KEYS.has(key)) return null;
+  if (req.get('x-allow-shrink') === 'true') return null;
+
+  let newArr;
+  try { newArr = JSON.parse(newValueStr); } catch (e) { return null; }
+  if (!Array.isArray(newArr)) return null;
+
+  const { status, body } = await sb('GET', `kn_store?key=eq.${encodeURIComponent(key)}&select=value`);
+  if (status >= 400 || !body || !body[0]) return null; // nothing on record yet to compare against
+
+  let oldArr;
+  try { oldArr = JSON.parse(body[0].value); } catch (e) { return null; }
+  if (!Array.isArray(oldArr)) return null;
+
+  const dropped = oldArr.length - newArr.length;
+  const threshold = Math.max(3, Math.ceil(oldArr.length * 0.05));
+  if (dropped > threshold) {
+    return `Refusing write to "${key}": this write would drop ${dropped} of ${oldArr.length} ` +
+      `existing records (${oldArr.length} -> ${newArr.length}). If this is really intentional, ` +
+      `retry the request with header "x-allow-shrink: true".`;
+  }
+  return null;
+}
+
 // PUT /api/store/:key — upsert a value
 app.put('/api/store/:key', async (req, res) => {
   try {
@@ -123,6 +161,13 @@ app.put('/api/store/:key', async (req, res) => {
     const value = typeof req.body.value === 'string'
       ? req.body.value
       : JSON.stringify(req.body.value);
+
+    const guardError = await guardAgainstDataLoss(key, value, req);
+    if (guardError) {
+      console.error('PUT /api/store blocked by data-loss guard:', guardError);
+      return res.status(409).json({ error: guardError });
+    }
+
     const { status, body } = await sb('POST', 'kn_store', {
       key,
       value,

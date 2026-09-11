@@ -105,6 +105,13 @@ function rebuildUnitMap(roster){
   sel.innerHTML='<option value="">Select your name...</option>';
   roster.forEach(function(d){if(!d.name)return;var o=document.createElement('option');o.value=o.textContent=d.name;if(d.name===cur)o.selected=true;sel.appendChild(o);});
 }
+// DANGER — DO NOT CALL, DO NOT WIRE UP TO ANY UI ELEMENT:
+// this blindly overwrites the ENTIRE server-side ei_manifests array with
+// whatever happens to be in the local `manifests` variable at the moment
+// it's called, with no refresh-and-merge safety. It is currently unused
+// (only referenced by the also-unused save() in manager.js) — leave it
+// that way. Any real manifest save must go through mergeAndSaveManifest()
+// or refreshThenMutateManifests() in api.js instead.
 function saveManifests(){saveToStore('ei_manifests',JSON.stringify(manifests));}
 
 // ── DROP LOCATIONS ────────────────────────────────────────────────────────────

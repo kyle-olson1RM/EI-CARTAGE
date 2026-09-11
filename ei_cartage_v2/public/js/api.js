@@ -55,18 +55,32 @@ async function apiSet(key, value) {
 // Force a fresh read of a key from the server, bypassing the in-memory cache.
 // Used before any write to ei_manifests so we merge against the latest data
 // instead of clobbering everything written by other drivers/tablets since boot.
+//
+// IMPORTANT (Sept 2026 incident fix): this THROWS on failure instead of
+// returning null. Previously, both a failed refresh and a genuinely-empty
+// key returned the same `null`, and every caller did
+// `JSON.parse(await apiRefresh(key) || '[]')` — so a transient network
+// hiccup during a routine refresh looked identical to "there's nothing
+// here yet." The merge then ran against an empty array, and the resulting
+// write (a single-record array) silently replaced the entire manifest
+// history on the server. The save itself succeeded, so nothing ever
+// surfaced to the driver or a manager — this is exactly what wiped
+// ei_manifests from 257 records down to 1 with no error anywhere.
+// Every caller that merges-then-writes (mergeAndSaveManifest,
+// refreshThenMutateManifests, refreshThenMutateJFiles) already wraps its
+// body in try/catch and returns {ok:false} on any thrown error — so
+// letting this throw is enough to make a failed refresh abort the save
+// instead of quietly emptying the dataset. Do NOT change this back to
+// swallow-and-return-null.
 async function apiRefresh(key) {
-  try {
-    const res = await fetch('/api/store');
-    if (res.ok) {
-      const all = await res.json();
-      Object.assign(_cache, all);
-      return _cache[key] || null;
-    } else {
-      console.error('apiRefresh failed:', res.status, await res.text());
-    }
-  } catch(e) { console.error('apiRefresh network error:', e.message); }
-  return null;
+  const res = await fetch('/api/store');
+  if (!res.ok) {
+    const errText = await res.text().catch(function(){ return '(no body)'; });
+    throw new Error('apiRefresh failed: ' + res.status + ' ' + errText);
+  }
+  const all = await res.json();
+  Object.assign(_cache, all);
+  return _cache[key] || null; // null here legitimately means "key not present yet"
 }
 
 // Merge one manifest (new or edited) into the latest server copy of ei_manifests

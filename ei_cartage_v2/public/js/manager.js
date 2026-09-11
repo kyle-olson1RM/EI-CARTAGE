@@ -42,8 +42,18 @@ function updateMgrStats(){
 }
 
 async function refreshMgr(){
-  var fresh=await apiRefresh('ei_manifests');
-  manifests=JSON.parse(fresh||cacheGet('ei_manifests')||'[]');
+  // apiRefresh now throws on a failed fetch instead of returning null (see
+  // api.js) — this is a read-only dashboard refresh, not a save, so on
+  // failure we just keep showing the last-known cached data with a warning
+  // instead of letting the exception stall the refresh silently.
+  try{
+    var fresh=await apiRefresh('ei_manifests');
+    manifests=JSON.parse(fresh||cacheGet('ei_manifests')||'[]');
+  }catch(e){
+    console.error('refreshMgr: could not refresh from server, showing last-known data:', e.message);
+    showToast('⚠ Could not refresh from server — showing last-known data',3000);
+    manifests=JSON.parse(cacheGet('ei_manifests')||'[]');
+  }
   // Build ALL weeks (even empty ones) from earliest to current
   mgrWeeks=buildAllWeeks();
   if(mgrWeekIdx<0&&mgrWeeks.length>0) mgrWeekIdx=0; // default to most recent
