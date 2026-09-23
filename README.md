@@ -1,4 +1,3 @@
-[README.md](https://github.com/user-attachments/files/28115445/README.md)
 # EI Cartage — Digital Manifest System
 
 A fully featured digital manifest system for EI Cartage / Expeditors trucking program. Drivers submit daily manifests from tablets, managers review and approve, and weekly summaries with cost analytics are generated automatically.
@@ -189,3 +188,14 @@ The app currently shows a loading screen and waits for the API on startup. For f
 ## License
 
 Private — EI Cartage / Expeditors internal use only.
+
+## Holiday Billing
+
+On company holidays no trucks run, but every roster unit is billed a flat **8 hours** at its truck-type rate (TT/ST).
+
+- **Holidays (auto-calculated every year from 2026):** New Year's Day, Memorial Day (last Mon in May), Independence Day, Labor Day (1st Mon in Sept), Thanksgiving (4th Thu in Nov), Christmas Day.
+- **Weekend rule:** a Saturday holiday is observed the Friday before; a Sunday holiday the Monday after. Only the observed weekday is billed.
+- **Who is billed:** every current roster unit **except** spare placeholders named `SP###` and admin/test drivers.
+- **If a unit actually runs on a holiday:** its manifest is billed normally and the flat 8 hrs is skipped for that unit (no double billing). A substitute covering a unit counts as that unit running.
+- Computed at display/billing time only (`getHolidayCharges()` in `api.js`); no manifests are created and no stored data changes. Uses the *current* roster and rates, so keep the roster up to date before each holiday.
+- Shows up as a green **Holiday** line on the manager dashboard, weekly Summary (screen, print/PDF, CSV), custom date range report + CSV, and the customer view. Driver Management shows the holiday calendar for this year and next.
