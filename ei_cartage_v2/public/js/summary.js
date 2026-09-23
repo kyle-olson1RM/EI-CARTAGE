@@ -551,7 +551,7 @@ function renderSum(){
   var extras=getWeekExtras(sunday,friday);
   var exRows='';
   if(extras.tolls.length)exRows+='<tr class="data-row"><td colspan="2"><strong>Tolls</strong></td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td class="chg-cell">$'+extras.tollTotal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td><td>—</td></tr>';
-  if(extras.trailers.length)exRows+='<tr class="data-row"><td colspan="2"><strong>Additional Trailers</strong> ('+extras.trailers.length+')</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td class="chg-cell">$'+extras.trailerTotal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td><td>—</td></tr>';
+  if(extras.trailerTotal>0)exRows+='<tr class="data-row"><td colspan="2"><strong>Additional Trailers</strong> ('+extras.trailerCount+')</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td class="chg-cell">$'+extras.trailerTotal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td><td>—</td></tr>';
   var grandC=gC+jfTotal+extras.tollTotal+extras.trailerTotal;
   var grandW=gW+jfWt;
   var acps=gS>0?grandC/gS:0,acpl=grandW>0?grandC/grandW:0,asph=workedH>0?gS/workedH:0,amd=gM/5,acpm=gM>0?grandC/gM:0;

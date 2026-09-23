@@ -201,18 +201,20 @@ function showDriverMgr(){
   var pin=cacheGet('ei_manager_emp')||'1234';
   var pinEl=document.getElementById('mgrPinInput');
   if(pinEl)pinEl.value=pin;
-  var trEl=document.getElementById('trailerRateInput');
-  if(trEl){var tr=getTrailerRate();trEl.value=tr?tr:'';}
+  var _td=getTrailerDefault();
+  var tc=document.getElementById('trlDefCount'),tt=document.getElementById('trlDefTotal'),ts=document.getElementById('trlDefStart');
+  if(tc)tc.value=_td.count;if(tt)tt.value=_td.total;if(ts)ts.textContent=fs(_td.start);
   renderDriverList();renderHolidayList();if(typeof renderMgrWho==='function')renderMgrWho();ss('driverMgr');
 }
-function saveTrailerRate(){
-  var v=parseFloat(document.getElementById('trailerRateInput')?.value);
-  if(isNaN(v)||v<0){showToast('Enter a valid trailer rate',3000);return;}
-  var _old=getTrailerRate();
-  saveToStore('ei_trailer_rate',String(v));
-  if(_old!==v)logChange('Trailer rate','$'+_old.toFixed(2)+' \u2192 $'+v.toFixed(2));
-  var msg=document.getElementById('trailerRateMsg');if(msg){msg.textContent='\u2713 Updated';setTimeout(function(){msg.textContent='';},3000);}
-  showToast('\u2713 Trailer rate updated');
+function saveTrailerDefault(){
+  var c=parseInt(document.getElementById('trlDefCount')?.value,10),t=parseFloat(document.getElementById('trlDefTotal')?.value);
+  if(isNaN(c)||c<0||isNaN(t)||t<0){showToast('Enter the number of trailers and the weekly total',3000);return;}
+  var old=getTrailerDefault();
+  var nd={count:c,total:t,start:old.start};
+  saveToStore('ei_trailer_default',JSON.stringify(nd));
+  if(old.count!==c||old.total!==t)logChange('Trailers: standard changed',old.count+' / $'+Number(old.total).toFixed(2)+' \u2192 '+c+' / $'+t.toFixed(2)+' per week');
+  var msg=document.getElementById('trlDefMsg');if(msg){msg.textContent='\u2713 Updated';setTimeout(function(){msg.textContent='';},3000);}
+  showToast('\u2713 Weekly trailer standard updated');
 }
 // Read-only list of this year's and next year's billable holidays, with the
 // unit count and amount they bill at the current roster and rates.

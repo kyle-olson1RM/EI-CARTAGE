@@ -205,8 +205,8 @@ On company holidays no trucks run, but every roster unit is billed a flat **8 ho
 Manager-entered weekly add-on charges, added from the buttons at the bottom of the manager dashboard (same pattern as J Files). **Internal only** — included in dashboard Program Totals and the weekly Summary (screen + print/PDF), **not** shown on the customer view.
 
 - **Tolls** (`ei_tolls`): one lump-sum amount per entry; pick any day in the week and it's filed to that week's Friday. Multiple entries per week are summed.
-- **Additional Trailers** (`ei_trailers`): date + trailer # per trailer, billed at one flat rate per trailer (`ei_trailer_rate`, set under Driver Management → Additional Trailer Rate). Like truck rates, the current rate is applied when reports are shown. Trailer #s are stored uppercase with spaces removed; entering the same trailer on the same date asks for confirmation.
-- Both keys are on the server write whitelist and the data-loss shrink guard.
+- **Additional Trailers**: a standing weekly charge billed **automatically every week** starting the week of Sep 20, 2026 — standard is **4 trailers / $640 per week** (`ei_trailer_default`, editable under Driver Management → Additional Trailers — Weekly Standard). From the Trailers button, any single week can be changed (count/total), removed, or reset to standard; those per-week overrides live in `ei_trailer_weeks` (one entry per week, keyed by that week's Friday). Weeks before the start week never bill trailers.
+- `ei_tolls`, `ei_trailer_default` and `ei_trailer_weeks` are on the server write whitelist; `ei_tolls` and `ei_trailer_weeks` are also shrink-guarded.
 
 ## Manager Badge Login & Change Log
 
@@ -214,5 +214,5 @@ Lightweight "who did what" tracking — a way to identify managers, not a securi
 
 - **Login:** managers enter their **badge #** from the Manager Access roster (`ei_manager_roster`: `{name, badge, isAdmin}`). The shared manager # still works as a fallback and is recorded as **"Shared PIN"**. The logged-in manager shows in the dashboard legend bar with a **Switch** button.
 - **Admin access:** only managers marked **Admin** can open the Manager Access screen (manager roster + change log), reachable from the dashboard **Managers** button or **Driver Management → Manager Roster & Change Log**. Until at least one Admin exists, anyone logged in can open it (first-time setup). Admins need a badge #.
-- **Stamps on records:** manifests get `reviewedBy/At` and `lastEditedBy/At` (shown on the dashboard day card); J Files, tolls and trailers get `addedBy/At` (shown in their lists).
-- **Change log** (`ei_change_log`, newest 3,000 kept, filterable by manager): logins, manifest review/unreview, edits (with hours and $ before → after), deletes, J File / toll / trailer adds and deletes, truck & trailer rate changes, driver roster changes (added/removed/field changes), drop locations, customer code, shared manager #, and manager roster changes. Log writes are queued and never block the change itself.
+- **Stamps on records:** manifests get `reviewedBy/At` and `lastEditedBy/At` (shown on the dashboard day card); J Files and tolls get `addedBy/At` (shown in their lists); per-week trailer changes record who/when.
+- **Change log** (`ei_change_log`, newest 3,000 kept, filterable by manager): logins, manifest review/unreview, edits (with hours and $ before → after), deletes, J File / toll adds and deletes, weekly trailer changes/removals/resets and standard changes, truck rate changes, driver roster changes (added/removed/field changes), drop locations, customer code, shared manager #, and manager roster changes. Log writes are queued and never block the change itself.

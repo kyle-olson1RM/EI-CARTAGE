@@ -183,7 +183,7 @@ async function refreshThenMutateJFiles(mutatorFn) {
 
 // Same refresh-then-merge safety as refreshThenMutateJFiles, for any other
 // array-shaped key (used by Tolls 'ei_tolls' and Additional Trailers
-// 'ei_trailers'). Returns {ok, list}.
+// 'ei_trailer_weeks'). Returns {ok, list}.
 async function refreshThenMutateList(key, mutatorFn) {
   try {
     const fresh = JSON.parse(await apiRefresh(key) || cacheGet(key) || '[]');

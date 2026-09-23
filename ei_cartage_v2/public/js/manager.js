@@ -873,9 +873,12 @@ function renderJFilesList(){
 //   date is normalized to that week's Friday so it always lands inside both
 //   the dashboard week (Sun-Sat) and the Summary week (Sun-Fri). Multiple
 //   entries per week are allowed and summed.
-// Additional Trailers ('ei_trailers'): [{id, date, trailerNum}] — billed at
-//   one flat rate per trailer ('ei_trailer_rate', set in Driver Management),
-//   applied at display time like truck rates.
+// Additional Trailers: a standing weekly charge, billed automatically every
+//   week from the start week on (default 4 trailers / $640 per week, set in
+//   Driver Management -> 'ei_trailer_default'). Any single week can be
+//   changed or removed from the Trailers button; those per-week overrides
+//   live in 'ei_trailer_weeks' as [{id, week (that week's Friday), count,
+//   total, removed, by, at}] — the newest entry for a week wins.
 
 function _money(n){return (n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function _fmtLocal(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
@@ -886,21 +889,54 @@ function weekFriday(dateStr){
   return _fmtLocal(d);
 }
 function getTolls(){ try{ return JSON.parse(cacheGet('ei_tolls')||'[]'); }catch(e){ return []; } }
-function getTrailers(){ try{ return JSON.parse(cacheGet('ei_trailers')||'[]'); }catch(e){ return []; } }
-function getTrailerRate(){ return parseFloat(cacheGet('ei_trailer_rate'))||0; }
+var TRAILER_DEFAULT_FALLBACK={count:4,total:640,start:'2026-09-20'}; // start = Sunday of first billed week
+function getTrailerDefault(){
+  try{var d=JSON.parse(cacheGet('ei_trailer_default')||'null');if(d&&d.start)return d;}catch(e){}
+  return TRAILER_DEFAULT_FALLBACK;
+}
+function getTrailerWeekOverrides(){ try{ return JSON.parse(cacheGet('ei_trailer_weeks')||'[]'); }catch(e){ return []; } }
+// Trailer charge for the Sun-Sat week whose Friday is `friday`
+function getTrailersForWeek(friday){
+  var def=getTrailerDefault();
+  var ov=getTrailerWeekOverrides().filter(function(o){return o.week===friday;})
+    .sort(function(a,b){return (a.at||'')<(b.at||'')?-1:1;}).pop();
+  if(ov){
+    if(ov.removed)return {week:friday,count:0,total:0,source:'removed',by:ov.by,at:ov.at};
+    return {week:friday,count:ov.count,total:ov.total,source:'override',by:ov.by,at:ov.at};
+  }
+  // Week's Sunday must be on/after the default start week
+  var sun=new Date(friday+'T12:00:00');sun.setDate(sun.getDate()-5);
+  if(_fmtLocal(sun)<def.start)return {week:friday,count:0,total:0,source:'none'};
+  return {week:friday,count:def.count,total:def.total,source:'default'};
+}
 
-// Tolls + trailers within from..to (inclusive). Empty from/to = everything.
+// Tolls + trailers within from..to (inclusive). Empty from = everything
+// from the start; empty to = through the current week.
 function getWeekExtras(from,to){
   var inRange=function(x){return (!from||x.date>=from)&&(!to||x.date<=to);};
   var tolls=getTolls().filter(inRange);
-  var trailers=getTrailers().filter(inRange);
-  var rate=getTrailerRate();
+  // Every week (by its Friday) whose Friday falls in the range, capped at
+  // the current week so "All Weeks" never bills future weeks.
+  var def=getTrailerDefault();
+  var startF=weekFriday(from||def.start);
+  var capF=weekFriday(localDateStr());
+  var endF=to?weekFriday(to):capF;
+  if(to&&to<endF)endF=_fmtLocal(new Date(new Date(endF+'T12:00:00').getTime()-7*864e5)); // partial last week not ending in range
+  if(endF>capF)endF=capF;
+  var weeks=[];
+  for(var d=new Date(startF+'T12:00:00');_fmtLocal(d)<=endF;d.setDate(d.getDate()+7)){
+    var f=_fmtLocal(d);
+    if(from&&f<from)continue;
+    weeks.push(getTrailersForWeek(f));
+  }
+  var billed=weeks.filter(function(w){return w.total>0||w.count>0;});
   return {
     tolls:tolls,
     tollTotal:tolls.reduce(function(s,t){return s+(parseFloat(t.amount)||0);},0),
-    trailers:trailers,
-    trailerRate:rate,
-    trailerTotal:trailers.length*rate
+    trailerWeeks:weeks,
+    trailerCount:billed.reduce(function(s,w){return s+w.count;},0),
+    trailerTotal:billed.reduce(function(s,w){return s+w.total;},0),
+    trailerRemoved:weeks.some(function(w){return w.source==='removed';})
   };
 }
 
@@ -970,62 +1006,70 @@ function renderTollsList(){
 }
 
 // ── Additional Trailers modal ──
+function _trlSelectedFriday(){
+  var v=document.getElementById('trlDate')?.value;
+  return v?weekFriday(v):weekFriday(_extrasDefaultDate());
+}
 function showTrailers(){
   var d=document.getElementById('trlDate');if(d)d.value=_extrasDefaultDate();
-  var n=document.getElementById('trlNum');if(n)n.value='';
-  renderTrailersList();
+  renderTrailersPanel();
   document.getElementById('trailersOv').classList.add('open');
 }
-async function addTrailer(){
-  var date=document.getElementById('trlDate')?.value;
-  var trailerNum=(document.getElementById('trlNum')?.value||'').replace(/\s+/g,'').toUpperCase();
-  if(!date){ showToast('Please enter a date',3000); return; }
-  if(!trailerNum){ showToast('Please enter the trailer #',3000); return; }
-  var btn=document.getElementById('trlAddBtn');
-  if(btn){ if(btn.disabled) return; btn.disabled=true; btn.textContent='Adding…'; }
-  var cancelled=false;
-  var result=await refreshThenMutateList('ei_trailers',function(fresh){
-    var dupe=fresh.find(function(t){return t.trailerNum===trailerNum&&t.date===date;});
-    if(dupe&&!confirm('Trailer '+trailerNum+' is already entered for '+date+'. Add it again anyway?')){cancelled=true;return fresh;}
-    var _st=mgrStamp();
-    fresh.push({id:Date.now().toString()+'_'+Math.random().toString(36).slice(2,7),date:date,trailerNum:trailerNum,addedBy:_st.by,addedAt:_st.at});
-    return fresh;
+function renderTrailersPanel(){
+  var f=_trlSelectedFriday(),w=getTrailersForWeek(f),def=getTrailerDefault();
+  var c=document.getElementById('trlCount'),t=document.getElementById('trlTotal');
+  if(c)c.value=w.source==='removed'||w.source==='none'?def.count:w.count;
+  if(t)t.value=w.source==='removed'||w.source==='none'?def.total:w.total;
+  var st=document.getElementById('trlStatus');if(!st)return;
+  var sun=new Date(f+'T12:00:00');sun.setDate(sun.getDate()-5);
+  var wk='Week of '+fs(_fmtLocal(sun))+' \u2013 '+fs(f);
+  var line;
+  if(w.source==='default')line='<strong>'+w.count+' trailers \u00b7 $'+_money(w.total)+'</strong> <span style="color:var(--muted)">(standard weekly default \u2014 billed automatically)</span>';
+  else if(w.source==='override')line='<strong>'+w.count+' trailers \u00b7 $'+_money(w.total)+'</strong> <span style="color:var(--warn)">(changed for this week by '+_escAttr(w.by||'?')+' '+fmtStamp(w.at)+')</span>';
+  else if(w.source==='removed')line='<strong style="color:var(--danger)">Removed for this week</strong> <span style="color:var(--muted)">(by '+_escAttr(w.by||'?')+' '+fmtStamp(w.at)+') \u2014 $0 billed</span>';
+  else line='<span style="color:var(--muted)">Not billed \u2014 before the weekly trailer charge started ('+fs(def.start)+')</span>';
+  st.innerHTML='<div style="font-size:12px;color:var(--muted);margin-bottom:4px">'+wk+'</div><div style="font-size:14px">'+line+'</div>'
+    +'<div style="font-size:11px;color:var(--muted);margin-top:6px">Standard: '+def.count+' trailers / $'+_money(def.total)+' per week (change in Driver Management)</div>';
+  var rm=document.getElementById('trlRemoveBtn'),rs=document.getElementById('trlResetBtn');
+  if(rm)rm.style.display=w.source==='removed'||w.source==='none'?'none':'';
+  if(rs)rs.style.display=(w.source==='override'||w.source==='removed')?'':'none';
+}
+async function _saveTrailerWeek(entry,logAction,logDetail){
+  var result=await refreshThenMutateList('ei_trailer_weeks',function(fresh){
+    if(entry.reset)return fresh.filter(function(o){return o.week!==entry.week;});
+    fresh=fresh.filter(function(o){return o.week!==entry.week;}); // one entry per week
+    fresh.push(entry);return fresh;
   });
-  if(btn){ btn.disabled=false; btn.textContent='+ Add Trailer'; }
-  if(cancelled) return;
-  if(!result.ok){ showToast('⚠ Could not save — check connection and try again',4000); return; }
-  document.getElementById('trlNum').value='';
-  logChange('Added trailer',date+' · Trailer '+trailerNum);
-  showToast('✓ Trailer added');
-  renderTrailersList();
+  if(!result.ok){showToast('\u26a0 Could not save \u2014 check connection and try again',4000);return false;}
+  logChange(logAction,logDetail);
+  renderTrailersPanel();
+  if(typeof refreshMgr==='function')refreshMgr();
+  return true;
 }
-async function deleteTrailer(id){
-  if(!confirm('Remove this trailer?')) return;
-  var gone=getTrailers().find(function(t){return t.id===id;});
-  var result=await refreshThenMutateList('ei_trailers',function(fresh){return fresh.filter(function(t){return t.id!==id;});});
-  if(!result.ok){ showToast('⚠ Could not delete — check connection and try again',4000); return; }
-  if(gone)logChange('Deleted trailer',gone.date+' \u00b7 Trailer '+gone.trailerNum);
-  renderTrailersList();
-}
-function renderTrailersList(){
-  var el=document.getElementById('trailersList');if(!el)return;
-  var r=getMgrWeekRange(),x=getWeekExtras(r.from,r.to);
-  var rateNote=x.trailerRate
-    ?'<div style="font-size:12px;color:var(--text2);margin-bottom:8px">Billed at <strong>$'+_money(x.trailerRate)+'</strong> per trailer (change in Driver Management)</div>'
-    :'<div style="font-size:12px;color:var(--danger);font-weight:700;margin-bottom:8px">&#9888; No trailer rate set — trailers bill $0 until you set one in Driver Management</div>';
-  if(!x.trailers.length){
-    el.innerHTML=_extrasWeekNote()+rateNote+'<div style="color:var(--muted);font-size:13px;text-align:center;padding:12px">No additional trailers for this week</div>';
-  } else {
-    el.innerHTML=_extrasWeekNote()+rateNote
-      +'<div style="font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:8px">'+x.trailers.length+' trailer'+(x.trailers.length!==1?'s':'')+' — $'+_money(x.trailerTotal)+'</div>'
-      +x.trailers.slice().sort(function(a,b){return a.date<b.date?1:-1;}).map(function(t){
-        return '<div style="background:var(--surface);border:1.5px solid var(--border);border-radius:6px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px">'
-          +'<div style="flex:1;font-size:13px"><span style="font-weight:700;color:var(--accent)">'+t.date+' &nbsp;·&nbsp; Trailer '+t.trailerNum+'</span>'+(t.addedBy?'<span style="color:var(--muted);font-size:11px"> &nbsp;&middot;&nbsp; added by '+_escAttr(t.addedBy)+' '+fmtStamp(t.addedAt)+'</span>':'')+'</div>'
-          +'<button data-id="'+t.id+'" onclick="deleteTrailer(this.dataset.id)" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;flex-shrink:0;padding:0">&#128465;</button>'
-        +'</div>';
-      }).join('');
+async function saveTrailerWeek(){
+  var f=_trlSelectedFriday();
+  var count=parseInt(document.getElementById('trlCount')?.value,10);
+  var total=parseFloat(document.getElementById('trlTotal')?.value);
+  if(isNaN(count)||count<0||isNaN(total)||total<0){showToast('Enter the number of trailers and the weekly total',3000);return;}
+  var def=getTrailerDefault(),st=mgrStamp();
+  if(count===def.count&&total===def.total){
+    // Same as standard: just clear any override so it follows the default
+    if(await _saveTrailerWeek({week:f,reset:true},'Trailers: reset to standard','Week ending '+f))showToast('\u2713 Using standard for this week');
+    return;
   }
-  if(typeof refreshMgr==='function') refreshMgr();
+  if(await _saveTrailerWeek({id:Date.now().toString(),week:f,count:count,total:total,removed:false,by:st.by,at:st.at},
+    'Trailers: changed for week','Week ending '+f+' \u00b7 '+count+' trailers \u00b7 $'+total.toFixed(2)))showToast('\u2713 Trailers updated for this week');
+}
+async function removeTrailerWeek(){
+  var f=_trlSelectedFriday();
+  if(!confirm('Remove the additional trailer charge for the week ending '+f+'?'))return;
+  var st=mgrStamp();
+  if(await _saveTrailerWeek({id:Date.now().toString(),week:f,count:0,total:0,removed:true,by:st.by,at:st.at},
+    'Trailers: removed for week','Week ending '+f))showToast('Trailer charge removed for this week');
+}
+async function resetTrailerWeek(){
+  var f=_trlSelectedFriday();
+  if(await _saveTrailerWeek({week:f,reset:true},'Trailers: reset to standard','Week ending '+f))showToast('\u2713 Back to standard for this week');
 }
 
 // Dashboard cards (same look as the J Files card), shown under the drivers
@@ -1038,16 +1082,22 @@ function extrasCardsHtml(x){
       +'<div style="font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:800;color:#4f46e5">$'+_money(x.tollTotal)+'</div>'
       +'</div></div>';
   }
-  if(x.trailers.length){
+  // Only meaningful for a single selected week
+  if(x.trailerWeeks.length===1){
+    var w=x.trailerWeeks[0];
+    if(w.source!=='none'){
+      var sub=w.source==='removed'?'removed for this week':w.source==='override'?'changed for this week':'weekly standard';
+      html+='<div class="driver-group" style="border:1.5px solid #0891b2;border-radius:8px;margin-bottom:10px;overflow:hidden">'
+        +'<div style="background:#ecfeff;padding:12px 14px;display:flex;align-items:center;justify-content:space-between">'
+        +'<div style="font-family:Barlow Condensed,sans-serif;font-size:17px;font-weight:700">&#128667; Additional Trailers <span style="font-size:13px;font-weight:400;color:var(--muted)">('+(w.source==='removed'?'':w.count+' trailers \u00b7 ')+sub+')</span></div>'
+        +'<div style="font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:800;color:#0e7490">$'+_money(w.total)+'</div>'
+        +'</div></div>';
+    }
+  } else if(x.trailerTotal>0){
     html+='<div class="driver-group" style="border:1.5px solid #0891b2;border-radius:8px;margin-bottom:10px;overflow:hidden">'
       +'<div style="background:#ecfeff;padding:12px 14px;display:flex;align-items:center;justify-content:space-between">'
-      +'<div style="font-family:Barlow Condensed,sans-serif;font-size:17px;font-weight:700">&#128667; Additional Trailers <span style="font-size:13px;font-weight:400;color:var(--muted)">('+x.trailers.length+' &times; $'+_money(x.trailerRate)+')</span></div>'
+      +'<div style="font-family:Barlow Condensed,sans-serif;font-size:17px;font-weight:700">&#128667; Additional Trailers <span style="font-size:13px;font-weight:400;color:var(--muted)">('+x.trailerCount+' trailers across '+x.trailerWeeks.filter(function(w){return w.total>0;}).length+' weeks)</span></div>'
       +'<div style="font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:800;color:#0e7490">$'+_money(x.trailerTotal)+'</div>'
-      +'</div>'
-      +'<div style="padding:10px 14px;font-size:12px;color:var(--text2)">'
-      +x.trailers.slice().sort(function(a,b){return a.date<b.date?-1:1;}).map(function(t){
-        return '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)"><span>'+t.date+' &nbsp;·&nbsp; Trailer '+t.trailerNum+'</span><span style="font-weight:700;color:#0e7490">$'+_money(x.trailerRate)+'</span></div>';
-      }).join('')
       +'</div></div>';
   }
   return html;

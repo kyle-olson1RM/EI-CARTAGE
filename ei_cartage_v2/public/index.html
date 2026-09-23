@@ -365,21 +365,20 @@
       </div>
     </div>
 
-    <!-- Additional Trailer Rate -->
+    <!-- Additional Trailers weekly standard -->
     <div style="background:var(--surface);border-radius:8px;box-shadow:var(--shadow);margin-bottom:14px;overflow:hidden">
-      <div style="background:var(--surface2);padding:10px 14px;border-bottom:1px solid var(--border);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--accent)">&#128667; Additional Trailer Rate</div>
-      <div style="padding:14px;display:flex;gap:10px;align-items:flex-end">
-        <div style="flex:1">
-          <label style="display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px">Flat rate per trailer</label>
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--muted)">$</span>
-            <input type="number" id="trailerRateInput" inputmode="decimal" placeholder="0.00"
-              style="flex:1;height:44px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:var(--accent)">
-          </div>
+      <div style="background:var(--surface2);padding:10px 14px;border-bottom:1px solid var(--border);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--accent)">&#128667; Additional Trailers &mdash; Weekly Standard</div>
+      <div style="padding:14px">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Billed automatically every week starting the week of <strong id="trlDefStart"></strong>. Change or remove a single week from the Trailers button on the dashboard.</div>
+        <div style="display:flex;gap:10px;align-items:flex-end">
+          <div style="flex:1"><label style="display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px">Trailers per week</label>
+            <input type="number" id="trlDefCount" inputmode="numeric" style="width:100%;height:44px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:var(--accent)"></div>
+          <div style="flex:1"><label style="display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px">Weekly total ($)</label>
+            <input type="number" id="trlDefTotal" inputmode="decimal" style="width:100%;height:44px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:var(--accent)"></div>
+          <button onclick="saveTrailerDefault()" style="height:44px;padding:0 20px;border-radius:6px;border:none;background:var(--accent);color:white;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer;touch-action:manipulation;white-space:nowrap">Update</button>
         </div>
-        <button onclick="saveTrailerRate()" style="height:44px;padding:0 20px;border-radius:6px;border:none;background:var(--accent);color:white;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer;touch-action:manipulation;white-space:nowrap">Update Rate</button>
+        <div id="trlDefMsg" style="font-size:12px;color:var(--success);min-height:16px;margin-top:6px"></div>
       </div>
-      <div id="trailerRateMsg" style="padding:0 14px 12px;font-size:12px;color:var(--success);min-height:16px"></div>
     </div>
 
     <!-- Holiday Billing (read-only) -->
@@ -710,14 +709,19 @@
     </div>
     <div style="padding:12px">
       <div style="background:var(--surface2);border-radius:8px;padding:10px;margin-bottom:10px">
-        <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--accent);margin-bottom:8px">Add Trailer</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--accent);margin-bottom:8px">Additional Trailers for the Week</div>
+        <div class="field" style="margin-bottom:8px"><label>Week (any day in it)</label><input type="date" id="trlDate" onchange="renderTrailersPanel()" style="font-size:13px;height:38px;padding:0 8px"></div>
+        <div id="trlStatus" style="background:var(--surface);border:1.5px solid var(--border);border-radius:6px;padding:10px 12px;margin-bottom:10px"></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
-          <div class="field"><label>Date</label><input type="date" id="trlDate" style="font-size:13px;height:38px;padding:0 8px"></div>
-          <div class="field"><label>Trailer #</label><input type="text" id="trlNum" placeholder="Trailer #" autocapitalize="characters" style="font-size:13px;height:38px;padding:0 8px"></div>
+          <div class="field"><label># of Trailers</label><input type="number" id="trlCount" inputmode="numeric" style="font-size:13px;height:38px;padding:0 8px"></div>
+          <div class="field"><label>Weekly Total ($)</label><input type="number" id="trlTotal" inputmode="decimal" style="font-size:13px;height:38px;padding:0 8px"></div>
         </div>
-        <button id="trlAddBtn" onclick="addTrailer()" style="width:100%;padding:9px;border-radius:6px;border:none;background:var(--accent);color:white;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;cursor:pointer;touch-action:manipulation">+ Add Trailer</button>
+        <button onclick="saveTrailerWeek()" style="width:100%;padding:9px;border-radius:6px;border:none;background:var(--accent);color:white;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;cursor:pointer;touch-action:manipulation;margin-bottom:6px">Save for This Week</button>
+        <div style="display:flex;gap:6px">
+          <button id="trlRemoveBtn" onclick="removeTrailerWeek()" style="flex:1;padding:9px;border-radius:6px;border:1.5px solid var(--danger);background:var(--danger-light);color:var(--danger);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;touch-action:manipulation">Remove for This Week</button>
+          <button id="trlResetBtn" onclick="resetTrailerWeek()" style="flex:1;padding:9px;border-radius:6px;border:1.5px solid var(--border2);background:var(--surface2);color:var(--text2);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;touch-action:manipulation">Reset to Standard</button>
+        </div>
       </div>
-      <div id="trailersList" style="max-height:35vh;overflow-y:auto"></div>
     </div>
   </div>
 </div>

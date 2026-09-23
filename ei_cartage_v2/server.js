@@ -67,8 +67,8 @@ const WRITABLE_KEYS = new Set([
   'ei_drop_locations',
   'ei_jfiles',
   'ei_tolls',
-  'ei_trailers',
-  'ei_trailer_rate',
+  'ei_trailer_default',
+  'ei_trailer_weeks',
   'ei_change_log',
   'ei_manager_roster',
   'ei_roster_version',
@@ -128,7 +128,7 @@ app.post('/api/verify', async (req, res) => {
 // single-record deletes/edits are always far under this threshold; a
 // client that genuinely needs to shrink the dataset a lot can send the
 // x-allow-shrink header to bypass this check.
-const SHRINK_GUARDED_KEYS = new Set(['ei_manifests', 'ei_jfiles', 'ei_tolls', 'ei_trailers', 'ei_change_log']);
+const SHRINK_GUARDED_KEYS = new Set(['ei_manifests', 'ei_jfiles', 'ei_tolls', 'ei_trailer_weeks', 'ei_change_log']);
 
 async function guardAgainstDataLoss(key, newValueStr, req) {
   if (!SHRINK_GUARDED_KEYS.has(key)) return null;
