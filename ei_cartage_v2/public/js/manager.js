@@ -60,6 +60,7 @@ async function refreshMgr(){
   if(mgrWeekIdx>=mgrWeeks.length) mgrWeekIdx=mgrWeeks.length-1;
   updateMgrWeekLabel();
   updateMgrStats();
+  if(typeof renderMgrWho==='function')renderMgrWho();
 
   // Populate driver dropdown (admin/test drivers excluded - they're hidden from this dashboard entirely)
   const sel=document.getElementById('fDrv'),cur=sel.value;
@@ -214,6 +215,7 @@ function renderCards(){
               (m.isSubstitute?' <span class="mbadge" style="background:var(--warn-light);color:var(--warn);font-size:10px;vertical-align:middle" title="'+_escAttr(m.driverName)+' covered this shift for '+_escAttr(m.subFor||'?')+'">SUB: '+_escAttr(m.driverName)+'</span>':'')+
             '</div>'+
             '<div style="font-size:11px;color:var(--muted);margin-top:2px">Truck '+( m.truckNum||'&mdash;')+' &middot; '+m.startTime+' &rarr; '+getEffectiveEndTime(m)+' &middot; '+getEffectiveHours(m).toFixed(2)+' hrs</div>'+
+            ((m.reviewedBy||m.lastEditedBy)?'<div style="font-size:10px;color:var(--muted);margin-top:2px">'+(m.reviewedBy?'&#10003; Reviewed by '+_escAttr(m.reviewedBy)+' '+fmtStamp(m.reviewedAt):'')+(m.reviewedBy&&m.lastEditedBy?' &middot; ':'')+(m.lastEditedBy?'&#9998; Edited by '+_escAttr(m.lastEditedBy)+' '+fmtStamp(m.lastEditedAt):'')+'</div>':'')+
           '</div>'+
           '<div style="display:flex;gap:10px;align-items:center">'+
             '<span style="font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;color:var(--accent)">$'+chg.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</span>'+
@@ -508,18 +510,22 @@ async function appM(id){
   var newStatus=m.status==='reviewed'?'pending':'reviewed';
   // Marking reviewed means any flags on this manifest have been addressed -
   // clear them so they stop showing. Un-reviewing doesn't resurrect them.
+  var _st=mgrStamp();
   var clearingFlags=newStatus==='reviewed'&&((m.flags&&m.flags.length)||(m.flaggedStops&&m.flaggedStops.length));
   var result=await refreshThenMutateManifests(function(fresh){
     var idx=fresh.findIndex(function(x){return x.id===id;});
     if(idx>=0){
       fresh[idx].status=newStatus;
-      if(newStatus==='reviewed'){fresh[idx].flags=[];fresh[idx].flaggedStops=[];}
+      if(newStatus==='reviewed'){fresh[idx].flags=[];fresh[idx].flaggedStops=[];fresh[idx].reviewedBy=_st.by;fresh[idx].reviewedAt=_st.at;}
+      else{delete fresh[idx].reviewedBy;delete fresh[idx].reviewedAt;}
     }
     return fresh;
   });
   if(!result.ok){showToast('\u26a0 Could not save — check connection and try again',4000);return;}
   m.status=newStatus;
-  if(newStatus==='reviewed'){m.flags=[];m.flaggedStops=[];}
+  if(newStatus==='reviewed'){m.flags=[];m.flaggedStops=[];m.reviewedBy=_st.by;m.reviewedAt=_st.at;}
+  else{delete m.reviewedBy;delete m.reviewedAt;}
+  logChange(newStatus==='reviewed'?'Marked reviewed':'Marked pending',_mDesc(m));
   var isReviewed=newStatus==='reviewed';
 
   if(clearingFlags){
@@ -583,10 +589,13 @@ async function appM(id){
   showToast(isReviewed?'Marked reviewed':'Marked pending');
 }
 
+function _mDesc(m){return (m.driverName||'?')+' \u2014 '+(m.date||'?');}
 async function delM(id){
   if(!confirm('Delete this manifest?'))return;
+  var gone=manifests.find(function(m){return m.id===id;});
   var result=await refreshThenMutateManifests(function(fresh){return fresh.filter(function(m){return m.id!==id;});});
   if(!result.ok){showToast('\u26a0 Delete failed — check connection and try again',4000);return;}
+  if(gone)logChange('Deleted manifest',_mDesc(gone)+' \u00b7 '+getEffectiveHours(gone).toFixed(2)+' hrs \u00b7 $'+(getEffectiveHours(gone)*rate(gone.driverName)).toFixed(2));
   document.getElementById('modOv').classList.remove('open');
   refreshMgr();
   showToast('Deleted');
@@ -787,7 +796,8 @@ async function addJFile(){
       var proceed=confirm(matchedOn+' is already used on a J File dated '+dupe.date+' \u2014 $'+dupe.price.toFixed(2)+' ('+(dupe.ref||'\u2014')+' / '+(dupe.expRef||'\u2014')+'). Add this one anyway?');
       if(!proceed){ cancelled=true; return fresh; }
     }
-    fresh.push({id:Date.now().toString()+'_'+Math.random().toString(36).slice(2,7), date, ref, expRef, price, pcs, wt, shipper, consignee});
+    var _st=mgrStamp();
+    fresh.push({id:Date.now().toString()+'_'+Math.random().toString(36).slice(2,7), date, ref, expRef, price, pcs, wt, shipper, consignee, addedBy:_st.by, addedAt:_st.at});
     return fresh;
   });
 
@@ -799,17 +809,19 @@ async function addJFile(){
   ['jfDate','jfRef','jfExpRef','jfPrice','jfPcs','jfWt','jfShipper','jfConsignee']
     .forEach(function(id){ var el=document.getElementById(id); if(el)el.value=''; });
 
-  showToast('\u2713 J File added');
+  logChange('Added J File',date+' \u00b7 '+(ref||'\u2014')+' / '+(expRef||'\u2014')+' \u00b7 $'+price.toFixed(2));
   renderJFilesList();
   showToast('\u2713 J File added');
 }
 
 async function deleteJFile(id){
   if(!confirm('Remove this J File?')) return;
+  var gone=getJFiles().find(function(j){return j.id===id;});
   var result = await refreshThenMutateJFiles(function(fresh){
     return fresh.filter(function(j){ return j.id !== id; });
   });
   if(!result.ok){ showToast('\u26a0 Could not delete — check connection and try again',4000); return; }
+  if(gone)logChange('Deleted J File',gone.date+' \u00b7 '+(gone.ref||'\u2014')+' / '+(gone.expRef||'\u2014')+' \u00b7 $'+(parseFloat(gone.price)||0).toFixed(2));
   renderJFilesList();
 }
 
@@ -842,6 +854,7 @@ function renderJFilesList(){
           +'<div style="font-weight:700;color:var(--accent)">'+j.date+' &nbsp;·&nbsp; $'+j.price.toFixed(2)+(isDupe?' &nbsp;<span style="color:var(--danger);font-size:11px;font-weight:700">&#9888; DUPLICATE REF</span>':'')+'</div>'
           +'<div style="color:var(--text2);margin-top:2px">'+(j.ref||'—')+' / '+(j.expRef||'—')+'</div>'
           +'<div style="color:var(--muted);font-size:12px;margin-top:2px">'+(j.shipper||'—')+' → '+(j.consignee||'—')+' &nbsp;·&nbsp; '+j.pcs+' pcs &nbsp;·&nbsp; '+j.wt+' lbs</div>'
+          +(j.addedBy?'<div style="color:var(--muted);font-size:10px;margin-top:2px">Added by '+_escAttr(j.addedBy)+' '+fmtStamp(j.addedAt)+'</div>':'')
         +'</div>'
         +'<button data-jid="'+j.id+'" onclick="deleteJFile(this.dataset.jid)" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;flex-shrink:0;padding:0">&#128465;</button>'
       +'</div>';
@@ -919,19 +932,23 @@ async function addToll(){
   if(btn){ if(btn.disabled) return; btn.disabled=true; btn.textContent='Adding…'; }
   var date=weekFriday(dateIn);
   var result=await refreshThenMutateList('ei_tolls',function(fresh){
-    fresh.push({id:Date.now().toString()+'_'+Math.random().toString(36).slice(2,7),date:date,amount:amount});
+    var _st=mgrStamp();
+    fresh.push({id:Date.now().toString()+'_'+Math.random().toString(36).slice(2,7),date:date,amount:amount,addedBy:_st.by,addedAt:_st.at});
     return fresh;
   });
   if(btn){ btn.disabled=false; btn.textContent='+ Add Tolls'; }
   if(!result.ok){ showToast('⚠ Could not save — check connection and try again',4000); return; }
   document.getElementById('tollAmt').value='';
+  logChange('Added tolls','Week ending '+date+' · $'+amount.toFixed(2));
   showToast('✓ Tolls added');
   renderTollsList();
 }
 async function deleteToll(id){
   if(!confirm('Remove this toll entry?')) return;
+  var gone=getTolls().find(function(t){return t.id===id;});
   var result=await refreshThenMutateList('ei_tolls',function(fresh){return fresh.filter(function(t){return t.id!==id;});});
   if(!result.ok){ showToast('⚠ Could not delete — check connection and try again',4000); return; }
+  if(gone)logChange('Deleted tolls','Week ending '+gone.date+' \u00b7 $'+(parseFloat(gone.amount)||0).toFixed(2));
   renderTollsList();
 }
 function renderTollsList(){
@@ -944,7 +961,7 @@ function renderTollsList(){
       +'<div style="font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:8px">'+x.tolls.length+' entr'+(x.tolls.length!==1?'ies':'y')+' — $'+_money(x.tollTotal)+'</div>'
       +x.tolls.slice().sort(function(a,b){return a.date<b.date?1:-1;}).map(function(t){
         return '<div style="background:var(--surface);border:1.5px solid var(--border);border-radius:6px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px">'
-          +'<div style="flex:1;font-size:13px"><span style="font-weight:700;color:var(--accent)">$'+_money(parseFloat(t.amount))+'</span> <span style="color:var(--muted)">&nbsp;·&nbsp; week ending '+fs(t.date)+'</span></div>'
+          +'<div style="flex:1;font-size:13px"><span style="font-weight:700;color:var(--accent)">$'+_money(parseFloat(t.amount))+'</span> <span style="color:var(--muted)">&nbsp;·&nbsp; week ending '+fs(t.date)+(t.addedBy?' &nbsp;\u00b7&nbsp; added by '+_escAttr(t.addedBy)+' '+fmtStamp(t.addedAt):'')+'</span></div>'
           +'<button data-id="'+t.id+'" onclick="deleteToll(this.dataset.id)" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;flex-shrink:0;padding:0">&#128465;</button>'
         +'</div>';
       }).join('');
@@ -970,20 +987,24 @@ async function addTrailer(){
   var result=await refreshThenMutateList('ei_trailers',function(fresh){
     var dupe=fresh.find(function(t){return t.trailerNum===trailerNum&&t.date===date;});
     if(dupe&&!confirm('Trailer '+trailerNum+' is already entered for '+date+'. Add it again anyway?')){cancelled=true;return fresh;}
-    fresh.push({id:Date.now().toString()+'_'+Math.random().toString(36).slice(2,7),date:date,trailerNum:trailerNum});
+    var _st=mgrStamp();
+    fresh.push({id:Date.now().toString()+'_'+Math.random().toString(36).slice(2,7),date:date,trailerNum:trailerNum,addedBy:_st.by,addedAt:_st.at});
     return fresh;
   });
   if(btn){ btn.disabled=false; btn.textContent='+ Add Trailer'; }
   if(cancelled) return;
   if(!result.ok){ showToast('⚠ Could not save — check connection and try again',4000); return; }
   document.getElementById('trlNum').value='';
+  logChange('Added trailer',date+' · Trailer '+trailerNum);
   showToast('✓ Trailer added');
   renderTrailersList();
 }
 async function deleteTrailer(id){
   if(!confirm('Remove this trailer?')) return;
+  var gone=getTrailers().find(function(t){return t.id===id;});
   var result=await refreshThenMutateList('ei_trailers',function(fresh){return fresh.filter(function(t){return t.id!==id;});});
   if(!result.ok){ showToast('⚠ Could not delete — check connection and try again',4000); return; }
+  if(gone)logChange('Deleted trailer',gone.date+' \u00b7 Trailer '+gone.trailerNum);
   renderTrailersList();
 }
 function renderTrailersList(){
@@ -999,7 +1020,7 @@ function renderTrailersList(){
       +'<div style="font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:8px">'+x.trailers.length+' trailer'+(x.trailers.length!==1?'s':'')+' — $'+_money(x.trailerTotal)+'</div>'
       +x.trailers.slice().sort(function(a,b){return a.date<b.date?1:-1;}).map(function(t){
         return '<div style="background:var(--surface);border:1.5px solid var(--border);border-radius:6px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px">'
-          +'<div style="flex:1;font-size:13px"><span style="font-weight:700;color:var(--accent)">'+t.date+' &nbsp;·&nbsp; Trailer '+t.trailerNum+'</span></div>'
+          +'<div style="flex:1;font-size:13px"><span style="font-weight:700;color:var(--accent)">'+t.date+' &nbsp;·&nbsp; Trailer '+t.trailerNum+'</span>'+(t.addedBy?'<span style="color:var(--muted);font-size:11px"> &nbsp;&middot;&nbsp; added by '+_escAttr(t.addedBy)+' '+fmtStamp(t.addedAt)+'</span>':'')+'</div>'
           +'<button data-id="'+t.id+'" onclick="deleteTrailer(this.dataset.id)" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;flex-shrink:0;padding:0">&#128465;</button>'
         +'</div>';
       }).join('');

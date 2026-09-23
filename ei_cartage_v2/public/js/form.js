@@ -519,6 +519,13 @@ function _doSubmit(){
     var existing=manifests.find(function(x){return x.id===editingManifestId;});
     m.id=editingManifestId;
     m.status=existing?existing.status:'pending';
+    // Who/when: keep the review stamp, record this edit
+    if(existing&&existing.reviewedBy){m.reviewedBy=existing.reviewedBy;m.reviewedAt=existing.reviewedAt;}
+    var _st=(typeof mgrStamp==='function')?mgrStamp():{by:'Unknown',at:new Date().toISOString()};
+    m.lastEditedBy=_st.by;m.lastEditedAt=_st.at;
+    var _oldH=existing?getEffectiveHours(existing):0,_newH=getEffectiveHours(m),_r=rate(m.driverName);
+    var _editLog=(m.driverName||'?')+' \u2014 '+(m.date||'?')+(existing&&existing.date!==m.date?' (was '+existing.date+')':'')
+      +(Math.abs(_oldH-_newH)>0.001?' \u00b7 hrs '+_oldH.toFixed(2)+' \u2192 '+_newH.toFixed(2)+' \u00b7 $'+(_oldH*_r).toFixed(2)+' \u2192 $'+(_newH*_r).toFixed(2):' \u00b7 billing unchanged');
   }
   var submitBtn=document.getElementById('submitBtn')||document.querySelector('#driverForm [onclick*="submitManifest"]');
   if(submitBtn)submitBtn.disabled=true;
@@ -530,6 +537,7 @@ function _doSubmit(){
       return; // don't clear draft/form — nothing is confirmed saved
     }
     if(isEdit){
+      if(typeof logChange==='function')logChange('Edited manifest',_editLog);
       editingManifestId=null;
       wasEditingFromMgr=true;
       showToast('\u2713 Manifest updated!');

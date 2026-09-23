@@ -57,7 +57,23 @@ function getDriverRoster(){
   }catch(e){}
   return Object.entries(UNIT_MAP).map(function(e){var n=e[0],u=e[1];return{name:n,unit:u,rate:u.toUpperCase().startsWith('ST')?TRUCK_RATES.ST:TRUCK_RATES.TT};});
 }
+// Plain-English summary of what changed between two rosters, for the change log
+function _rosterDiff(oldR,newR){
+  var byName=function(r){var o={};(r||[]).forEach(function(d){if(d&&d.name)o[d.name]=d;});return o;};
+  var a=byName(oldR),b=byName(newR),out=[];
+  Object.keys(b).forEach(function(n){
+    if(!a[n]){out.push('Added '+n+' ('+(b[n].unit||'')+')');return;}
+    var ch=[];
+    ['unit','driverNum','rate','startTime'].forEach(function(k){if(String(a[n][k]||'')!==String(b[n][k]||''))ch.push(k+' '+(a[n][k]||'\u2014')+'\u2192'+(b[n][k]||'\u2014'));});
+    if(!!a[n].isAdmin!==!!b[n].isAdmin)ch.push(b[n].isAdmin?'set admin/test':'removed admin/test');
+    if(ch.length)out.push(n+': '+ch.join(', '));
+  });
+  Object.keys(a).forEach(function(n){if(!b[n])out.push('Removed '+n+' ('+(a[n].unit||'')+')');});
+  return out.join('; ');
+}
 function saveDriverRoster(roster){
+  var _diff=_rosterDiff(getDriverRoster(),roster);
+  if(_diff)logChange('Driver roster',_diff);
   var sorted=sortRoster(roster);
   saveToStore('ei_driver_roster',JSON.stringify(sorted)); // saves to Supabase + localStorage
   rebuildUnitMap(sorted);
@@ -120,6 +136,7 @@ function saveDropLocations(){
   var l1=document.getElementById('dropLoc1')?.value.trim(),l2=document.getElementById('dropLoc2')?.value.trim();
   if(!l1||!l2){showToast('Both locations required');return;}
   saveToStore('ei_drop_locations',JSON.stringify({loc1:l1,loc2:l2}));
+  logChange('Drop locations',l1+', '+l2);
   var msg=document.getElementById('dropLocMsg');if(msg){msg.textContent='\u2713 Saved';setTimeout(function(){msg.textContent='';},3000);}
   showToast('\u2713 Drop locations updated');
 }
@@ -186,12 +203,14 @@ function showDriverMgr(){
   if(pinEl)pinEl.value=pin;
   var trEl=document.getElementById('trailerRateInput');
   if(trEl){var tr=getTrailerRate();trEl.value=tr?tr:'';}
-  renderDriverList();renderHolidayList();ss('driverMgr');
+  renderDriverList();renderHolidayList();if(typeof renderMgrWho==='function')renderMgrWho();ss('driverMgr');
 }
 function saveTrailerRate(){
   var v=parseFloat(document.getElementById('trailerRateInput')?.value);
   if(isNaN(v)||v<0){showToast('Enter a valid trailer rate',3000);return;}
+  var _old=getTrailerRate();
   saveToStore('ei_trailer_rate',String(v));
+  if(_old!==v)logChange('Trailer rate','$'+_old.toFixed(2)+' \u2192 $'+v.toFixed(2));
   var msg=document.getElementById('trailerRateMsg');if(msg){msg.textContent='\u2713 Updated';setTimeout(function(){msg.textContent='';},3000);}
   showToast('\u2713 Trailer rate updated');
 }
@@ -456,7 +475,9 @@ function confirmAddDriver(){
 function saveDrivers(){rebuildUnitMap(getDriverRoster());showToast('\u2713 Roster saved');setTimeout(function(){ss('manager');},600);}
 function saveTruckRates(){
   var tt=parseFloat(document.getElementById('rateTT')?.value)||92,st=parseFloat(document.getElementById('rateST')?.value)||87;
-  var rates={TT:tt,ST:st};saveToStore('ei_truck_rates',JSON.stringify(rates));
+  var rates={TT:tt,ST:st};
+  if(TRUCK_RATES.TT!==tt||TRUCK_RATES.ST!==st)logChange('Truck rates','TT $'+TRUCK_RATES.TT+' \u2192 $'+tt+', ST $'+TRUCK_RATES.ST+' \u2192 $'+st);
+  saveToStore('ei_truck_rates',JSON.stringify(rates));
   TRUCK_RATES.TT=tt;TRUCK_RATES.ST=st;
   var msg=document.getElementById('rateMsg');if(msg){msg.textContent='\u2713 Updated';setTimeout(function(){msg.textContent='';},3000);}
   showToast('\u2713 Rates updated');
@@ -467,33 +488,85 @@ function changeMgrPin(){
   if(!cur||!nw){if(msg){msg.style.color='var(--danger)';msg.textContent='Fill in both fields';}return;}
   if(cur!==stored){if(msg){msg.style.color='var(--danger)';msg.textContent='Current # incorrect';}return;}
   saveToStore('ei_manager_emp',nw);
+  logChange('Shared manager #','Changed');
   if(msg){msg.style.color='var(--success)';msg.textContent='\u2713 Updated';document.getElementById('mgrPinCurrent').value='';document.getElementById('mgrPinNew').value='';}
 }
 
 // ── MANAGER ACCESS ROSTER ─────────────────────────────────────────────────────
 function getManagerRoster(){try{var s=cacheGet('ei_manager_roster');if(s)return JSON.parse(s);}catch(e){}return[];}
 function saveManagerRoster(r){saveToStore('ei_manager_roster',JSON.stringify(r));}
-function showManagerAccess(){renderManagerList();ss('managerAccess');}
+// Admin gate for the Manager Access screen (manager roster + change log).
+// Until at least one manager is marked Admin, anyone logged in can open it
+// (first-time setup); after that, only managers whose roster entry has
+// isAdmin can. Checked against the live roster, so un-ticking Admin takes
+// effect immediately.
+function hasAnyMgrAdmin(){return getManagerRoster().some(function(m){return m.isAdmin&&m.badge;});}
+function isMgrAdmin(){
+  var u=(typeof currentMgr==='function')?currentMgr():null;
+  if(!u||!u.badge)return false;
+  return getManagerRoster().some(function(m){return m.isAdmin&&String(m.badge).trim().toUpperCase()===String(u.badge).toUpperCase();});
+}
+function canAccessManagerRoster(){return !hasAnyMgrAdmin()||isMgrAdmin();}
+function showManagerAccess(){
+  if(!canAccessManagerRoster()){showToast('\u26a0 Admin access required',3000);return;}
+  renderManagerList();renderChangeLog();ss('managerAccess');
+}
+// Change log viewer (Manager Access screen): newest first, filter by manager
+async function renderChangeLog(){
+  var el=document.getElementById('changeLogList');if(!el)return;
+  try{await apiRefresh('ei_change_log');}catch(e){} // best effort; falls back to cached copy
+  var log=getChangeLog().slice().reverse();
+  var sel=document.getElementById('changeLogWho');
+  if(sel){
+    var cur=sel.value,names=[];
+    log.forEach(function(e){if(names.indexOf(e.by)<0)names.push(e.by);});
+    sel.innerHTML='<option value="">All managers</option>'+names.sort().map(function(n){return '<option'+(n===cur?' selected':'')+'>'+_escAttr(n)+'</option>';}).join('');
+    if(cur)log=log.filter(function(e){return e.by===cur;});
+  }
+  var shown=log.slice(0,300);
+  if(!shown.length){el.innerHTML='<div style="text-align:center;padding:18px;color:var(--muted);font-size:13px">No changes logged yet.</div>';return;}
+  el.innerHTML=shown.map(function(e){
+    var d=new Date(e.at);
+    var when=d.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' '+d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+    return '<div style="display:grid;grid-template-columns:110px 130px 150px 1fr;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;align-items:start">'
+      +'<div style="color:var(--muted)">'+when+'</div>'
+      +'<div style="font-weight:700">'+_escAttr(e.by)+'</div>'
+      +'<div style="color:var(--accent);font-weight:600">'+_escAttr(e.action)+'</div>'
+      +'<div style="color:var(--text2)">'+_escAttr(e.detail)+'</div>'
+      +'</div>';
+  }).join('')+(log.length>shown.length?'<div style="font-size:11px;color:var(--muted);padding-top:8px">Showing newest 300 of '+log.length+'</div>':'');
+}
 function renderManagerList(){
   var roster=getManagerRoster(),el=document.getElementById('managerList');if(!el)return;
   if(!roster.length){el.innerHTML='<div style="text-align:center;padding:24px;color:var(--muted)">No managers yet. Click + Add to get started.</div>';return;}
   el.innerHTML='<div style="display:flex;align-items:center;gap:10px;padding:6px 0 8px;border-bottom:2px solid var(--border2)"><div style="flex:1;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)">Manager Name</div><div style="width:130px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)">Badge #</div><div style="width:60px"></div></div>'+
   roster.map(function(m,i){
-    return '<div class="dl-row" id="mgrow_'+i+'" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)"><div style="flex:1;font-size:14px;font-weight:500">'+(m.name||'<span style="color:var(--muted);font-style:italic">Unnamed</span>')+'</div><div style="width:130px;font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;color:var(--text2)">'+(m.badge?'#'+m.badge:'<span style="color:var(--muted)">&mdash;</span>')+'</div><button onclick="editManager('+i+')" style="height:34px;padding:0 14px;border-radius:5px;border:1.5px solid var(--accent);background:var(--accent-light);color:var(--accent);font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;cursor:pointer;touch-action:manipulation">Edit</button></div>';
+    return '<div class="dl-row" id="mgrow_'+i+'" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)"><div style="flex:1;font-size:14px;font-weight:500">'+(m.name||'<span style="color:var(--muted);font-style:italic">Unnamed</span>')+(m.isAdmin?' <span style="font-size:10px;padding:2px 6px;border-radius:3px;background:var(--accent-light);color:var(--accent);font-weight:700;letter-spacing:.3px">ADMIN</span>':'')+'</div><div style="width:130px;font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;color:var(--text2)">'+(m.badge?'#'+m.badge:'<span style="color:var(--muted)">&mdash;</span>')+'</div><button onclick="editManager('+i+')" style="height:34px;padding:0 14px;border-radius:5px;border:1.5px solid var(--accent);background:var(--accent-light);color:var(--accent);font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;cursor:pointer;touch-action:manipulation">Edit</button></div>';
   }).join('');
 }
 function editManager(i){
   var roster=getManagerRoster(),m=roster[i],row=document.getElementById('mgrow_'+i);if(!row)return;
-  row.innerHTML='<div style="display:grid;grid-template-columns:1fr 130px auto auto auto;gap:8px;align-items:center;width:100%;padding:6px 0"><input type="text" id="emgr_name_'+i+'" value="'+_escAttr(m.name||'')+'" placeholder="Manager name" style="height:40px;padding:0 10px;border:1.5px solid var(--accent);border-radius:5px;font-size:14px;font-family:Barlow,sans-serif;width:100%"><input type="text" id="emgr_badge_'+i+'" value="'+_escAttr(m.badge||'')+'" placeholder="Badge #" inputmode="tel" style="height:40px;padding:0 10px;border:1.5px solid var(--accent);border-radius:5px;font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;width:100%"><button onclick="saveManagerEdit('+i+')" style="height:40px;padding:0 14px;border-radius:5px;border:none;background:var(--success);color:white;font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;cursor:pointer;touch-action:manipulation">Save</button><button onclick="renderManagerList()" style="height:40px;padding:0 10px;border-radius:5px;border:1.5px solid var(--border2);background:var(--surface2);color:var(--text2);font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;cursor:pointer;touch-action:manipulation">Cancel</button><button onclick="removeManager('+i+')" style="height:40px;padding:0 10px;border-radius:5px;border:1.5px solid var(--danger);background:var(--danger-light);color:var(--danger);font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;cursor:pointer;touch-action:manipulation">&#128465;</button></div>';
+  row.innerHTML='<div style="display:grid;grid-template-columns:1fr 130px auto auto auto auto;gap:8px;align-items:center;width:100%;padding:6px 0"><input type="text" id="emgr_name_'+i+'" value="'+_escAttr(m.name||'')+'" placeholder="Manager name" style="height:40px;padding:0 10px;border:1.5px solid var(--accent);border-radius:5px;font-size:14px;font-family:Barlow,sans-serif;width:100%"><input type="text" id="emgr_badge_'+i+'" value="'+_escAttr(m.badge||'')+'" placeholder="Badge #" inputmode="tel" style="height:40px;padding:0 10px;border:1.5px solid var(--accent);border-radius:5px;font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;width:100%"><label style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--text2);white-space:nowrap;cursor:pointer"><input type="checkbox" id="emgr_admin_'+i+'" '+(m.isAdmin?'checked':'')+'> Admin</label><button onclick="saveManagerEdit('+i+')" style="height:40px;padding:0 14px;border-radius:5px;border:none;background:var(--success);color:white;font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;cursor:pointer;touch-action:manipulation">Save</button><button onclick="renderManagerList()" style="height:40px;padding:0 10px;border-radius:5px;border:1.5px solid var(--border2);background:var(--surface2);color:var(--text2);font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;cursor:pointer;touch-action:manipulation">Cancel</button><button onclick="removeManager('+i+')" style="height:40px;padding:0 10px;border-radius:5px;border:1.5px solid var(--danger);background:var(--danger-light);color:var(--danger);font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;cursor:pointer;touch-action:manipulation">&#128465;</button></div>';
   setTimeout(function(){document.getElementById('emgr_name_'+i)?.focus();},50);
 }
 function saveManagerEdit(i){
   var name=document.getElementById('emgr_name_'+i)?.value.trim(),badge=document.getElementById('emgr_badge_'+i)?.value.trim();
   if(!name){showToast('Manager name required');return;}
-  var roster=getManagerRoster();roster[i]={name:name,badge:badge};saveManagerRoster(roster);renderManagerList();showToast('\u2713 Manager updated');
+  var roster=getManagerRoster();
+  var dupe=badge&&roster.some(function(m,j){return j!==i&&m.badge&&String(m.badge).trim().toUpperCase()===badge.toUpperCase();});
+  if(dupe){showToast('\u26a0 Badge #'+badge+' is already assigned to another manager',4000);return;}
+  var isAdmin=!!document.getElementById('emgr_admin_'+i)?.checked;
+  if(isAdmin&&!badge){showToast('\u26a0 An admin needs a badge # to log in with',4000);return;}
+  var prev=roster[i]||{};
+  roster[i]={name:name,badge:badge,isAdmin:isAdmin};saveManagerRoster(roster);renderManagerList();showToast('\u2713 Manager updated');
+  var notes=[];if(prev.name&&prev.badge!==badge)notes.push('badge changed');if(!!prev.isAdmin!==isAdmin)notes.push(isAdmin?'made admin':'admin removed');
+  logChange('Manager roster',(prev.name?'Updated ':'Added ')+name+(notes.length?' ('+notes.join(', ')+')':''));
+  renderMgrWho();
+  // If you just removed your own admin access, leave the screen
+  if(!canAccessManagerRoster()){showToast('This screen is now limited to admins',3000);ss('manager');}
 }
 function removeManager(i){
-  var roster=getManagerRoster();if(!confirm('Remove '+(roster[i].name||'this manager')+'?'))return;roster.splice(i,1);saveManagerRoster(roster);renderManagerList();showToast('Manager removed');
+  var roster=getManagerRoster();if(!confirm('Remove '+(roster[i].name||'this manager')+'?'))return;var _gone=roster[i].name||'unnamed';roster.splice(i,1);saveManagerRoster(roster);renderManagerList();showToast('Manager removed');logChange('Manager roster','Removed '+_gone);
 }
 function addManagerRow(){
   var roster=getManagerRoster();roster.push({name:'',badge:''});saveManagerRoster(roster);renderManagerList();editManager(roster.length-1);
@@ -504,6 +577,7 @@ function saveCustomerCode(){
   var code=document.getElementById('custCodeInput')?.value.trim().toUpperCase();
   if(!code){showToast('Please enter a code');return;}
   saveToStore('ei_customer_code',code); // saves to Supabase + all devices
+  logChange('Customer access code','Changed');
   var msg=document.getElementById('custCodeMsg');
   if(msg){msg.textContent='\u2713 Updated to '+code;setTimeout(function(){msg.textContent='';},3000);}
   showToast('\u2713 Customer code updated');
