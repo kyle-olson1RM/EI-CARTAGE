@@ -219,6 +219,8 @@
   </div>
   <div class="bot-bar" style="justify-content:center">
     <button class="bot-btn" onclick="showJFiles()">&#128196; J Files</button>
+    <button class="bot-btn" onclick="showTolls()">&#128739; Tolls</button>
+    <button class="bot-btn" onclick="showTrailers()">&#128667; Trailers</button>
     <button class="bot-btn bot-btn-s" onclick="showDriverMgr()">&#128100; Drivers</button>
     <button class="bot-btn bot-btn-s" onclick="showManagerAccess()">&#128274; Managers</button>
   </div>
@@ -354,6 +356,23 @@
         <button onclick="saveTruckRates()" style="height:40px;padding:0 20px;border-radius:6px;border:none;background:var(--accent);color:white;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer">Update Rates</button>
         <div id="rateMsg" style="font-size:12px;color:var(--success);min-height:16px"></div>
       </div>
+    </div>
+
+    <!-- Additional Trailer Rate -->
+    <div style="background:var(--surface);border-radius:8px;box-shadow:var(--shadow);margin-bottom:14px;overflow:hidden">
+      <div style="background:var(--surface2);padding:10px 14px;border-bottom:1px solid var(--border);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--accent)">&#128667; Additional Trailer Rate</div>
+      <div style="padding:14px;display:flex;gap:10px;align-items:flex-end">
+        <div style="flex:1">
+          <label style="display:block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin-bottom:6px">Flat rate per trailer</label>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span style="font-family:'Barlow Condensed',sans-serif;font-size:18px;font-weight:700;color:var(--muted)">$</span>
+            <input type="number" id="trailerRateInput" inputmode="decimal" placeholder="0.00"
+              style="flex:1;height:44px;padding:0 12px;border:1.5px solid var(--border);border-radius:6px;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:var(--accent)">
+          </div>
+        </div>
+        <button onclick="saveTrailerRate()" style="height:44px;padding:0 20px;border-radius:6px;border:none;background:var(--accent);color:white;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700;cursor:pointer;touch-action:manipulation;white-space:nowrap">Update Rate</button>
+      </div>
+      <div id="trailerRateMsg" style="padding:0 14px 12px;font-size:12px;color:var(--success);min-height:16px"></div>
     </div>
 
     <!-- Holiday Billing (read-only) -->
@@ -641,6 +660,48 @@
       </div>
       <!-- J Files list -->
       <div id="jfilesList" style="max-height:35vh;overflow-y:auto"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TOLLS MODAL -->
+<div class="modal-overlay" id="tollsOv" style="align-items:flex-end;z-index:999" onclick="if(event.target===this)document.getElementById('tollsOv').classList.remove('open')">
+  <div class="modal" style="border-radius:12px 12px 0 0;max-height:85vh;overflow-y:auto;touch-action:manipulation">
+    <div style="background:#1a1a1a;padding:14px 18px;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:white">Tolls</div>
+      <button onclick="document.getElementById('tollsOv').classList.remove('open')" style="background:none;border:none;color:rgba(255,255,255,.6);font-size:24px;cursor:pointer;padding:0 4px">&#215;</button>
+    </div>
+    <div style="padding:12px">
+      <div style="background:var(--surface2);border-radius:8px;padding:10px;margin-bottom:10px">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--accent);margin-bottom:8px">Add Weekly Tolls</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
+          <div class="field"><label>Week (any day in it)</label><input type="date" id="tollDate" style="font-size:13px;height:38px;padding:0 8px"></div>
+          <div class="field"><label>Amount ($)</label><input type="number" id="tollAmt" placeholder="0.00" inputmode="decimal" style="font-size:13px;height:38px;padding:0 8px"></div>
+        </div>
+        <button id="tollAddBtn" onclick="addToll()" style="width:100%;padding:9px;border-radius:6px;border:none;background:var(--accent);color:white;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;cursor:pointer;touch-action:manipulation">+ Add Tolls</button>
+      </div>
+      <div id="tollsList" style="max-height:35vh;overflow-y:auto"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ADDITIONAL TRAILERS MODAL -->
+<div class="modal-overlay" id="trailersOv" style="align-items:flex-end;z-index:999" onclick="if(event.target===this)document.getElementById('trailersOv').classList.remove('open')">
+  <div class="modal" style="border-radius:12px 12px 0 0;max-height:85vh;overflow-y:auto;touch-action:manipulation">
+    <div style="background:#1a1a1a;padding:14px 18px;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:white">Additional Trailers</div>
+      <button onclick="document.getElementById('trailersOv').classList.remove('open')" style="background:none;border:none;color:rgba(255,255,255,.6);font-size:24px;cursor:pointer;padding:0 4px">&#215;</button>
+    </div>
+    <div style="padding:12px">
+      <div style="background:var(--surface2);border-radius:8px;padding:10px;margin-bottom:10px">
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--accent);margin-bottom:8px">Add Trailer</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
+          <div class="field"><label>Date</label><input type="date" id="trlDate" style="font-size:13px;height:38px;padding:0 8px"></div>
+          <div class="field"><label>Trailer #</label><input type="text" id="trlNum" placeholder="Trailer #" autocapitalize="characters" style="font-size:13px;height:38px;padding:0 8px"></div>
+        </div>
+        <button id="trlAddBtn" onclick="addTrailer()" style="width:100%;padding:9px;border-radius:6px;border:none;background:var(--accent);color:white;font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;cursor:pointer;touch-action:manipulation">+ Add Trailer</button>
+      </div>
+      <div id="trailersList" style="max-height:35vh;overflow-y:auto"></div>
     </div>
   </div>
 </div>

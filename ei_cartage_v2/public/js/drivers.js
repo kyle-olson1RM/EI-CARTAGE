@@ -184,7 +184,16 @@ function showDriverMgr(){
   var pin=cacheGet('ei_manager_emp')||'1234';
   var pinEl=document.getElementById('mgrPinInput');
   if(pinEl)pinEl.value=pin;
+  var trEl=document.getElementById('trailerRateInput');
+  if(trEl){var tr=getTrailerRate();trEl.value=tr?tr:'';}
   renderDriverList();renderHolidayList();ss('driverMgr');
+}
+function saveTrailerRate(){
+  var v=parseFloat(document.getElementById('trailerRateInput')?.value);
+  if(isNaN(v)||v<0){showToast('Enter a valid trailer rate',3000);return;}
+  saveToStore('ei_trailer_rate',String(v));
+  var msg=document.getElementById('trailerRateMsg');if(msg){msg.textContent='\u2713 Updated';setTimeout(function(){msg.textContent='';},3000);}
+  showToast('\u2713 Trailer rate updated');
 }
 // Read-only list of this year's and next year's billable holidays, with the
 // unit count and amount they bill at the current roster and rates.

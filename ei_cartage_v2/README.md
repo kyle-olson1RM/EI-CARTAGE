@@ -199,3 +199,11 @@ On company holidays no trucks run, but every roster unit is billed a flat **8 ho
 - **If a unit actually runs on a holiday:** its manifest is billed normally and the flat 8 hrs is skipped for that unit (no double billing). A substitute covering a unit counts as that unit running.
 - Computed at display/billing time only (`getHolidayCharges()` in `api.js`); no manifests are created and no stored data changes. Uses the *current* roster and rates, so keep the roster up to date before each holiday.
 - Each billable unit gets the holiday as one of its own days: a green holiday day on its manager-dashboard card, and 8 hrs added to its row (marked 🎉) in the weekly Summary (screen, print/PDF, CSV), custom date range report + CSV, and the customer view. Driver Management shows the holiday calendar for this year and next.
+
+## Tolls & Additional Trailers
+
+Manager-entered weekly add-on charges, added from the buttons at the bottom of the manager dashboard (same pattern as J Files). **Internal only** — included in dashboard Program Totals and the weekly Summary (screen + print/PDF), **not** shown on the customer view.
+
+- **Tolls** (`ei_tolls`): one lump-sum amount per entry; pick any day in the week and it's filed to that week's Friday. Multiple entries per week are summed.
+- **Additional Trailers** (`ei_trailers`): date + trailer # per trailer, billed at one flat rate per trailer (`ei_trailer_rate`, set under Driver Management → Additional Trailer Rate). Like truck rates, the current rate is applied when reports are shown. Trailer #s are stored uppercase with spaces removed; entering the same trailer on the same date asks for confirmation.
+- Both keys are on the server write whitelist and the data-loss shrink guard.

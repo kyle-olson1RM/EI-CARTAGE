@@ -546,7 +546,13 @@ function renderSum(){
   var jfRow=weekJFiles.length
     ?'<tr class="data-row" style="background:#fffbeb"><td colspan="2"><strong>J Files</strong> ('+weekJFiles.length+')</td><td>—</td><td>—</td><td>'+weekJFiles.length+'</td><td>'+jfWt.toLocaleString()+'</td><td>—</td><td>—</td><td class="chg-cell">$'+jfTotal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td><td class="chg-cell">$'+jfCpl.toFixed(4)+'</td></tr>'
     :'';
-  var grandC=gC+jfTotal;
+  // Tolls + Additional Trailers (internal add-ons; not on customer view).
+  // Rows use a colspan="2" label like J Files so print drops Driver cleanly.
+  var extras=getWeekExtras(sunday,friday);
+  var exRows='';
+  if(extras.tolls.length)exRows+='<tr class="data-row"><td colspan="2"><strong>Tolls</strong></td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td class="chg-cell">$'+extras.tollTotal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td><td>—</td></tr>';
+  if(extras.trailers.length)exRows+='<tr class="data-row"><td colspan="2"><strong>Additional Trailers</strong> ('+extras.trailers.length+')</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td class="chg-cell">$'+extras.trailerTotal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td><td>—</td></tr>';
+  var grandC=gC+jfTotal+extras.tollTotal+extras.trailerTotal;
   var grandW=gW+jfWt;
   var acps=gS>0?grandC/gS:0,acpl=grandW>0?grandC/grandW:0,asph=workedH>0?gS/workedH:0,amd=gM/5,acpm=gM>0?grandC/gM:0;
 
@@ -567,7 +573,7 @@ function renderSum(){
     +'<div style="overflow-x:auto"><table class="sum-tbl">'
     +'<colgroup><col style="width:7%"><col style="width:15%"><col style="width:9%"><col style="width:9%"><col style="width:9%"><col style="width:11%"><col style="width:8%"><col style="width:8%"><col style="width:13%"><col style="width:11%"></colgroup>'
     +'<thead><tr><th>Unit</th><th>Driver</th><th>Deliveries</th><th>Pick Ups</th><th>Shipments</th><th>Weight (lbs)</th><th>Miles</th><th>Hours</th><th>Charges</th><th>$/Lb</th></tr></thead>'
-    +'<tbody>'+ttRows+jfRow+stRows+'</tbody>'
+    +'<tbody>'+ttRows+jfRow+stRows+exRows+'</tbody>'
     +'<tfoot><tr class="total-row"><td colspan="2"><strong>TOTAL</strong></td><td>'+gD+'</td><td>'+gP+'</td><td>'+gS+'</td><td>'+grandW.toLocaleString()+'</td><td>'+gM+'</td><td>'+gH.toFixed(2)+'</td><td class="chg-cell">$'+grandC.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td><td class="chg-cell">$'+(grandW>0?(grandC/grandW).toFixed(4):'0.0000')+'</td></tr></tfoot>'
     +'</table></div>'
     +'<div class="sum-stats">'

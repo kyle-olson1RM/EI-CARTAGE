@@ -181,6 +181,37 @@ async function refreshThenMutateJFiles(mutatorFn) {
   }
 }
 
+// Same refresh-then-merge safety as refreshThenMutateJFiles, for any other
+// array-shaped key (used by Tolls 'ei_tolls' and Additional Trailers
+// 'ei_trailers'). Returns {ok, list}.
+async function refreshThenMutateList(key, mutatorFn) {
+  try {
+    const fresh = JSON.parse(await apiRefresh(key) || cacheGet(key) || '[]');
+    const updated = mutatorFn(fresh) || fresh;
+    var isServer = window.location.protocol !== 'file:' &&
+                   window.location.hostname !== '' &&
+                   window.location.hostname !== 'localhost' &&
+                   window.location.hostname !== '127.0.0.1';
+    if (isServer) {
+      var res = await fetch('/api/store/' + encodeURIComponent(key), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ value: JSON.stringify(updated) })
+      });
+      if (!res.ok) {
+        console.error('refreshThenMutateList write failed for', key, res.status, await res.text());
+        return { ok: false, list: updated };
+      }
+    }
+    _cache[key] = JSON.stringify(updated);
+    try { localStorage.setItem(key, JSON.stringify(updated)); } catch(e) {}
+    return { ok: true, list: updated };
+  } catch(e) {
+    console.error('refreshThenMutateList error for', key, e.message);
+    return { ok: false, list: null };
+  }
+}
+
 async function apiDel(key) {
   delete _cache[key];
   try {

@@ -133,7 +133,9 @@ function renderCards(){
     var r=rate(n);
     hlByDrv[n].forEach(function(x){pgH+=x.hours;pgC+=x.hours*r;});
   });
-  var pgGrandC=pgC+jfTotal;
+  // Tolls + Additional Trailers for this week (internal add-on charges)
+  var extras=getWeekExtras(ffrom,fto);
+  var pgGrandC=pgC+jfTotal+extras.tollTotal+extras.trailerTotal;
   var pgGrandW=pgW+jfWt;
   var jfRow=weekJFiles.length
     ?'<tr class="data-row" style="background:#fffbeb"><td colspan="2"><strong>&#128196; J Files</strong> ('+weekJFiles.length+')</td><td>—</td><td>—</td><td>'+weekJFiles.length+'</td><td>'+jfWt.toLocaleString()+'</td><td>—</td><td>—</td><td class="chg-cell" style="color:#d97706">$'+jfTotal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td></tr>'
@@ -285,7 +287,7 @@ function renderCards(){
       +'</div>'
       +'</div>';
   }
-  c.innerHTML=totalsBox+driverCardsHtml+jfCardHtml;
+  c.innerHTML=totalsBox+driverCardsHtml+jfCardHtml+extrasCardsHtml(extras);
 }
 
 function openMod(id){
@@ -846,4 +848,186 @@ function renderJFilesList(){
     }).join('');
   // Refresh dashboard to show updated J Files
   if(typeof refreshMgr==='function') refreshMgr();
+}
+
+// ── TOLLS & ADDITIONAL TRAILERS ──────────────────────────────────────────────
+// Both are manager-entered weekly add-on charges, handled like J Files:
+// stored as arrays in kn_store, saved with refresh-then-merge, scoped to the
+// dashboard's selected week, and added to Program Totals + the weekly
+// Summary. Internal only — deliberately NOT shown on the customer view.
+//
+// Tolls ('ei_tolls'): [{id, date, amount}] — a lump sum for the week. The
+//   date is normalized to that week's Friday so it always lands inside both
+//   the dashboard week (Sun-Sat) and the Summary week (Sun-Fri). Multiple
+//   entries per week are allowed and summed.
+// Additional Trailers ('ei_trailers'): [{id, date, trailerNum}] — billed at
+//   one flat rate per trailer ('ei_trailer_rate', set in Driver Management),
+//   applied at display time like truck rates.
+
+function _money(n){return (n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function _fmtLocal(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+// Friday of the Sun-Sat week containing dateStr
+function weekFriday(dateStr){
+  var d=new Date(dateStr+'T12:00:00');
+  d.setDate(d.getDate()+(5-d.getDay()));
+  return _fmtLocal(d);
+}
+function getTolls(){ try{ return JSON.parse(cacheGet('ei_tolls')||'[]'); }catch(e){ return []; } }
+function getTrailers(){ try{ return JSON.parse(cacheGet('ei_trailers')||'[]'); }catch(e){ return []; } }
+function getTrailerRate(){ return parseFloat(cacheGet('ei_trailer_rate'))||0; }
+
+// Tolls + trailers within from..to (inclusive). Empty from/to = everything.
+function getWeekExtras(from,to){
+  var inRange=function(x){return (!from||x.date>=from)&&(!to||x.date<=to);};
+  var tolls=getTolls().filter(inRange);
+  var trailers=getTrailers().filter(inRange);
+  var rate=getTrailerRate();
+  return {
+    tolls:tolls,
+    tollTotal:tolls.reduce(function(s,t){return s+(parseFloat(t.amount)||0);},0),
+    trailers:trailers,
+    trailerRate:rate,
+    trailerTotal:trailers.length*rate
+  };
+}
+
+// Default date for the add forms: the dashboard's selected week (its Friday),
+// or today when "All Weeks" is selected.
+function _extrasDefaultDate(){
+  var r=getMgrWeekRange();
+  return r.from?weekFriday(r.from):localDateStr();
+}
+function _extrasWeekNote(){
+  var r=getMgrWeekRange();
+  var lbl=r.from?(fs(r.from)+' – '+fs(r.to)):'All Weeks';
+  return '<div style="font-size:11px;color:var(--muted);margin-bottom:6px">Showing: <strong>'+lbl+'</strong> (matches the week selected on the dashboard)</div>';
+}
+
+// ── Tolls modal ──
+function showTolls(){
+  var d=document.getElementById('tollDate');if(d)d.value=_extrasDefaultDate();
+  var a=document.getElementById('tollAmt');if(a)a.value='';
+  renderTollsList();
+  document.getElementById('tollsOv').classList.add('open');
+}
+async function addToll(){
+  var dateIn=document.getElementById('tollDate')?.value;
+  var amount=parseFloat(document.getElementById('tollAmt')?.value)||0;
+  if(!dateIn){ showToast('Please pick a day in the week',3000); return; }
+  if(!amount){ showToast('Please enter the toll amount',3000); return; }
+  var btn=document.getElementById('tollAddBtn');
+  if(btn){ if(btn.disabled) return; btn.disabled=true; btn.textContent='Adding…'; }
+  var date=weekFriday(dateIn);
+  var result=await refreshThenMutateList('ei_tolls',function(fresh){
+    fresh.push({id:Date.now().toString()+'_'+Math.random().toString(36).slice(2,7),date:date,amount:amount});
+    return fresh;
+  });
+  if(btn){ btn.disabled=false; btn.textContent='+ Add Tolls'; }
+  if(!result.ok){ showToast('⚠ Could not save — check connection and try again',4000); return; }
+  document.getElementById('tollAmt').value='';
+  showToast('✓ Tolls added');
+  renderTollsList();
+}
+async function deleteToll(id){
+  if(!confirm('Remove this toll entry?')) return;
+  var result=await refreshThenMutateList('ei_tolls',function(fresh){return fresh.filter(function(t){return t.id!==id;});});
+  if(!result.ok){ showToast('⚠ Could not delete — check connection and try again',4000); return; }
+  renderTollsList();
+}
+function renderTollsList(){
+  var el=document.getElementById('tollsList');if(!el)return;
+  var r=getMgrWeekRange(),x=getWeekExtras(r.from,r.to);
+  if(!x.tolls.length){
+    el.innerHTML=_extrasWeekNote()+'<div style="color:var(--muted);font-size:13px;text-align:center;padding:12px">No tolls entered for this week</div>';
+  } else {
+    el.innerHTML=_extrasWeekNote()
+      +'<div style="font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:8px">'+x.tolls.length+' entr'+(x.tolls.length!==1?'ies':'y')+' — $'+_money(x.tollTotal)+'</div>'
+      +x.tolls.slice().sort(function(a,b){return a.date<b.date?1:-1;}).map(function(t){
+        return '<div style="background:var(--surface);border:1.5px solid var(--border);border-radius:6px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px">'
+          +'<div style="flex:1;font-size:13px"><span style="font-weight:700;color:var(--accent)">$'+_money(parseFloat(t.amount))+'</span> <span style="color:var(--muted)">&nbsp;·&nbsp; week ending '+fs(t.date)+'</span></div>'
+          +'<button data-id="'+t.id+'" onclick="deleteToll(this.dataset.id)" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;flex-shrink:0;padding:0">&#128465;</button>'
+        +'</div>';
+      }).join('');
+  }
+  if(typeof refreshMgr==='function') refreshMgr();
+}
+
+// ── Additional Trailers modal ──
+function showTrailers(){
+  var d=document.getElementById('trlDate');if(d)d.value=_extrasDefaultDate();
+  var n=document.getElementById('trlNum');if(n)n.value='';
+  renderTrailersList();
+  document.getElementById('trailersOv').classList.add('open');
+}
+async function addTrailer(){
+  var date=document.getElementById('trlDate')?.value;
+  var trailerNum=(document.getElementById('trlNum')?.value||'').replace(/\s+/g,'').toUpperCase();
+  if(!date){ showToast('Please enter a date',3000); return; }
+  if(!trailerNum){ showToast('Please enter the trailer #',3000); return; }
+  var btn=document.getElementById('trlAddBtn');
+  if(btn){ if(btn.disabled) return; btn.disabled=true; btn.textContent='Adding…'; }
+  var cancelled=false;
+  var result=await refreshThenMutateList('ei_trailers',function(fresh){
+    var dupe=fresh.find(function(t){return t.trailerNum===trailerNum&&t.date===date;});
+    if(dupe&&!confirm('Trailer '+trailerNum+' is already entered for '+date+'. Add it again anyway?')){cancelled=true;return fresh;}
+    fresh.push({id:Date.now().toString()+'_'+Math.random().toString(36).slice(2,7),date:date,trailerNum:trailerNum});
+    return fresh;
+  });
+  if(btn){ btn.disabled=false; btn.textContent='+ Add Trailer'; }
+  if(cancelled) return;
+  if(!result.ok){ showToast('⚠ Could not save — check connection and try again',4000); return; }
+  document.getElementById('trlNum').value='';
+  showToast('✓ Trailer added');
+  renderTrailersList();
+}
+async function deleteTrailer(id){
+  if(!confirm('Remove this trailer?')) return;
+  var result=await refreshThenMutateList('ei_trailers',function(fresh){return fresh.filter(function(t){return t.id!==id;});});
+  if(!result.ok){ showToast('⚠ Could not delete — check connection and try again',4000); return; }
+  renderTrailersList();
+}
+function renderTrailersList(){
+  var el=document.getElementById('trailersList');if(!el)return;
+  var r=getMgrWeekRange(),x=getWeekExtras(r.from,r.to);
+  var rateNote=x.trailerRate
+    ?'<div style="font-size:12px;color:var(--text2);margin-bottom:8px">Billed at <strong>$'+_money(x.trailerRate)+'</strong> per trailer (change in Driver Management)</div>'
+    :'<div style="font-size:12px;color:var(--danger);font-weight:700;margin-bottom:8px">&#9888; No trailer rate set — trailers bill $0 until you set one in Driver Management</div>';
+  if(!x.trailers.length){
+    el.innerHTML=_extrasWeekNote()+rateNote+'<div style="color:var(--muted);font-size:13px;text-align:center;padding:12px">No additional trailers for this week</div>';
+  } else {
+    el.innerHTML=_extrasWeekNote()+rateNote
+      +'<div style="font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:8px">'+x.trailers.length+' trailer'+(x.trailers.length!==1?'s':'')+' — $'+_money(x.trailerTotal)+'</div>'
+      +x.trailers.slice().sort(function(a,b){return a.date<b.date?1:-1;}).map(function(t){
+        return '<div style="background:var(--surface);border:1.5px solid var(--border);border-radius:6px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px">'
+          +'<div style="flex:1;font-size:13px"><span style="font-weight:700;color:var(--accent)">'+t.date+' &nbsp;·&nbsp; Trailer '+t.trailerNum+'</span></div>'
+          +'<button data-id="'+t.id+'" onclick="deleteTrailer(this.dataset.id)" style="background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;flex-shrink:0;padding:0">&#128465;</button>'
+        +'</div>';
+      }).join('');
+  }
+  if(typeof refreshMgr==='function') refreshMgr();
+}
+
+// Dashboard cards (same look as the J Files card), shown under the drivers
+function extrasCardsHtml(x){
+  var html='';
+  if(x.tolls.length){
+    html+='<div class="driver-group" style="border:1.5px solid #6366f1;border-radius:8px;margin-bottom:10px;overflow:hidden">'
+      +'<div style="background:#eef2ff;padding:12px 14px;display:flex;align-items:center;justify-content:space-between">'
+      +'<div style="font-family:Barlow Condensed,sans-serif;font-size:17px;font-weight:700">&#128739; Tolls <span style="font-size:13px;font-weight:400;color:var(--muted)">('+x.tolls.length+' entr'+(x.tolls.length!==1?'ies':'y')+')</span></div>'
+      +'<div style="font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:800;color:#4f46e5">$'+_money(x.tollTotal)+'</div>'
+      +'</div></div>';
+  }
+  if(x.trailers.length){
+    html+='<div class="driver-group" style="border:1.5px solid #0891b2;border-radius:8px;margin-bottom:10px;overflow:hidden">'
+      +'<div style="background:#ecfeff;padding:12px 14px;display:flex;align-items:center;justify-content:space-between">'
+      +'<div style="font-family:Barlow Condensed,sans-serif;font-size:17px;font-weight:700">&#128667; Additional Trailers <span style="font-size:13px;font-weight:400;color:var(--muted)">('+x.trailers.length+' &times; $'+_money(x.trailerRate)+')</span></div>'
+      +'<div style="font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:800;color:#0e7490">$'+_money(x.trailerTotal)+'</div>'
+      +'</div>'
+      +'<div style="padding:10px 14px;font-size:12px;color:var(--text2)">'
+      +x.trailers.slice().sort(function(a,b){return a.date<b.date?-1:1;}).map(function(t){
+        return '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)"><span>'+t.date+' &nbsp;·&nbsp; Trailer '+t.trailerNum+'</span><span style="font-weight:700;color:#0e7490">$'+_money(x.trailerRate)+'</span></div>';
+      }).join('')
+      +'</div></div>';
+  }
+  return html;
 }
