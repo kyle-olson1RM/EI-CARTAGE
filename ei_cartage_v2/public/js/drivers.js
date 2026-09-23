@@ -184,7 +184,27 @@ function showDriverMgr(){
   var pin=cacheGet('ei_manager_emp')||'1234';
   var pinEl=document.getElementById('mgrPinInput');
   if(pinEl)pinEl.value=pin;
-  renderDriverList();ss('driverMgr');
+  renderDriverList();renderHolidayList();ss('driverMgr');
+}
+// Read-only list of this year's and next year's billable holidays, with the
+// unit count and amount they bill at the current roster and rates.
+function renderHolidayList(){
+  var el=document.getElementById('holidayList');if(!el)return;
+  var today=localDateStr(),y=parseInt(today.slice(0,4),10);
+  var units=getDriverRoster().filter(isHolidayBillableDriver);
+  var perDay=units.reduce(function(s,d){return s+HOLIDAY_HOURS*rate(d.name);},0);
+  var hols=getHolidaysInRange(y+'-01-01',(y+1)+'-12-31');
+  if(!hols.length){el.innerHTML='<div style="font-size:13px;color:var(--muted)">No holidays scheduled.</div>';return;}
+  el.innerHTML='<div style="font-size:12px;color:var(--text2);margin-bottom:8px"><strong>'+units.length+'</strong> billable units &times; '+HOLIDAY_HOURS+' hrs = <strong>$'+perDay.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</strong> per holiday at current roster/rates</div>'
+    +hols.map(function(h){
+      var past=h.date<today;
+      var d=new Date(h.date+'T12:00:00');
+      var ds=d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px;'+(past?'color:var(--muted)':'')+'">'
+        +'<span><strong>'+h.name+'</strong> &nbsp;·&nbsp; '+ds+'</span>'
+        +'<span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px">'+(past?'Billed':'Upcoming')+'</span>'
+        +'</div>';
+    }).join('');
 }
 function renderDriverList(){
   var roster=getDriverRoster(),el=document.getElementById('driverList');

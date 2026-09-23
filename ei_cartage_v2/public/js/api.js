@@ -286,3 +286,124 @@ function getEffectiveEndTime(m){
   var eh = Math.floor(eMin/60), em = eMin%60;
   return String(eh).padStart(2,'0')+':'+String(em).padStart(2,'0');
 }
+
+// ── HOLIDAY BILLING ─────────────────────────────────────────────────────────
+// On company holidays no trucks run, but every real roster unit is billed a
+// flat HOLIDAY_HOURS at its truck-type rate. Like getEffectiveHours(), this
+// is computed at render/billing time only — no manifests are created and no
+// stored data is touched.
+//
+// Billable units = current roster, excluding admin/test drivers and spare
+// placeholders whose name is "SP" + number (e.g. SP774). If a real manifest
+// exists for a unit on a holiday (driver or substitute covering them), that
+// manifest is billed normally and the flat holiday charge is skipped for that
+// unit, so nothing is ever double-billed.
+//
+// Calendar (auto-computed every year from HOLIDAY_FIRST_YEAR on):
+//   New Year's Day, Memorial Day (last Mon of May), Independence Day,
+//   Labor Day (1st Mon of Sept), Thanksgiving (4th Thu of Nov), Christmas.
+// Fixed-date holidays falling on a Saturday are observed the Friday before;
+// on a Sunday, the Monday after. Only the observed weekday is billed.
+var HOLIDAY_HOURS = 8;
+var HOLIDAY_FIRST_YEAR = 2026;
+
+function _hlFmt(d){
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function _hlObserved(y,m,day){ // m is 0-based
+  var d=new Date(y,m,day,12);
+  var dow=d.getDay();
+  if(dow===6)d.setDate(d.getDate()-1);      // Saturday -> Friday
+  else if(dow===0)d.setDate(d.getDate()+1); // Sunday -> Monday
+  return _hlFmt(d);
+}
+function _hlNthWeekday(y,m,dow,n){ // nth (1-based) given weekday of month
+  var d=new Date(y,m,1,12);
+  d.setDate(1+((dow-d.getDay()+7)%7)+(n-1)*7);
+  return _hlFmt(d);
+}
+function _hlLastWeekday(y,m,dow){
+  var d=new Date(y,m+1,0,12); // last day of month
+  d.setDate(d.getDate()-((d.getDay()-dow+7)%7));
+  return _hlFmt(d);
+}
+// Holidays belonging to calendar year y (an observed New Year's Day can land
+// on Dec 31 of the prior year — getHolidaysInRange handles that by date).
+function getHolidaysForYear(y){
+  if(y<HOLIDAY_FIRST_YEAR)return [];
+  return [
+    {date:_hlObserved(y,0,1),        name:"New Year's Day"},
+    {date:_hlLastWeekday(y,4,1),     name:'Memorial Day'},
+    {date:_hlObserved(y,6,4),        name:'Independence Day'},
+    {date:_hlNthWeekday(y,8,1,1),    name:'Labor Day'},
+    {date:_hlNthWeekday(y,10,4,4),   name:'Thanksgiving Day'},
+    {date:_hlObserved(y,11,25),      name:'Christmas Day'}
+  ];
+}
+// All holidays with from <= date <= to (inclusive, 'YYYY-MM-DD' strings).
+function getHolidaysInRange(from,to){
+  if(!from||!to||from>to)return [];
+  var y1=parseInt(from.slice(0,4),10),y2=parseInt(to.slice(0,4),10)+1;
+  var out=[];
+  for(var y=y1;y<=y2;y++){
+    getHolidaysForYear(y).forEach(function(h){if(h.date>=from&&h.date<=to)out.push(h);});
+  }
+  return out.sort(function(a,b){return a.date<b.date?-1:1;});
+}
+function isSpareDriver(d){
+  return !!(d&&d.name&&/^SP\s*\d+$/i.test(d.name.trim()));
+}
+function isHolidayBillableDriver(d){
+  return !!(d&&d.name&&!d.isAdmin&&d.unit!=='ADMIN'&&!isSpareDriver(d));
+}
+// Holiday charges for the range. from/to may be '' (open-ended): an open
+// start means HOLIDAY_FIRST_YEAR-01-01, an open end means today, so
+// "All Time" style views never bill a holiday that hasn't happened yet.
+// opts.unitFilter(d) -> bool can narrow which roster units are included.
+// Returns [{date,name,dayOfWeek,units:[{name,unit,hours,rate,cost}],hours,cost}]
+function getHolidayCharges(from,to,opts){
+  opts=opts||{};
+  var f=from||(HOLIDAY_FIRST_YEAR+'-01-01');
+  var t=to||localDateStr();
+  var hols=getHolidaysInRange(f,t);
+  if(!hols.length)return [];
+  var roster=(typeof getDriverRoster==='function')?getDriverRoster():[];
+  var units=roster.filter(isHolidayBillableDriver);
+  if(opts.unitFilter)units=units.filter(opts.unitFilter);
+  return hols.map(function(h){
+    // Units that actually worked this day are billed from their manifest.
+    var worked={};
+    (manifests||[]).forEach(function(m){
+      if(m.date!==h.date)return;
+      worked[m.driverName]=true;
+      if(m.isSubstitute&&m.subFor)worked[m.subFor]=true;
+    });
+    var list=units.filter(function(d){return !worked[d.name];}).map(function(d){
+      var r=rate(d.name);
+      return {name:d.name,unit:d.unit,hours:HOLIDAY_HOURS,rate:r,cost:HOLIDAY_HOURS*r};
+    });
+    var dow=new Date(h.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'long'});
+    return {
+      date:h.date,name:h.name,dayOfWeek:dow,units:list,
+      hours:list.reduce(function(s,u){return s+u.hours;},0),
+      cost:list.reduce(function(s,u){return s+u.cost;},0)
+    };
+  }).filter(function(h){return h.units.length>0;});
+}
+// Short label, e.g. "Labor Day (Mon 9/7)"
+function holidayLabel(h){
+  var d=new Date(h.date+'T12:00:00');
+  return h.name+' ('+d.toLocaleDateString('en-US',{weekday:'short'})+' '+(d.getMonth()+1)+'/'+d.getDate()+')';
+}
+// Regroups getHolidayCharges() output per driver so each unit's own row /
+// card can show the holiday as one of its days:
+//   { 'Tom Hunt': [{date,holiday,dayOfWeek,hours,rate,cost}], ... }
+function getHolidayDaysByDriver(holidays){
+  var map={};
+  (holidays||[]).forEach(function(h){
+    h.units.forEach(function(u){
+      (map[u.name]=map[u.name]||[]).push({date:h.date,holiday:h.name,dayOfWeek:h.dayOfWeek,hours:u.hours,rate:u.rate,cost:u.cost});
+    });
+  });
+  return map;
+}

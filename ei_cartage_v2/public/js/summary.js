@@ -111,21 +111,30 @@ function renderRangeStats(){
   var filtered=manifests.filter(function(m){return !adminNames.has(m.driverName);});
   if(from)filtered=filtered.filter(function(m){return m.date>=from;});
   if(to)filtered=filtered.filter(function(m){return m.date<=to;});
-  if(!filtered.length){el.innerHTML='<div class="no-data"><div style="font-size:36px;margin-bottom:10px">&#128197;</div><div style="font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:700">No data in this range</div></div>';return;}
+  var holidays=getHolidayCharges(from||'',to||'');
+  if(!filtered.length&&!holidays.length){el.innerHTML='<div class="no-data"><div style="font-size:36px;margin-bottom:10px">&#128197;</div><div style="font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:700">No data in this range</div></div>';return;}
   var dateLabel=from&&to?fs(from)+' \u2013 '+fs(to):from?'From '+fs(from):to?'Through '+fs(to):'All Time';
   var dm={};filtered.forEach(function(m){if(!dm[m.driverName])dm[m.driverName]={del:0,pu:0,ship:0,wt:0,mi:0,hrs:0,days:new Set()};dm[m.driverName].del+=m.ttlDeliveries||0;dm[m.driverName].pu+=m.ttlPickups||0;dm[m.driverName].ship+=m.ttlShipments||0;dm[m.driverName].wt+=m.ttlWeight||0;dm[m.driverName].mi+=m.totalMiles||0;dm[m.driverName].hrs+=getEffectiveHours(m);dm[m.driverName].days.add(m.date);});
   var gD=0,gP=0,gS=0,gW=0,gM=0,gH=0,gC=0;
+  Object.keys(dm).forEach(function(n){var d=dm[n];gH+=d.hrs;});
+  var workedH=gH; // shipments/hr stays based on hours actually worked
+  gH=0;
+  // Holiday: add each unit's 8-hr holiday day(s) into its own row
+  holidays.forEach(function(h){h.units.forEach(function(u){
+    if(!dm[u.name])dm[u.name]={del:0,pu:0,ship:0,wt:0,mi:0,hrs:0,days:new Set()};
+    dm[u.name].hrs+=u.hours;dm[u.name].hlHrs=(dm[u.name].hlHrs||0)+u.hours;dm[u.name].days.add(h.date);
+  });});
   Object.keys(dm).forEach(function(n){var d=dm[n],r=rate(n),c=d.hrs*r;gD+=d.del;gP+=d.pu;gS+=d.ship;gW+=d.wt;gM+=d.mi;gH+=d.hrs;gC+=c;});
   var roster=getDriverRoster().filter(function(d){return !d.isAdmin;});
   var totalDays=new Set(filtered.map(function(m){return m.date;})).size;
-  var acps=gS>0?gC/gS:0,acpl=gW>0?gC/gW:0,asph=gH>0?gS/gH:0,acpm=gM>0?gC/gM:0,amd=totalDays>0?gM/totalDays:0;
+  var acps=gS>0?gC/gS:0,acpl=gW>0?gC/gW:0,asph=workedH>0?gS/workedH:0,acpm=gM>0?gC/gM:0,amd=totalDays>0?gM/totalDays:0;
   var rowsHtml=roster.map(function(d){
     var data=dm[d.name],r=rate(d.name);
     if(!data)return '<tr class="zero-row"><td><strong>'+d.unit+'</strong></td><td>'+d.name+'</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0.00</td><td>0</td><td>$0.00</td></tr>';
     var c=data.hrs*r,dw=data.days.size;
-    return '<tr class="data-row"><td><strong>'+d.unit+'</strong></td><td>'+d.name+'</td><td>'+data.del+'</td><td>'+data.pu+'</td><td>'+data.ship+'</td><td>'+data.wt.toLocaleString()+'</td><td>'+data.mi+'</td><td>'+data.hrs.toFixed(2)+'</td><td>'+dw+'</td><td class="chg-cell">$'+c.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td></tr>';
+    return '<tr class="data-row"><td><strong>'+d.unit+'</strong></td><td>'+d.name+'</td><td>'+data.del+'</td><td>'+data.pu+'</td><td>'+data.ship+'</td><td>'+data.wt.toLocaleString()+'</td><td>'+data.mi+'</td><td>'+data.hrs.toFixed(2)+_hlMark(data.hlHrs||0)+'</td><td>'+dw+'</td><td class="chg-cell">$'+c.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td></tr>';
   }).join('');
-  el.innerHTML='<div class="sum-report"><div class="sum-report-head"><div class="srh-title">Expeditors Cartage Program</div><div class="srh-week">Custom Range: '+dateLabel+' &nbsp;&middot;&nbsp; '+filtered.length+' manifest'+(filtered.length!==1?'s':'')+'</div></div><div style="overflow-x:auto"><table class="sum-tbl"><thead><tr><th>Unit</th><th>Driver</th><th>Deliveries</th><th>Pick Ups</th><th>Shipments</th><th>Weight (lbs)</th><th>Miles</th><th>Hours</th><th>Days</th><th>Charges</th></tr></thead><tbody>'+rowsHtml+'</tbody><tfoot><tr class="total-row"><td colspan="2"><strong>TOTAL</strong></td><td>'+gD+'</td><td>'+gP+'</td><td>'+gS+'</td><td>'+gW.toLocaleString()+'</td><td>'+gM+'</td><td>'+gH.toFixed(2)+'</td><td>'+totalDays+'</td><td class="chg-cell">$'+gC.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td></tr></tfoot></table></div><div class="sum-stats"><div class="ss-row"><div class="ss-lbl">Average Cost Per Shipment</div><div class="ss-val">$'+acps.toFixed(2)+'</div></div><div class="ss-row"><div class="ss-lbl">Average Cost Per Pound</div><div class="ss-val">$'+acpl.toFixed(4)+'</div></div><div class="ss-row"><div class="ss-lbl">Average Shipments Per Hour</div><div class="ss-val">'+asph.toFixed(2)+'</div></div><div class="ss-row"><div class="ss-lbl">Average Miles Per Day</div><div class="ss-val">'+amd.toFixed(1)+'</div></div><div class="ss-row"><div class="ss-lbl">Average Cost Per Mile</div><div class="ss-val">$'+acpm.toFixed(2)+'</div></div><div class="ss-row"><div class="ss-lbl">Total Days with Activity</div><div class="ss-val">'+totalDays+'</div></div></div></div>';
+  el.innerHTML='<div class="sum-report"><div class="sum-report-head"><div class="srh-title">Expeditors Cartage Program</div><div class="srh-week">Custom Range: '+dateLabel+' &nbsp;&middot;&nbsp; '+filtered.length+' manifest'+(filtered.length!==1?'s':'')+_hlNote(holidays)+'</div></div><div style="overflow-x:auto"><table class="sum-tbl"><thead><tr><th>Unit</th><th>Driver</th><th>Deliveries</th><th>Pick Ups</th><th>Shipments</th><th>Weight (lbs)</th><th>Miles</th><th>Hours</th><th>Days</th><th>Charges</th></tr></thead><tbody>'+rowsHtml+'</tbody><tfoot><tr class="total-row"><td colspan="2"><strong>TOTAL</strong></td><td>'+gD+'</td><td>'+gP+'</td><td>'+gS+'</td><td>'+gW.toLocaleString()+'</td><td>'+gM+'</td><td>'+gH.toFixed(2)+'</td><td>'+totalDays+'</td><td class="chg-cell">$'+gC.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td></tr></tfoot></table></div><div class="sum-stats"><div class="ss-row"><div class="ss-lbl">Average Cost Per Shipment</div><div class="ss-val">$'+acps.toFixed(2)+'</div></div><div class="ss-row"><div class="ss-lbl">Average Cost Per Pound</div><div class="ss-val">$'+acpl.toFixed(4)+'</div></div><div class="ss-row"><div class="ss-lbl">Average Shipments Per Hour</div><div class="ss-val">'+asph.toFixed(2)+'</div></div><div class="ss-row"><div class="ss-lbl">Average Miles Per Day</div><div class="ss-val">'+amd.toFixed(1)+'</div></div><div class="ss-row"><div class="ss-lbl">Average Cost Per Mile</div><div class="ss-val">$'+acpm.toFixed(2)+'</div></div><div class="ss-row"><div class="ss-lbl">Total Days with Activity</div><div class="ss-val">'+totalDays+'</div></div></div></div>';
 }
 function dlRangeReport(){
   var from=document.getElementById('rsFrom')?.value,to=document.getElementById('rsTo')?.value;
@@ -133,14 +142,21 @@ function dlRangeReport(){
   var filtered=manifests.filter(function(m){return !adminNames.has(m.driverName);});
   if(from)filtered=filtered.filter(function(m){return m.date>=from;});
   if(to)filtered=filtered.filter(function(m){return m.date<=to;});
-  if(!filtered.length){showToast('No data to download');return;}
+  var holidays=getHolidayCharges(from||'',to||'');
+  if(!filtered.length&&!holidays.length){showToast('No data to download');return;}
   var dm={};filtered.forEach(function(m){if(!dm[m.driverName])dm[m.driverName]={del:0,pu:0,ship:0,wt:0,mi:0,hrs:0};dm[m.driverName].del+=m.ttlDeliveries||0;dm[m.driverName].pu+=m.ttlPickups||0;dm[m.driverName].ship+=m.ttlShipments||0;dm[m.driverName].wt+=m.ttlWeight||0;dm[m.driverName].mi+=m.totalMiles||0;dm[m.driverName].hrs+=getEffectiveHours(m);});
+  var workedH=0;Object.keys(dm).forEach(function(n){workedH+=dm[n].hrs;});
+  holidays.forEach(function(h){h.units.forEach(function(u){
+    if(!dm[u.name])dm[u.name]={del:0,pu:0,ship:0,wt:0,mi:0,hrs:0};
+    dm[u.name].hrs+=u.hours;dm[u.name].hlHrs=(dm[u.name].hlHrs||0)+u.hours;
+  });});
   var dateLabel=from&&to?from+' to '+to:from?'From '+from:to?'Through '+to:'All Time';
   var gD=0,gP=0,gS=0,gW=0,gM=0,gH=0,gC=0;
-  var csv='EI Cartage Report - '+dateLabel+'\n\nDriver,Unit,TTL Deliveries,TTL Pick Ups,TTL Shipments,TTL Weight (lbs),TTL Miles,TTL Hours,Charges\n';
-  getDriverRoster().filter(function(d){return !d.isAdmin;}).forEach(function(drv){var name=drv.name,unit=drv.unit,d=dm[name],r=rate(name);if(!d)return;var c=d.hrs*r;csv+=name+','+unit+','+d.del+','+d.pu+','+d.ship+','+d.wt+','+d.mi+','+d.hrs.toFixed(2)+',$'+c.toFixed(2)+'\n';gD+=d.del;gP+=d.pu;gS+=d.ship;gW+=d.wt;gM+=d.mi;gH+=d.hrs;gC+=c;});
+  var csv='EI Cartage Report - '+dateLabel+'\n\nDriver,Unit,TTL Deliveries,TTL Pick Ups,TTL Shipments,TTL Weight (lbs),TTL Miles,TTL Hours,Charges,Holiday Hrs Included\n';
+  getDriverRoster().filter(function(d){return !d.isAdmin;}).forEach(function(drv){var name=drv.name,unit=drv.unit,d=dm[name],r=rate(name);if(!d)return;var c=d.hrs*r;csv+=name+','+unit+','+d.del+','+d.pu+','+d.ship+','+d.wt+','+d.mi+','+d.hrs.toFixed(2)+',$'+c.toFixed(2)+','+(d.hlHrs||0)+'\n';gD+=d.del;gP+=d.pu;gS+=d.ship;gW+=d.wt;gM+=d.mi;gH+=d.hrs;gC+=c;});
+  if(holidays.length)csv+='"Includes '+holidays.map(holidayLabel).join(', ')+' - '+HOLIDAY_HOURS+' hrs billed per unit"\n';
   csv+='\nTOTAL,,'+gD+','+gP+','+gS+','+gW+','+gM+','+gH.toFixed(2)+',$'+gC.toFixed(2)+'\n';
-  var acps=gS>0?gC/gS:0,acpl=gW>0?gC/gW:0,asph=gH>0?gS/gH:0,acpm=gM>0?gC/gM:0;
+  var acps=gS>0?gC/gS:0,acpl=gW>0?gC/gW:0,asph=workedH>0?gS/workedH:0,acpm=gM>0?gC/gM:0;
   csv+='\nAvg Cost/Shipment,$'+acps.toFixed(2)+'\nAvg Cost/lb,$'+acpl.toFixed(4)+'\nShipments/Hr,'+asph.toFixed(2)+'\nAvg Cost/Mile,$'+acpm.toFixed(2)+'\n';
   var blob=new Blob([csv],{type:'text/csv'}),url=URL.createObjectURL(blob),a=document.createElement('a');
   a.href=url;a.download='EI_Cartage_Report.csv';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);showToast('Report downloaded');
@@ -225,11 +241,15 @@ function renderCustomerDash(){
     if(!dm[key])dm[key]=[];dm[key].push(m);
   });
 
+  // Holiday: each billable unit gets an 8-hr day added to its own row
+  var holidays=getHolidayCharges(sunday,friday);
+  var hlByDrv=getHolidayDaysByDriver(holidays);
   var gD=0,gP=0,gS=0,gW=0,gM=0,gH=0,gC=0;
   roster.forEach(function(drv){
-    var d=dm[drv.name];if(!d)return;
+    var d=dm[drv.name]||[],hd=hlByDrv[drv.name]||[];
     var r=rate(drv.name),c=0;
     d.forEach(function(m){gD+=m.ttlDeliveries||0;gP+=m.ttlPickups||0;gS+=m.ttlShipments||0;gW+=m.ttlWeight||0;gM+=m.totalMiles||0;gH+=getEffectiveHours(m);c+=getEffectiveHours(m)*r;});
+    hd.forEach(function(x){gH+=x.hours;c+=x.hours*r;});
     gC+=c;
   });
 
@@ -245,20 +265,22 @@ function renderCustomerDash(){
     :'';
 
   var tbodyHtml=roster.map(function(drv){
-    var name=drv.name,unit=drv.unit,d=dm[name],r=rate(name);
-    if(!d)return '<tr class="zero-row"><td><strong>'+unit+'</strong></td><td>'+name+'</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0.00</td><td>$0.00</td><td></td></tr>';
+    var name=drv.name,unit=drv.unit,d=dm[name]||[],hd=hlByDrv[name]||[],r=rate(name);
+    if(!d.length&&!hd.length)return '<tr class="zero-row"><td><strong>'+unit+'</strong></td><td>'+name+'</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0.00</td><td>$0.00</td><td></td></tr>';
     var wD=0,wP=0,wS=0,wW=0,wM=0,wH=0;
     d.forEach(function(m){wD+=m.ttlDeliveries||0;wP+=m.ttlPickups||0;wS+=m.ttlShipments||0;wW+=m.ttlWeight||0;wM+=m.totalMiles||0;wH+=getEffectiveHours(m);});
+    var hH=hd.reduce(function(s,x){return s+x.hours;},0);
+    wH+=hH;
     var wC=wH*r;
     return '<tr class="data-row" style="cursor:pointer" data-dname="'+name+'" onclick="custToggleDriver(this.dataset.dname,this)">'
       +'<td><strong>'+unit+'</strong></td><td>'+name+'</td><td>'+wD+'</td><td>'+wP+'</td><td>'+wS+'</td>'
-      +'<td>'+wW.toLocaleString()+'</td><td>'+wM+'</td><td>'+wH.toFixed(2)+'</td>'
+      +'<td>'+wW.toLocaleString()+'</td><td>'+wM+'</td><td>'+wH.toFixed(2)+_hlMark(hH)+'</td>'
       +'<td class="chg-cell">$'+wC.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'
       +'<td style="text-align:center;color:var(--accent);font-size:16px">&#9660;</td>'
       +'</tr>'
       +'<tr id="custdetail_'+name.replace(/[^a-zA-Z0-9]/g,'_')+'" style="display:none">'
       +'<td colspan="10" style="padding:0;background:var(--surface2)">'
-      +custBuildDetail(d,name,sunday,friday)
+      +custBuildDetail(d,name,sunday,friday,hd)
       +'</td></tr>';
   }).join('');
 
@@ -278,7 +300,7 @@ function renderCustomerDash(){
     +'<div class="gi"><div class="gi-val">$'+(grandW>0?(grandC/grandW).toFixed(4):'0.0000')+'</div><div class="gi-lbl">Cost Per Lb</div></div>'
     +'</div></div>'
     +'<div class="sum-report">'
-    +'<div class="sum-report-head"><div class="srh-title">Expeditors Cartage Program</div><div class="srh-week">'+fs(sunday)+' — '+fs(friday)+' &nbsp;&middot;&nbsp; Click a driver row to see stop details</div></div>'
+    +'<div class="sum-report-head"><div class="srh-title">Expeditors Cartage Program</div><div class="srh-week">'+fs(sunday)+' — '+fs(friday)+' &nbsp;&middot;&nbsp; Click a driver row to see stop details'+_hlNote(holidays)+'</div></div>'
     +'<div style="overflow-x:auto"><table class="sum-tbl">'
     +'<thead><tr><th>Unit</th><th>Driver</th><th>Deliveries</th><th>Pick Ups</th><th>Shipments</th><th>Weight (lbs)</th><th>Miles</th><th>Hours</th><th>Charges</th><th></th></tr></thead>'
     +'<tbody>'+tbodyHtml+'</tbody>'
@@ -288,7 +310,7 @@ function renderCustomerDash(){
 }
 
 
-function custBuildDetail(manifests_arr, driverName, mon, friday){
+function custBuildDetail(manifests_arr, driverName, mon, friday, holidayDays){
   // Collect all deliveries and pickups for this driver this week
   var allDels=[], allPUs=[];
   manifests_arr.forEach(function(m){
@@ -356,7 +378,10 @@ function custBuildDetail(manifests_arr, driverName, mon, friday){
     html+='</tbody></table>';
   }
 
-  if(!allDels.length && !allPUs.length){
+  (holidayDays||[]).forEach(function(x){
+    html+='<div style="background:#ecfdf5;border-left:3px solid #059669;padding:6px 10px;margin-bottom:8px;font-size:12px;color:#065f46"><strong>&#127881; '+x.dayOfWeek+' '+fs(x.date)+' &mdash; '+x.holiday+'</strong> &middot; No service &middot; '+x.hours+' hrs billed</div>';
+  });
+  if(!allDels.length && !allPUs.length && !(holidayDays||[]).length){
     html+='<div style="color:var(--muted);font-size:13px;padding:8px 0">No stop detail available for this driver this week.</div>';
   }
 
@@ -425,6 +450,17 @@ function custExportAll(){var mon=_custMon,friday=_custFriday;
   showToast('All ref #s exported!');
 }
 
+// ── HOLIDAY HELPERS ───────────────────────────────────────────────────────────
+// Small "🎉" marker for an Hours cell that includes holiday hours.
+function _hlMark(hH){
+  return hH?' <span title="Includes '+hH+' holiday hrs" style="font-size:11px">&#127881;</span>':'';
+}
+// One-line note naming the holiday(s) in a period, for report headers.
+function _hlNote(holidays){
+  if(!holidays.length)return '';
+  return ' &nbsp;&middot;&nbsp; &#127881; Includes '+holidays.map(holidayLabel).join(', ')+' &mdash; '+HOLIDAY_HOURS+' hrs billed per unit';
+}
+
 // ── WEEKLY SUMMARY NAVIGATION ────────────────────────────────────────────────
 
 function showSumForWeek(mon){
@@ -474,17 +510,23 @@ function renderSum(){
   var wm=manifests.filter(function(m){return m.date>=sunday&&m.date<=friday;});
   var dm={};
   wm.forEach(function(m){var key=m.isSubstitute&&m.subFor?m.subFor:m.driverName;if(!dm[key])dm[key]=[];dm[key].push(m);});
-  var gD=0,gP=0,gS=0,gW=0,gM=0,gH=0,gC=0;
+  var gD=0,gP=0,gS=0,gW=0,gM=0,gH=0,gC=0,workedH=0;
+  // Holiday: each billable unit gets an 8-hr day added to its own row
+  var holidays=getHolidayCharges(sunday,friday);
+  var hlByDrv=getHolidayDaysByDriver(holidays);
   function buildSumRow(drv){
     var name=drv.name,unit=drv.unit,r=rate(name);
-    var d=dm[name];
-    if(!d)return '<tr class="zero-row"><td><strong>'+unit+'</strong></td><td>'+name+'</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0.00</td><td>$0.00</td><td>$0.0000</td></tr>';
+    var d=dm[name]||[],hd=hlByDrv[name]||[];
+    if(!d.length&&!hd.length)return '<tr class="zero-row"><td><strong>'+unit+'</strong></td><td>'+name+'</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0.00</td><td>$0.00</td><td>$0.0000</td></tr>';
     var wD=0,wP=0,wS=0,wW=0,wM=0,wH=0;
     d.forEach(function(m){wD+=m.ttlDeliveries||0;wP+=m.ttlPickups||0;wS+=m.ttlShipments||0;wW+=m.ttlWeight||0;wM+=m.totalMiles||0;wH+=getEffectiveHours(m);});
+    workedH+=wH; // shipments/hr stays based on hours actually worked
+    var hH=hd.reduce(function(s,x){return s+x.hours;},0);
+    wH+=hH;
     var wC=wH*r;
     var wCpl=wW>0?wC/wW:0;
     gD+=wD;gP+=wP;gS+=wS;gW+=wW;gM+=wM;gH+=wH;gC+=wC;
-    return '<tr class="data-row"><td><strong>'+unit+'</strong></td><td>'+name+'</td><td>'+wD+'</td><td>'+wP+'</td><td>'+wS+'</td><td>'+wW.toLocaleString()+'</td><td>'+wM+'</td><td>'+wH.toFixed(2)+'</td><td class="chg-cell">$'+wC.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td><td class="chg-cell">$'+wCpl.toFixed(4)+'</td></tr>';
+    return '<tr class="data-row"><td><strong>'+unit+'</strong></td><td>'+name+'</td><td>'+wD+'</td><td>'+wP+'</td><td>'+wS+'</td><td>'+wW.toLocaleString()+'</td><td>'+wM+'</td><td>'+wH.toFixed(2)+_hlMark(hH)+'</td><td class="chg-cell">$'+wC.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td><td class="chg-cell">$'+wCpl.toFixed(4)+'</td></tr>';
   }
   // Split into TT / ST groups so J Files can sit between them as a single
   // one-time row, instead of living in <tfoot> - which browsers repeat at
@@ -506,7 +548,7 @@ function renderSum(){
     :'';
   var grandC=gC+jfTotal;
   var grandW=gW+jfWt;
-  var acps=gS>0?grandC/gS:0,acpl=grandW>0?grandC/grandW:0,asph=gH>0?gS/gH:0,amd=gM/5,acpm=gM>0?grandC/gM:0;
+  var acps=gS>0?grandC/gS:0,acpl=grandW>0?grandC/grandW:0,asph=workedH>0?gS/workedH:0,amd=gM/5,acpm=gM>0?grandC/gM:0;
 
   el.innerHTML=
     '<div class="grand-box"><h3>Program Totals &mdash; Week Ending '+fs(friday)+'</h3>'
@@ -521,7 +563,7 @@ function renderSum(){
     +'<div class="gi"><div class="gi-val">$'+(grandW>0?(grandC/grandW).toFixed(4):'0.0000')+'</div><div class="gi-lbl">Cost Per Lb</div></div>'
     +'</div></div>'
     +'<div class="sum-report">'
-    +'<div class="sum-report-head"><div class="srh-title">Expeditors Cartage Program</div><div class="srh-week">Week Ending '+fs(friday)+'</div></div>'
+    +'<div class="sum-report-head"><div class="srh-title">Expeditors Cartage Program</div><div class="srh-week">Week Ending '+fs(friday)+_hlNote(holidays)+'</div></div>'
     +'<div style="overflow-x:auto"><table class="sum-tbl">'
     +'<colgroup><col style="width:7%"><col style="width:15%"><col style="width:9%"><col style="width:9%"><col style="width:9%"><col style="width:11%"><col style="width:8%"><col style="width:8%"><col style="width:13%"><col style="width:11%"></colgroup>'
     +'<thead><tr><th>Unit</th><th>Driver</th><th>Deliveries</th><th>Pick Ups</th><th>Shipments</th><th>Weight (lbs)</th><th>Miles</th><th>Hours</th><th>Charges</th><th>$/Lb</th></tr></thead>'
@@ -550,15 +592,19 @@ function dlWeekly(){
   var wm=manifests.filter(function(m){return m.date>=sunday&&m.date<=friday;});
   var dm={};
   wm.forEach(function(m){var key=m.isSubstitute&&m.subFor?m.subFor:m.driverName;if(!dm[key])dm[key]=[];dm[key].push(m);});
-  var rows=['Unit,Driver,Deliveries,Pick Ups,Shipments,Weight (lbs),Miles,Hours,Charges'];
+  var holidays=getHolidayCharges(sunday,friday),hlByDrv=getHolidayDaysByDriver(holidays);
+  var rows=['Unit,Driver,Deliveries,Pick Ups,Shipments,Weight (lbs),Miles,Hours,Charges,Holiday Hrs Included'];
   roster.forEach(function(drv){
-    var name=drv.name,unit=drv.unit,r=rate(name),d=dm[name];
-    if(!d){rows.push([unit,name,0,0,0,0,0,'0.00','$0.00'].join(','));return;}
+    var name=drv.name,unit=drv.unit,r=rate(name),d=dm[name]||[],hd=hlByDrv[name]||[];
+    if(!d.length&&!hd.length){rows.push([unit,name,0,0,0,0,0,'0.00','$0.00',0].join(','));return;}
     var wD=0,wP=0,wS=0,wW=0,wM=0,wH=0;
     d.forEach(function(m){wD+=m.ttlDeliveries||0;wP+=m.ttlPickups||0;wS+=m.ttlShipments||0;wW+=m.ttlWeight||0;wM+=m.totalMiles||0;wH+=getEffectiveHours(m);});
+    var hH=hd.reduce(function(s,x){return s+x.hours;},0);
+    wH+=hH;
     var wC=wH*r;
-    rows.push([unit,name,wD,wP,wS,wW,wM,wH.toFixed(2),'$'+wC.toFixed(2)].join(','));
+    rows.push([unit,name,wD,wP,wS,wW,wM,wH.toFixed(2),'$'+wC.toFixed(2),hH].join(','));
   });
+  if(holidays.length)rows.push('','"Includes '+holidays.map(holidayLabel).join(', ')+' - '+HOLIDAY_HOURS+' hrs billed per unit"');
   var csv=rows.join('\n');
   var blob=new Blob([csv],{type:'text/csv'});
   var url=URL.createObjectURL(blob);

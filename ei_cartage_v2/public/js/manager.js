@@ -90,7 +90,16 @@ function renderCards(){
   }).sort(function(a,b){return new Date(b.date)-new Date(a.date);});
 
   var c=document.getElementById('mCards');
-  if(!list.length){
+  // Holiday charges for the selected week (or all holidays to date on "All
+  // Weeks"), narrowed by the driver / unit / day filters so the totals match
+  // what's on screen. See getHolidayCharges() in api.js.
+  var holidays=getHolidayCharges(ffrom,fto,{unitFilter:function(d){
+    if(fd&&d.name!==fd)return false;
+    if(funit&&!(d.unit||'').toUpperCase().startsWith(funit))return false;
+    return true;
+  }}).filter(function(h){return !fdy||h.dayOfWeek===fdy;});
+  var hlByDrv=getHolidayDaysByDriver(holidays);
+  if(!list.length&&!holidays.length){
     c.innerHTML='<div class="no-data"><div style="font-size:40px;margin-bottom:12px">&#128203;</div><div style="font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:700;color:var(--text2)">No manifests found</div></div>';
     return;
   }
@@ -103,6 +112,8 @@ function renderCards(){
     groups[key].push(m);
   });
 
+  // Every unit billed a holiday gets a driver group, even with no manifests
+  Object.keys(hlByDrv).forEach(function(n){if(!groups[n])groups[n]=[];});
   var driverNames=Object.keys(groups).sort();
 
   // Calculate program totals for the filtered period
@@ -118,6 +129,10 @@ function renderCards(){
   var weekJFiles=ffrom?allJFiles.filter(function(j){return j.date>=ffrom&&j.date<=fto;}):allJFiles;
   var jfTotal=weekJFiles.reduce(function(s,j){return s+(parseFloat(j.price)||0);},0);
   var jfWt=weekJFiles.reduce(function(s,j){return s+(parseFloat(j.wt)||0);},0);
+  Object.keys(hlByDrv).forEach(function(n){
+    var r=rate(n);
+    hlByDrv[n].forEach(function(x){pgH+=x.hours;pgC+=x.hours*r;});
+  });
   var pgGrandC=pgC+jfTotal;
   var pgGrandW=pgW+jfWt;
   var jfRow=weekJFiles.length
@@ -147,7 +162,10 @@ function renderCards(){
     // Driver totals
     var totDel=0,totPU=0,totWt=0,totMi=0,totHrs=0;
     entries.forEach(function(m){totDel+=m.ttlDeliveries||0;totPU+=m.ttlPickups||0;totWt+=m.ttlWeight||0;totMi+=m.totalMiles||0;totHrs+=getEffectiveHours(m);});
+    var hDays=hlByDrv[name]||[];
+    hDays.forEach(function(x){totHrs+=x.hours;});
     var totChg=totHrs*r;
+    var dayCount=entries.length+hDays.length;
     var anyPending=entries.some(function(m){return m.status==='pending';});
     var anyFlag=entries.some(function(m){return m.flags&&m.flags.length>0;});
     // Collect all notes from deliveries and pickups for tooltip
@@ -161,7 +179,7 @@ function renderCards(){
     flagNotesMap[name]=flagNotes;
 
     // Build daily rows for this driver
-    var dayRows=entries.map(function(m){
+    var dayRowItems=entries.map(function(m){
       var ds=new Date(m.date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
       var chg=getEffectiveHours(m)*r;
       var acps=m.ttlShipments>0?chg/m.ttlShipments:0;
@@ -214,18 +232,34 @@ function renderCards(){
           '<button class="ea-btn ea-ok-btn '+(m.status==='reviewed'?'ea-ok-reviewed':'ea-ok')+'" style="font-size:13px;height:36px" data-mid="'+m.id+'" onclick="appM(this.dataset.mid)">'+(m.status==='reviewed'?'Mark Pending':'Mark Reviewed')+'</button>'+
         '</div>'+
       '</div>';
-    }).join('');
+    }).map(function(html,i){return {date:entries[i].date,html:html};});
+    // Holiday day entries (no service, flat hours) slot in by date
+    hDays.forEach(function(x){
+      var ds=new Date(x.date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
+      dayRowItems.push({date:x.date,html:
+        '<div class="day-entry" style="border-top:1px solid var(--border)">'+
+          '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#ecfdf5">'+
+            '<div>'+
+              '<div style="font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:700">'+x.dayOfWeek+' &middot; '+ds+' <span class="mbadge" style="background:#d1fae5;color:#059669;font-size:10px;vertical-align:middle">&#127881; '+x.holiday.toUpperCase()+'</span></div>'+
+              '<div style="font-size:11px;color:var(--muted);margin-top:2px">Company holiday &middot; no service &middot; '+x.hours.toFixed(2)+' hrs billed @ $'+x.rate+'/hr</div>'+
+            '</div>'+
+            '<span style="font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;color:#059669">$'+(x.hours*r).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</span>'+
+          '</div>'+
+        '</div>'});
+    });
+    dayRowItems.sort(function(a,b){return a.date<b.date?1:a.date>b.date?-1:0;});
+    var dayRows=dayRowItems.map(function(x){return x.html;}).join('');
 
     return '<div class="driver-group" data-gid="'+name+'">'+
       '<div class="dg-header" onclick="toggleGroup(this)">'+
         '<div class="avatar">'+init+'</div>'+
         '<div style="flex:1">'+
           '<div class="mcard-driver">'+name+' <span style="font-size:12px;font-weight:700;color:'+(unit.toUpperCase().startsWith('ST')?'var(--success)':'var(--accent)')+';margin-left:6px;background:'+(unit.toUpperCase().startsWith('ST')?'var(--success-light)':'var(--accent-light)')+';padding:1px 6px;border-radius:3px">'+(unit.toUpperCase().startsWith('ST')?'ST':'TT')+'</span> <span style="font-size:11px;color:var(--muted);font-weight:400">'+unit+'</span></div>'+
-          '<div class="mcard-meta">'+entries.length+' day'+(entries.length!==1?'s':'')+' &middot; '+totDel+' del &middot; '+totPU+' PU &middot; '+totWt.toLocaleString()+' lbs &middot; '+totMi+' mi &middot; '+totHrs.toFixed(2)+' hrs</div>'+
+          '<div class="mcard-meta">'+dayCount+' day'+(dayCount!==1?'s':'')+(hDays.length?' (incl. '+hDays.length+' holiday)':'')+' &middot; '+totDel+' del &middot; '+totPU+' PU &middot; '+totWt.toLocaleString()+' lbs &middot; '+totMi+' mi &middot; '+totHrs.toFixed(2)+' hrs</div>'+
         '</div>'+
         '<div style="display:flex;align-items:center;gap:8px">'+
           (anyFlag?'<span class="flag-icon" style="font-size:16px;cursor:pointer" onclick="showFlagPopup(this)" data-gid="'+name+'">&#9888;</span>':'')+
-          '<span class="mbadge '+(anyPending?'bp':'br')+'">'+(anyPending?'PENDING':'REVIEWED')+'</span>'+
+          (entries.length?'<span class="mbadge '+(anyPending?'bp':'br')+'">'+(anyPending?'PENDING':'REVIEWED')+'</span>':'<span class="mbadge" style="background:#d1fae5;color:#059669">HOLIDAY</span>')+
           '<div style="font-family:Barlow Condensed,sans-serif;font-size:17px;font-weight:800;color:var(--accent)">$'+totChg.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div>'+
           '<span class="dg-arrow" style="color:var(--muted);font-size:20px;transition:transform .25s;display:inline-block">&#8964;</span>'+
         '</div>'+

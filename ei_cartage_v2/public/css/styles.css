@@ -154,6 +154,7 @@ html{overflow-x:hidden;max-width:100vw;}body{font-family:'Barlow',sans-serif;bac
 .sum-tbl .data-row td { background: var(--surface); }
 .sum-tbl .data-row:hover td { background: var(--accent-light); }
 .sum-tbl .zero-row td { background: var(--surface2); color: var(--muted); }
+.sum-tbl .holiday-row td { background: #ecfdf5; }
 .sum-tbl .total-row td { background: #E31837; color: white; font-weight: 700; font-size: 15px; border-top: 2px solid var(--accent2); }
 .sum-tbl .total-row td:first-child, .sum-tbl .total-row td:nth-child(2) { font-family: 'Barlow Condensed', sans-serif; font-size: 15px; }
 .chg-cell { color: var(--accent); font-weight: 700; }
