@@ -260,35 +260,39 @@ function renderCustomerDash(){
   var jfWt=weekJF.reduce(function(s,j){return s+(parseFloat(j.wt)||0);},0);
   var grandC=gC+jfTotal;
   var grandW=gW+jfWt;
-  var jfRow=weekJF.length
-    ?'<tr class="data-row" style="background:#fffbeb"><td colspan="2"><strong>&#128196; J Files</strong> ('+weekJF.length+')</td><td>—</td><td>—</td><td>'+weekJF.length+'</td><td>'+jfWt.toLocaleString()+'</td><td>—</td><td>—</td><td class="chg-cell" style="color:#d97706">$'+jfTotal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td><td></td></tr>'
-    :'';
 
-  var tbodyHtml=roster.map(function(drv){
-    var name=drv.name,unit=drv.unit,d=dm[name]||[],hd=hlByDrv[name]||[],r=rate(name);
-    if(!d.length&&!hd.length)return '<tr class="zero-row"><td><strong>'+unit+'</strong></td><td>'+name+'</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0.00</td><td>$0.00</td><td></td></tr>';
-    var wD=0,wP=0,wS=0,wW=0,wM=0,wH=0;
-    d.forEach(function(m){wD+=m.ttlDeliveries||0;wP+=m.ttlPickups||0;wS+=m.ttlShipments||0;wW+=m.ttlWeight||0;wM+=m.totalMiles||0;wH+=getEffectiveHours(m);});
-    var hH=hd.reduce(function(s,x){return s+x.hours;},0);
-    wH+=hH;
-    var wC=wH*r;
-    return '<tr class="data-row" style="cursor:pointer" data-dname="'+name+'" onclick="custToggleDriver(this.dataset.dname,this)">'
-      +'<td><strong>'+unit+'</strong></td><td>'+name+'</td><td>'+wD+'</td><td>'+wP+'</td><td>'+wS+'</td>'
-      +'<td>'+wW.toLocaleString()+'</td><td>'+wM+'</td><td>'+wH.toFixed(2)+_hlMark(hH)+'</td>'
-      +'<td class="chg-cell">$'+wC.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td>'
-      +'<td style="text-align:center;color:var(--accent);font-size:16px">&#9660;</td>'
-      +'</tr>'
-      +'<tr id="custdetail_'+name.replace(/[^a-zA-Z0-9]/g,'_')+'" style="display:none">'
-      +'<td colspan="10" style="padding:0;background:var(--surface2)">'
-      +custBuildDetail(d,name,sunday,friday,hd)
-      +'</td></tr>';
+  // Driver cards — same day-by-day layout as the manager dashboard, but
+  // strictly READ-ONLY: no edit/delete/review buttons, no review status,
+  // no driver notes or internal flags. Only drivers with activity (or a
+  // billed holiday) this week get a card, matching the manager screen.
+  var custDrivers=roster.filter(function(drv){return (dm[drv.name]||[]).length||(hlByDrv[drv.name]||[]).length;});
+  var cardsHtml=custDrivers.map(function(drv){
+    return custDriverCard(drv,dm[drv.name]||[],hlByDrv[drv.name]||[],sunday,friday);
   }).join('');
+  if(!cardsHtml)cardsHtml='<div class="no-data"><div style="font-family:Barlow Condensed,sans-serif;font-size:18px;font-weight:700;color:var(--text2)">No activity this week</div></div>';
+
+  var jfCardHtml='';
+  if(weekJF.length){
+    jfCardHtml='<div class="driver-group" style="border:1.5px solid #d97706">'
+      +'<div style="background:#fffbeb;padding:12px 14px;display:flex;align-items:center;justify-content:space-between">'
+      +'<div style="font-family:Barlow Condensed,sans-serif;font-size:17px;font-weight:700">&#128196; J Files <span style="font-size:13px;font-weight:400;color:var(--muted)">('+weekJF.length+' entries &middot; '+jfWt.toLocaleString()+' lbs)</span></div>'
+      +'<div style="font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:800;color:#d97706">$'+jfTotal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div>'
+      +'</div>'
+      +'<div style="padding:10px 14px;font-size:12px;color:var(--text2)">'
+      +weekJF.map(function(j){
+        return '<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--border)">'
+          +'<span>'+fs(j.date)+' &nbsp;&middot;&nbsp; '+(j.ref||j.expRef||'&mdash;')+'</span>'
+          +'<span style="font-weight:700;color:#d97706">$'+(parseFloat(j.price)||0).toFixed(2)+'</span>'
+          +'</div>';
+      }).join('')
+      +'</div></div>';
+  }
 
   el.innerHTML=
     '<div style="display:flex;justify-content:flex-end;margin-bottom:10px">'
     +'<button onclick="custExportAll()" style="height:38px;padding:0 16px;border-radius:6px;border:none;background:var(--accent);color:white;font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;cursor:pointer;touch-action:manipulation">&#11015; Export All Ref #s (CSV)</button>'
     +'</div>'
-    +'<div class="grand-box"><h3>Program Totals &mdash; '+fs(sunday)+' &mdash; '+fs(friday)+'</h3>'
+    +'<div class="grand-box" style="margin-bottom:14px"><h3>Program Totals &mdash; '+fs(sunday)+' &mdash; '+fs(friday)+'</h3>'
     +'<div class="grand-grid">'
     +'<div class="gi"><div class="gi-val">'+gD+'</div><div class="gi-lbl">Deliveries</div></div>'
     +'<div class="gi"><div class="gi-val">'+gP+'</div><div class="gi-lbl">Pick Ups</div></div>'
@@ -299,119 +303,97 @@ function renderCustomerDash(){
     +'<div class="gi"><div class="gi-val">$'+grandC.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div><div class="gi-lbl">Total Charges</div></div>'
     +'<div class="gi"><div class="gi-val">$'+(grandW>0?(grandC/grandW).toFixed(4):'0.0000')+'</div><div class="gi-lbl">Cost Per Lb</div></div>'
     +'</div></div>'
-    +'<div class="sum-report">'
-    +'<div class="sum-report-head"><div class="srh-title">Expeditors Cartage Program</div><div class="srh-week">'+fs(sunday)+' — '+fs(friday)+' &nbsp;&middot;&nbsp; Click a driver row to see stop details'+_hlNote(holidays)+'</div></div>'
-    +'<div style="overflow-x:auto"><table class="sum-tbl">'
-    +'<thead><tr><th>Unit</th><th>Driver</th><th>Deliveries</th><th>Pick Ups</th><th>Shipments</th><th>Weight (lbs)</th><th>Miles</th><th>Hours</th><th>Charges</th><th></th></tr></thead>'
-    +'<tbody>'+tbodyHtml+'</tbody>'
-    +'<tfoot>'+jfRow+'<tr class="total-row"><td colspan="2"><strong>TOTAL</strong></td><td>'+gD+'</td><td>'+gP+'</td><td>'+gS+'</td><td>'+grandW.toLocaleString()+'</td><td>'+gM+'</td><td>'+gH.toFixed(2)+'</td><td class="chg-cell">$'+grandC.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</td><td></td></tr></tfoot>'
-    +'</table></div>'
-    +'</div>';
+    +'<div style="font-size:12px;color:var(--muted);margin:0 2px 8px">Tap a driver to see each day\'s stops and stats'+_hlNote(holidays)+'</div>'
+    +cardsHtml
+    +jfCardHtml;
 }
 
+// One read-only driver card for the customer view (collapsed by default;
+// tapping the header uses the shared toggleGroup() from manager.js).
+function custDriverCard(drv, entries, hDays, sunday, friday){
+  var name=drv.name,unit=drv.unit||'',r=rate(name);
+  var isST=unit.toUpperCase().startsWith('ST');
+  var init=name.split(' ').map(function(w){return w[0]||'';}).join('').slice(0,2);
+  var money=function(n){return (n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});};
+  var totDel=0,totPU=0,totWt=0,totMi=0,totHrs=0;
+  entries.forEach(function(m){totDel+=m.ttlDeliveries||0;totPU+=m.ttlPickups||0;totWt+=m.ttlWeight||0;totMi+=m.totalMiles||0;totHrs+=getEffectiveHours(m);});
+  hDays.forEach(function(x){totHrs+=x.hours;});
+  var totChg=totHrs*r;
+  var dayCount=entries.length+hDays.length;
+  var cell='padding:6px 8px;white-space:nowrap';
 
-function custBuildDetail(manifests_arr, driverName, mon, friday, holidayDays){
-  // Collect all deliveries and pickups for this driver this week
-  var allDels=[], allPUs=[];
-  manifests_arr.forEach(function(m){
-    (m.deliveries||[]).forEach(function(d){allDels.push({date:m.date,proNum:d.proNum,consignee:d.consignee,city:d.city,pieces:d.pieces,weight:d.weight||d.wt||0,tIn:d.timeIn||'',tOut:d.timeOut||''});});
-    (m.pickups||[]).forEach(function(p){allPUs.push({date:m.date,proNum:p.proNum,shipper:p.shipper,pieces:p.pieces,weight:p.weight||p.wt||0,drop:p.dropLocation,tIn:p.pickupIn||'',tOut:p.pickupOut||'',arrExp:p.arriveExp||'',depExp:p.departExp||''});});
+  var items=entries.map(function(m){
+    var ds=new Date(m.date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    var hrs=getEffectiveHours(m),chg=hrs*r;
+    var perShip=m.ttlShipments>0?chg/m.ttlShipments:0;
+    var tbls='';
+    if((m.deliveries||[]).length){
+      tbls+='<div style="padding:0 12px 8px"><div style="font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;color:#E31837;letter-spacing:.5px;text-transform:uppercase;padding:6px 0 4px">Deliveries ('+m.deliveries.length+')</div><div style="overflow-x:auto"><table class="det-tbl"><thead><tr><th>#</th><th>Pro #</th><th>Consignee</th><th>City</th><th style="text-align:center">Pcs</th><th style="text-align:center">Lbs</th><th>In</th><th>Out</th></tr></thead><tbody>'
+        +m.deliveries.map(function(d,i){
+          return '<tr style="background:'+(d.isSubDrop?'var(--accent-light)':'var(--surface2)')+'"><td>'+(i+1)+'</td><td style="font-family:monospace;font-size:11px">'+(d.proNum||'&mdash;')+'</td><td>'+(d.consignee||'&mdash;')+'</td><td>'+(d.city||'&mdash;')+'</td><td style="text-align:center">'+(d.pieces||0)+'</td><td style="text-align:center;font-weight:600">'+(d.weight||d.wt||0).toLocaleString()+'</td><td style="'+cell+'">'+(d.timeIn||'&mdash;')+'</td><td style="'+cell+'">'+(d.timeOut||'&mdash;')+'</td></tr>';
+        }).join('')+'</tbody></table></div></div>';
+    }
+    if((m.pickups||[]).length){
+      tbls+='<div style="padding:0 12px 8px"><div style="font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;color:#185FA5;letter-spacing:.5px;text-transform:uppercase;padding:6px 0 4px">Pick Ups ('+m.pickups.length+')</div><div style="overflow-x:auto"><table class="det-tbl"><thead><tr><th>#</th><th>Pro #</th><th>Exp Ref #</th><th>Shipper</th><th style="text-align:center">Pcs</th><th style="text-align:center">Lbs</th><th>In</th><th>Out</th><th>Drop</th><th>At Expeditors</th></tr></thead><tbody>'
+        +m.pickups.map(function(p,i){
+          var atExp=(p.arriveExp||p.departExp)?(p.arriveExp||'&mdash;')+' &rarr; '+(p.departExp||'&mdash;'):'&mdash;';
+          return '<tr style="background:#f0f5ff"><td>'+(i+1)+'</td><td style="font-family:monospace;font-size:11px">'+(p.proNum||'&mdash;')+'</td><td style="font-family:monospace;font-size:11px">'+(p.expRef||'&mdash;')+'</td><td>'+(p.shipper||'&mdash;')+'</td><td style="text-align:center">'+(p.pieces||0)+'</td><td style="text-align:center;font-weight:600">'+(p.weight||p.wt||0).toLocaleString()+'</td><td style="'+cell+'">'+(p.pickupIn||'&mdash;')+'</td><td style="'+cell+'">'+(p.pickupOut||'&mdash;')+'</td><td>'+(p.dropLocation||'&mdash;')+'</td><td style="'+cell+'">'+atExp+'</td></tr>';
+        }).join('')+'</tbody></table></div></div>';
+    }
+    return {date:m.date,html:
+      '<div class="day-entry" style="border-top:1px solid var(--border)">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface2)">'
+        +'<div>'
+          +'<div style="font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:700">'+(m.dayOfWeek||'')+' &middot; '+ds+'</div>'
+          +'<div style="font-size:11px;color:var(--muted);margin-top:2px">Truck '+(m.truckNum||'&mdash;')+' &middot; '+(m.startTime||'&mdash;')+' &rarr; '+(getEffectiveEndTime(m)||'&mdash;')+' &middot; '+hrs.toFixed(2)+' hrs</div>'
+        +'</div>'
+        +'<span style="font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;color:var(--accent)">$'+money(chg)+'</span>'
+      +'</div>'
+      +'<div style="display:grid;grid-template-columns:repeat(6,1fr);border-bottom:1px solid var(--border)">'
+        +'<div class="cs" style="padding:8px;border-right:1px solid var(--border)"><div class="cs-val">'+(m.ttlDeliveries||0)+'</div><div class="cs-lbl">Del</div></div>'
+        +'<div class="cs" style="padding:8px;border-right:1px solid var(--border)"><div class="cs-val">'+(m.ttlPickups||0)+'</div><div class="cs-lbl">PU</div></div>'
+        +'<div class="cs" style="padding:8px;border-right:1px solid var(--border)"><div class="cs-val">'+(m.ttlWeight||0).toLocaleString()+'</div><div class="cs-lbl">lbs</div></div>'
+        +'<div class="cs" style="padding:8px;border-right:1px solid var(--border)"><div class="cs-val">'+(m.totalMiles||0)+'</div><div class="cs-lbl">Miles</div></div>'
+        +'<div class="cs" style="padding:8px;border-right:1px solid var(--border)"><div class="cs-val">'+hrs.toFixed(2)+'</div><div class="cs-lbl">Hours</div></div>'
+        +'<div class="cs" style="padding:8px"><div class="cs-val">$'+perShip.toFixed(2)+'</div><div class="cs-lbl">$/Ship</div></div>'
+      +'</div>'
+      +tbls
+      +'</div>'};
   });
-
-  var html='<div style="padding:12px 16px;overflow-x:auto">'; 
-
-  // Export button for this driver
-  html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'
-    +'<span style="font-family:Barlow Condensed,sans-serif;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--accent)">'+driverName+' — Stop Detail</span>'
-    +'<button data-dname="'+driverName+'" data-mon="'+mon+'" data-fri="'+friday+'" onclick="custExportDriver(this.dataset.dname,this.dataset.mon,this.dataset.fri)" style="height:34px;padding:0 14px;border-radius:5px;border:none;background:var(--accent);color:white;font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;cursor:pointer;touch-action:manipulation">&#11015; Export CSV</button>'
-    +'</div>';
-
-  if(allDels.length){
-    html+='<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#E31837;margin-bottom:6px">Deliveries ('+allDels.length+')</div>';
-    html+='<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px;table-layout:fixed">'
-      +'<thead><tr style="background:#1a1a1a;color:white">'
-      +'<th style="padding:6px 8px;text-align:left;width:12%">Date</th>'
-      +'<th style="padding:6px 8px;text-align:left;width:14%">Pro #</th>'
-      +'<th style="padding:6px 8px;text-align:left;width:27%">Consignee</th>'
-      +'<th style="padding:6px 8px;text-align:left;width:14%">City</th>'
-      +'<th style="padding:6px 8px;text-align:left;width:8%">In</th>'
-      +'<th style="padding:6px 8px;text-align:left;width:8%">Out</th>'
-      +'<th style="padding:6px 8px;text-align:left;width:6%">Pcs</th>'
-      +'<th style="padding:6px 8px;text-align:left;width:8%">Lbs</th>'
-      +'<th style="padding:6px 8px;width:3%"></th>'
-      +'</tr></thead><tbody>';
-    allDels.forEach(function(d,i){
-      html+='<tr style="background:'+(i%2===0?'white':'var(--surface2)')+';">'
-        +'<td style="padding:6px 8px;text-align:left;white-space:nowrap">'+fs(d.date)+'</td>'
-        +'<td style="padding:6px 8px;text-align:left;font-family:monospace;font-weight:700;color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(d.proNum||'—')+'</td>'
-        +'<td style="padding:6px 8px;text-align:left;overflow:hidden;text-overflow:ellipsis;max-width:0">'+(d.consignee||'—')+'</td>'
-        +'<td style="padding:6px 8px;text-align:left;overflow:hidden;text-overflow:ellipsis;max-width:0">'+(d.city||'—')+'</td>'
-        +'<td style="padding:6px 8px;text-align:left;white-space:nowrap">'+(d.tIn||'—')+'</td>'
-        +'<td style="padding:6px 8px;text-align:left;white-space:nowrap">'+(d.tOut||'—')+'</td>'
-        +'<td style="padding:6px 8px;text-align:left">'+(d.pieces||0)+'</td>'
-        +'<td style="padding:6px 8px;text-align:left">'+(d.weight||0)+'</td>'
-        +'<td></td>'
-        +'</tr>';
-    });
-    html+='</tbody></table>';
-  }
-
-  if(allPUs.length){
-    html+='<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#185FA5;margin-bottom:6px">Pick Ups ('+allPUs.length+')</div>';
-    html+='<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:8px;table-layout:fixed">'
-      +'<thead><tr style="background:#1a1a1a;color:white">'
-      +'<th style="padding:6px 8px;text-align:left;width:11%">Date</th>'
-      +'<th style="padding:6px 8px;text-align:left;width:13%">Exp Ref #</th>'
-      +'<th style="padding:6px 8px;text-align:left;width:22%">Shipper</th>'
-      +'<th style="padding:6px 8px;text-align:left;width:7%">In</th>'
-      +'<th style="padding:6px 8px;text-align:left;width:7%">Out</th>'
-      +'<th style="padding:6px 8px;text-align:left;width:6%">Pcs</th>'
-      +'<th style="padding:6px 8px;text-align:left;width:7%">Lbs</th>'
-      +'<th style="padding:6px 8px;text-align:left;width:9%">Drop</th>'
-      +'<th style="padding:6px 8px;text-align:left;width:15%">At Expeditors</th>'
-      +'<th style="padding:6px 8px;width:3%"></th>'
-      +'</tr></thead><tbody>';
-    allPUs.forEach(function(p,i){
-      html+='<tr style="background:'+(i%2===0?'#f0f5ff':'#e8f0fe')+';">'
-        +'<td style="padding:6px 8px;text-align:left;white-space:nowrap">'+fs(p.date)+'</td>'
-        +'<td style="padding:6px 8px;text-align:left;font-family:monospace;font-weight:700;color:#185FA5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(p.expRef||p.proNum||'—')+'</td>'
-        +'<td style="padding:6px 8px;text-align:left;overflow:hidden;text-overflow:ellipsis;max-width:0">'+(p.shipper||'—')+'</td>'
-        +'<td style="padding:6px 8px;text-align:left;white-space:nowrap">'+(p.tIn||'—')+'</td>'
-        +'<td style="padding:6px 8px;text-align:left;white-space:nowrap">'+(p.tOut||'—')+'</td>'
-        +'<td style="padding:6px 8px;text-align:left">'+(p.pieces||0)+'</td>'
-        +'<td style="padding:6px 8px;text-align:left">'+(p.weight||0)+'</td>'
-        +'<td style="padding:6px 8px;text-align:left;overflow:hidden;text-overflow:ellipsis;max-width:0">'+(p.drop||'—')+'</td>'
-        +'<td style="padding:6px 8px;text-align:left;white-space:nowrap">'+((p.arrExp||p.depExp)?(p.arrExp||'—')+' &rarr; '+(p.depExp||'—'):'—')+'</td>'
-        +'<td></td>'
-        +'</tr>';
-    });
-    html+='</tbody></table>';
-  }
-
-  (holidayDays||[]).forEach(function(x){
-    html+='<div style="background:#ecfdf5;border-left:3px solid #059669;padding:6px 10px;margin-bottom:8px;font-size:12px;color:#065f46"><strong>&#127881; '+x.dayOfWeek+' '+fs(x.date)+' &mdash; '+x.holiday+'</strong> &middot; No service &middot; '+x.hours+' hrs billed</div>';
+  hDays.forEach(function(x){
+    var ds=new Date(x.date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    items.push({date:x.date,html:
+      '<div class="day-entry" style="border-top:1px solid var(--border)">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#ecfdf5">'
+        +'<div>'
+          +'<div style="font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:700">'+x.dayOfWeek+' &middot; '+ds+' <span class="mbadge" style="background:#d1fae5;color:#059669;font-size:10px;vertical-align:middle">&#127881; '+x.holiday.toUpperCase()+'</span></div>'
+          +'<div style="font-size:11px;color:var(--muted);margin-top:2px">Company holiday &middot; no service &middot; '+x.hours.toFixed(2)+' hrs billed</div>'
+        +'</div>'
+        +'<span style="font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;color:#059669">$'+money(x.hours*r)+'</span>'
+      +'</div></div>'});
   });
-  if(!allDels.length && !allPUs.length && !(holidayDays||[]).length){
-    html+='<div style="color:var(--muted);font-size:13px;padding:8px 0">No stop detail available for this driver this week.</div>';
-  }
+  // Oldest day first so the customer reads the week Sun -> Fri
+  items.sort(function(a,b){return a.date<b.date?-1:a.date>b.date?1:0;});
 
-  html+='</div>';
-  return html;
-}
-
-function custToggleDriver(name, row){
-  var safeId=name.replace(/[^a-zA-Z0-9]/g,'_');
-  var detailRow=document.getElementById('custdetail_'+safeId);
-  if(!detailRow)return;
-  var isOpen=detailRow.style.display!=='none';
-  // Close all others first
-  document.querySelectorAll('[id^="custdetail_"]').forEach(function(r){r.style.display='none';});
-  document.querySelectorAll('.data-row td:last-child').forEach(function(td){td.innerHTML='&#9660;';});
-  if(!isOpen){
-    detailRow.style.display='table-row';
-    row.querySelector('td:last-child').innerHTML='&#9650;';
-    detailRow.scrollIntoView({behavior:'smooth',block:'nearest'});
-  }
+  return '<div class="driver-group">'
+    +'<div class="dg-header" onclick="toggleGroup(this)">'
+      +'<div class="avatar">'+init+'</div>'
+      +'<div style="flex:1">'
+        +'<div class="mcard-driver">'+name+' <span style="font-size:12px;font-weight:700;color:'+(isST?'var(--success)':'var(--accent)')+';margin-left:6px;background:'+(isST?'var(--success-light)':'var(--accent-light)')+';padding:1px 6px;border-radius:3px">'+(isST?'ST':'TT')+'</span> <span style="font-size:11px;color:var(--muted);font-weight:400">'+unit+'</span></div>'
+        +'<div class="mcard-meta">'+dayCount+' day'+(dayCount!==1?'s':'')+(hDays.length?' (incl. '+hDays.length+' holiday)':'')+' &middot; '+totDel+' del &middot; '+totPU+' PU &middot; '+totWt.toLocaleString()+' lbs &middot; '+totMi+' mi &middot; '+totHrs.toFixed(2)+' hrs</div>'
+      +'</div>'
+      +'<div style="display:flex;align-items:center;gap:8px">'
+        +'<div style="font-family:Barlow Condensed,sans-serif;font-size:17px;font-weight:800;color:var(--accent)">$'+money(totChg)+'</div>'
+        +'<span class="dg-arrow" style="color:var(--muted);font-size:20px;transition:transform .25s;display:inline-block">&#8964;</span>'
+      +'</div>'
+    +'</div>'
+    +'<div class="dg-body" style="display:none">'
+      +'<div style="display:flex;justify-content:flex-end;padding:8px 14px;background:var(--surface)">'
+        +'<button data-dname="'+_escAttr(name)+'" data-mon="'+sunday+'" data-fri="'+friday+'" onclick="custExportDriver(this.dataset.dname,this.dataset.mon,this.dataset.fri)" style="height:32px;padding:0 14px;border-radius:5px;border:none;background:var(--accent);color:white;font-family:Barlow Condensed,sans-serif;font-size:13px;font-weight:700;cursor:pointer;touch-action:manipulation">&#11015; Export CSV</button>'
+      +'</div>'
+      +items.map(function(x){return x.html;}).join('')
+    +'</div>'
+  +'</div>';
 }
 
 function custExportDriver(driverName, mon, friday){
