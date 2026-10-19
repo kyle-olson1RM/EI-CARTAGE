@@ -314,8 +314,8 @@ function custBuildDetail(manifests_arr, driverName, mon, friday, holidayDays){
   // Collect all deliveries and pickups for this driver this week
   var allDels=[], allPUs=[];
   manifests_arr.forEach(function(m){
-    (m.deliveries||[]).forEach(function(d){allDels.push({date:m.date,proNum:d.proNum,consignee:d.consignee,city:d.city,pieces:d.pieces,weight:d.weight||d.wt||0});});
-    (m.pickups||[]).forEach(function(p){allPUs.push({date:m.date,proNum:p.proNum,shipper:p.shipper,pieces:p.pieces,weight:p.weight||p.wt||0,drop:p.dropLocation});});
+    (m.deliveries||[]).forEach(function(d){allDels.push({date:m.date,proNum:d.proNum,consignee:d.consignee,city:d.city,pieces:d.pieces,weight:d.weight||d.wt||0,tIn:d.timeIn||'',tOut:d.timeOut||''});});
+    (m.pickups||[]).forEach(function(p){allPUs.push({date:m.date,proNum:p.proNum,shipper:p.shipper,pieces:p.pieces,weight:p.weight||p.wt||0,drop:p.dropLocation,tIn:p.pickupIn||'',tOut:p.pickupOut||'',arrExp:p.arriveExp||'',depExp:p.departExp||''});});
   });
 
   var html='<div style="padding:12px 16px;overflow-x:auto">'; 
@@ -330,13 +330,15 @@ function custBuildDetail(manifests_arr, driverName, mon, friday, holidayDays){
     html+='<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#E31837;margin-bottom:6px">Deliveries ('+allDels.length+')</div>';
     html+='<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px;table-layout:fixed">'
       +'<thead><tr style="background:#1a1a1a;color:white">'
-      +'<th style="padding:6px 8px;text-align:left;width:15%">Date</th>'
-      +'<th style="padding:6px 8px;text-align:left;width:15%">Pro #</th>'
-      +'<th style="padding:6px 8px;text-align:left;width:35%">Consignee</th>'
-      +'<th style="padding:6px 8px;text-align:left;width:15%">City</th>'
-      +'<th style="padding:6px 8px;text-align:left;width:8%">Pcs</th>'
+      +'<th style="padding:6px 8px;text-align:left;width:12%">Date</th>'
+      +'<th style="padding:6px 8px;text-align:left;width:14%">Pro #</th>'
+      +'<th style="padding:6px 8px;text-align:left;width:27%">Consignee</th>'
+      +'<th style="padding:6px 8px;text-align:left;width:14%">City</th>'
+      +'<th style="padding:6px 8px;text-align:left;width:8%">In</th>'
+      +'<th style="padding:6px 8px;text-align:left;width:8%">Out</th>'
+      +'<th style="padding:6px 8px;text-align:left;width:6%">Pcs</th>'
       +'<th style="padding:6px 8px;text-align:left;width:8%">Lbs</th>'
-      +'<th style="padding:6px 8px;width:4%"></th>'
+      +'<th style="padding:6px 8px;width:3%"></th>'
       +'</tr></thead><tbody>';
     allDels.forEach(function(d,i){
       html+='<tr style="background:'+(i%2===0?'white':'var(--surface2)')+';">'
@@ -344,6 +346,8 @@ function custBuildDetail(manifests_arr, driverName, mon, friday, holidayDays){
         +'<td style="padding:6px 8px;text-align:left;font-family:monospace;font-weight:700;color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(d.proNum||'—')+'</td>'
         +'<td style="padding:6px 8px;text-align:left;overflow:hidden;text-overflow:ellipsis;max-width:0">'+(d.consignee||'—')+'</td>'
         +'<td style="padding:6px 8px;text-align:left;overflow:hidden;text-overflow:ellipsis;max-width:0">'+(d.city||'—')+'</td>'
+        +'<td style="padding:6px 8px;text-align:left;white-space:nowrap">'+(d.tIn||'—')+'</td>'
+        +'<td style="padding:6px 8px;text-align:left;white-space:nowrap">'+(d.tOut||'—')+'</td>'
         +'<td style="padding:6px 8px;text-align:left">'+(d.pieces||0)+'</td>'
         +'<td style="padding:6px 8px;text-align:left">'+(d.weight||0)+'</td>'
         +'<td></td>'
@@ -356,22 +360,28 @@ function custBuildDetail(manifests_arr, driverName, mon, friday, holidayDays){
     html+='<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:#185FA5;margin-bottom:6px">Pick Ups ('+allPUs.length+')</div>';
     html+='<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:8px;table-layout:fixed">'
       +'<thead><tr style="background:#1a1a1a;color:white">'
-      +'<th style="padding:6px 8px;text-align:left;width:15%">Date</th>'
-      +'<th style="padding:6px 8px;text-align:left;width:15%">Exp Ref #</th>'
-      +'<th style="padding:6px 8px;text-align:left;width:35%">Shipper</th>'
-      +'<th style="padding:6px 8px;text-align:left;width:8%">Pcs</th>'
-      +'<th style="padding:6px 8px;text-align:left;width:8%">Lbs</th>'
-      +'<th style="padding:6px 8px;text-align:left;width:15%">Drop</th>'
-      +'<th style="padding:6px 8px;width:4%"></th>'
+      +'<th style="padding:6px 8px;text-align:left;width:11%">Date</th>'
+      +'<th style="padding:6px 8px;text-align:left;width:13%">Exp Ref #</th>'
+      +'<th style="padding:6px 8px;text-align:left;width:22%">Shipper</th>'
+      +'<th style="padding:6px 8px;text-align:left;width:7%">In</th>'
+      +'<th style="padding:6px 8px;text-align:left;width:7%">Out</th>'
+      +'<th style="padding:6px 8px;text-align:left;width:6%">Pcs</th>'
+      +'<th style="padding:6px 8px;text-align:left;width:7%">Lbs</th>'
+      +'<th style="padding:6px 8px;text-align:left;width:9%">Drop</th>'
+      +'<th style="padding:6px 8px;text-align:left;width:15%">At Expeditors</th>'
+      +'<th style="padding:6px 8px;width:3%"></th>'
       +'</tr></thead><tbody>';
     allPUs.forEach(function(p,i){
       html+='<tr style="background:'+(i%2===0?'#f0f5ff':'#e8f0fe')+';">'
         +'<td style="padding:6px 8px;text-align:left;white-space:nowrap">'+fs(p.date)+'</td>'
         +'<td style="padding:6px 8px;text-align:left;font-family:monospace;font-weight:700;color:#185FA5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(p.expRef||p.proNum||'—')+'</td>'
         +'<td style="padding:6px 8px;text-align:left;overflow:hidden;text-overflow:ellipsis;max-width:0">'+(p.shipper||'—')+'</td>'
+        +'<td style="padding:6px 8px;text-align:left;white-space:nowrap">'+(p.tIn||'—')+'</td>'
+        +'<td style="padding:6px 8px;text-align:left;white-space:nowrap">'+(p.tOut||'—')+'</td>'
         +'<td style="padding:6px 8px;text-align:left">'+(p.pieces||0)+'</td>'
         +'<td style="padding:6px 8px;text-align:left">'+(p.weight||0)+'</td>'
         +'<td style="padding:6px 8px;text-align:left;overflow:hidden;text-overflow:ellipsis;max-width:0">'+(p.drop||'—')+'</td>'
+        +'<td style="padding:6px 8px;text-align:left;white-space:nowrap">'+((p.arrExp||p.depExp)?(p.arrExp||'—')+' &rarr; '+(p.depExp||'—'):'—')+'</td>'
         +'<td></td>'
         +'</tr>';
     });
@@ -406,15 +416,15 @@ function custToggleDriver(name, row){
 
 function custExportDriver(driverName, mon, friday){
   var driverMans=manifests.filter(function(m){return m.driverName===driverName&&m.date>=mon&&m.date<=friday;});
-  var rows=['Driver,Unit,Date,Type,Pro #/Ref #,Consignee/Shipper,City,Pieces,Weight (lbs),Drop Location'];
+  var rows=['Driver,Unit,Date,Type,Pro #/Ref #,Consignee/Shipper,City,Time In,Time Out,Pieces,Weight (lbs),Drop Location,Arrive Expeditors,Depart Expeditors'];
   var unit=getDriverRoster().find(function(d){return d.name===driverName;});
   var unitStr=unit?unit.unit:'';
   driverMans.forEach(function(m){
     (m.deliveries||[]).forEach(function(d){
-      rows.push([driverName,unitStr,m.date,'Delivery',d.proNum||'',d.consignee||'',d.city||'',d.pieces||0,d.weight||d.wt||0,''].join(','));
+      rows.push([driverName,unitStr,m.date,'Delivery',d.proNum||'',d.consignee||'',d.city||'',d.timeIn||'',d.timeOut||'',d.pieces||0,d.weight||d.wt||0,'','',''].join(','));
     });
     (m.pickups||[]).forEach(function(p){
-      rows.push([driverName,unitStr,m.date,'Pick Up',p.proNum||'',p.shipper||'','',p.pieces||0,p.weight||p.wt||0,p.dropLocation||''].join(','));
+      rows.push([driverName,unitStr,m.date,'Pick Up',p.proNum||'',p.shipper||'','',p.pickupIn||'',p.pickupOut||'',p.pieces||0,p.weight||p.wt||0,p.dropLocation||'',p.arriveExp||'',p.departExp||''].join(','));
     });
   });
   var csv=rows.join('\n');
@@ -429,16 +439,16 @@ function custExportDriver(driverName, mon, friday){
 function custExportAll(){var mon=_custMon,friday=_custFriday;
   var adminNames=getAdminDriverNames();
   var wm=manifests.filter(function(m){return m.date>=mon&&m.date<=friday&&!adminNames.has(m.driverName);});
-  var rows=['Driver,Unit,Date,Type,Pro #/Ref #,Consignee/Shipper,City,Pieces,Weight (lbs),Drop Location'];
+  var rows=['Driver,Unit,Date,Type,Pro #/Ref #,Consignee/Shipper,City,Time In,Time Out,Pieces,Weight (lbs),Drop Location,Arrive Expeditors,Depart Expeditors'];
   var rosterMap={};
   getDriverRoster().forEach(function(d){rosterMap[d.name]=d.unit;});
   wm.forEach(function(m){
     var unit=rosterMap[m.driverName]||'';
     (m.deliveries||[]).forEach(function(d){
-      rows.push([m.driverName,unit,m.date,'Delivery',d.proNum||'',d.consignee||'',d.city||'',d.pieces||0,d.weight||d.wt||0,''].join(','));
+      rows.push([m.driverName,unit,m.date,'Delivery',d.proNum||'',d.consignee||'',d.city||'',d.timeIn||'',d.timeOut||'',d.pieces||0,d.weight||d.wt||0,'','',''].join(','));
     });
     (m.pickups||[]).forEach(function(p){
-      rows.push([m.driverName,unit,m.date,'Pick Up',p.proNum||'',p.shipper||'','',p.pieces||0,p.weight||p.wt||0,p.dropLocation||''].join(','));
+      rows.push([m.driverName,unit,m.date,'Pick Up',p.proNum||'',p.shipper||'','',p.pickupIn||'',p.pickupOut||'',p.pieces||0,p.weight||p.wt||0,p.dropLocation||'',p.arriveExp||'',p.departExp||''].join(','));
     });
   });
   var csv=rows.join('\n');
