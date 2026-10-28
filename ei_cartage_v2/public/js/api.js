@@ -269,6 +269,10 @@ function rate(driverName){
   // Rate is based on the driver's unit type (TT or ST), not the driver themselves
   var roster=(typeof getDriverRoster==='function')?getDriverRoster():[];
   var driver=roster.find(function(d){return d.name===driverName;});
+  // Per-driver override wins, but only when it was deliberately set
+  // (rateOverride flag). Older roster entries carry a stored `rate` that may
+  // be a stale copy of an old type default, so a bare `rate` is ignored.
+  if(driver&&driver.rateOverride&&parseFloat(driver.rate)>0)return parseFloat(driver.rate);
   if(driver&&driver.unit){
     var unitType=driver.unit.trim().toUpperCase().startsWith('ST')?'ST':'TT';
     return TRUCK_RATES[unitType]||TRUCK_RATES.TT;
