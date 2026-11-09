@@ -34,6 +34,8 @@ function saveDraft(){
   try{
     var nameEl=document.getElementById('fName');if(!nameEl||!nameEl.value)return;
     var draft={savedAt:new Date().toISOString(),date:localDateStr(),
+      manifestDate:document.getElementById('fDate')?.value||localDateStr(),
+      pendingId:(typeof _pendingSubmitId!=='undefined'&&_pendingSubmitId)?_pendingSubmitId:null,
       driverName:nameEl.value||'',truckNum:document.getElementById('fTruck')?.value||'',
       startTime:document.getElementById('fStart')?.value||'',endTime:document.getElementById('fEnd')?.value||'',
       startMi:document.getElementById('fSMi')?.value||'',endMi:document.getElementById('fEMi')?.value||'',
@@ -55,22 +57,38 @@ function clearDraft(){
   for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);if(k&&k.startsWith('ei_draft_')){try{var d=JSON.parse(localStorage.getItem(k));if(d&&d.date===today)toRemove.push(k);}catch(e){}}}
   toRemove.forEach(function(k){localStorage.removeItem(k);});
 }
+// The manifest's own date (what the driver worked), not the day the draft
+// was last saved. Older drafts only have `date` (save day).
+function draftManifestDate(d){return (d&&(d.manifestDate||d.date))||localDateStr();}
+function draftHasContent(d){return !!(d&&((d.deliveries||[]).length||(d.pickups||[]).length||d.truckNum));}
+function fmtDraftDate(ymd){
+  try{return new Date(ymd+'T12:00:00').toLocaleDateString('en-US',{weekday:'short',month:'numeric',day:'numeric'});}catch(e){return ymd;}
+}
 function checkForDraft(){
   var btn=document.getElementById('continueDraftBtn'),sum=document.getElementById('draftSummary');if(!btn)return;
   var draft=loadDraft(),today=localDateStr();
   var driverMatch=!session||!draft||!draft.driverName||draft.driverName===''||draft.driverName===(session?session.name:'');
-  if(draft&&draft.date===today&&driverMatch){
+  // Show ANY unsubmitted draft for this driver, not just today's. A draft
+  // from an earlier day means that submit never went through — it used to be
+  // hidden here and then silently wiped by New Manifest, forcing a re-type.
+  if(draft&&driverMatch&&(draft.date===today||draftHasContent(draft))){
+    var mDate=draftManifestDate(draft),isOld=(draft.date!==today);
     btn.style.display='flex';
+    btn.style.background=isOld?'#d0021b':'#f5a623';
+    btn.innerHTML=isOld
+      ?'<span style="font-size:24px;margin-right:12px">&#9888;</span> Finish &amp; Submit '+fmtDraftDate(mDate)+' Manifest'
+      :'<span style="font-size:24px;margin-right:12px">&#9998;</span> Continue Today&#39;s Manifest';
     var dels=(draft.deliveries||[]).length,pus=(draft.pickups||[]).length,t=new Date(draft.savedAt);
-    if(sum){sum.style.display='flex';var txt=document.getElementById('draftSummaryText');if(txt)txt.textContent=(dels+pus)+' stop'+(dels+pus!==1?'s':'')+' \u00b7 Last saved '+t.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});}
+    if(sum){sum.style.display='flex';var txt=document.getElementById('draftSummaryText');if(txt)txt.textContent=(dels+pus)+' stop'+(dels+pus!==1?'s':'')+(isOld?' \u00b7 NOT SUBMITTED':' \u00b7 Last saved '+t.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}));}
   }else{btn.style.display='none';if(sum)sum.style.display='none';}
 }
 function continueDraft(){
-  var draft=loadDraft();if(!draft){showToast('No draft found for today');return;}
+  var draft=loadDraft();if(!draft){showToast('No draft found');return;}
   clearForm();ss('driverForm');
+  if(typeof _pendingSubmitId!=='undefined')_pendingSubmitId=draft.pendingId||null;
   setTimeout(function(){
     var set=function(id,val){var e=document.getElementById(id);if(e)e.value=val||'';};
-    set('fName',session?session.name:draft.driverName);set('fTruck',draft.truckNum);set('fDate',draft.date||localDateStr());set('fStart',draft.startTime);set('fEnd',draft.endTime);set('fSMi',draft.startMi);set('fEMi',draft.endMi);
+    set('fName',session?session.name:draft.driverName);set('fTruck',draft.truckNum);set('fDate',draftManifestDate(draft));set('fStart',draft.startTime);set('fEnd',draft.endTime);set('fSMi',draft.startMi);set('fEMi',draft.endMi);
     onDateChange();calcHours();calcMiles();
     (draft.deliveries||[]).forEach(function(d){
       // Use addDelStop so the card renders visually
@@ -137,7 +155,7 @@ function continueDraft(){
   },250);
 }
 function discardDraft(){
-  if(!confirm("Discard today's draft?"))return;
+  if(!confirm("Discard this unsubmitted manifest? Everything entered will be deleted."))return;
   clearDraft();
   var btn=document.getElementById('continueDraftBtn'),sum=document.getElementById('draftSummary');
   if(btn)btn.style.display='none';if(sum)sum.style.display='none';

@@ -87,6 +87,11 @@ async function apiRefresh(key) {
 // and write it back. Returns {ok, manifests} so callers can react to failure
 // instead of silently reporting success.
 async function mergeAndSaveManifest(m) {
+  var isServerMode = window.location.protocol !== 'file:' &&
+                     window.location.hostname !== '' &&
+                     window.location.hostname !== 'localhost' &&
+                     window.location.hostname !== '127.0.0.1';
+  if (isServerMode) return _upsertManifestOnServer(m);
   try {
     const fresh = JSON.parse(await apiRefresh('ei_manifests') || '[]');
     const idx = fresh.findIndex(function(x){ return x.id === m.id; });
@@ -114,6 +119,46 @@ async function mergeAndSaveManifest(m) {
     console.error('mergeAndSaveManifest error:', e.message);
     return { ok: false, manifests: manifests };
   }
+}
+
+// Server mode: send just this one manifest; the server merges it into
+// ei_manifests under a lock. Small payload (a few KB instead of ~4.5 MB of
+// round-trip), a 30s timeout so a dead connection can't hang "Submitting…"
+// forever, and up to 3 attempts. Retrying is safe: the server matches by
+// manifest id, so a retry after a lost response can't create a duplicate.
+async function _upsertManifestOnServer(m) {
+  var delays = [0, 2000, 5000];
+  var lastErr = '';
+  for (var attempt = 0; attempt < delays.length; attempt++) {
+    if (delays[attempt]) await new Promise(function(r){ setTimeout(r, delays[attempt]); });
+    var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    var timer = ctrl ? setTimeout(function(){ ctrl.abort(); }, 30000) : null;
+    try {
+      var res = await fetch('/api/manifests/upsert', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ manifest: m }),
+        signal: ctrl ? ctrl.signal : undefined
+      });
+      if (timer) clearTimeout(timer);
+      if (res.ok) {
+        var local = Array.isArray(manifests) ? manifests.slice() : [];
+        var idx = local.findIndex(function(x){ return x.id === m.id; });
+        if (idx >= 0) local[idx] = m; else local.push(m);
+        manifests = local;
+        _cache['ei_manifests'] = JSON.stringify(local);
+        try { localStorage.setItem('ei_manifests', _cache['ei_manifests']); } catch(e) {}
+        return { ok: true, manifests: local };
+      }
+      lastErr = res.status + ' ' + (await res.text().catch(function(){ return ''; }));
+      if (res.status >= 400 && res.status < 500) break; // bad request won't fix itself on retry
+    } catch(e) {
+      if (timer) clearTimeout(timer);
+      lastErr = (e && e.name === 'AbortError') ? 'timed out' : (e && e.message) || String(e);
+    }
+    console.error('Manifest save attempt ' + (attempt + 1) + ' failed:', lastErr);
+  }
+  return { ok: false, manifests: manifests, error: lastErr };
 }
 
 // Same idea for whole-array replacement operations initiated from the manager

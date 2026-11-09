@@ -247,9 +247,14 @@ function startForm(){startNewManifest();}
 
 function startNewManifest(){
   var draft=loadDraft();
-  if(draft&&draft.driverName===(session?session.name:'')&&draft.date===localDateStr()){
-    if(!confirm('You have an unfinished manifest for today. Starting a new one will discard it. Continue?'))return;
+  if(draft&&draft.driverName===(session?session.name:'')&&typeof draftHasContent==='function'&&draftHasContent(draft)){
+    var dDate=(typeof draftManifestDate==='function')?draftManifestDate(draft):draft.date;
+    var msg=(dDate===localDateStr())
+      ?'You have an unfinished manifest for today. Starting a new one will discard it. Continue?'
+      :'\u26a0 You have a manifest from '+(typeof fmtDraftDate==='function'?fmtDraftDate(dDate):dDate)+' that was NEVER SUBMITTED.\n\nTap Cancel, then tap "Finish & Submit" on the home screen to send it.\n\nTap OK only if you want to DELETE it and start a new manifest.';
+    if(!confirm(msg))return;
   }
+  _pendingSubmitId=null;
   clearDraft();
   clearForm();
   if(session){
@@ -290,6 +295,7 @@ function clearFormWithConfirm(){
     if(!confirm('Clear this manifest? All stops entered so far will be lost.'))return;
   }
   clearForm();
+  _pendingSubmitId=null;
   if(typeof clearDraft==='function')clearDraft();
   showToast('Form cleared');
 }
@@ -406,6 +412,9 @@ function confirmSubmit(){
   _doSubmit();
 }
 
+var _submitInFlight=false;
+var _pendingSubmitId=null; // id of a new manifest whose submit hasn't been confirmed yet
+
 function _doSubmit(){
   const name=document.getElementById('fName').value,truck=document.getElementById('fTruck').value.trim();
   const date=document.getElementById('fDate').value,st=document.getElementById('fStart').value,et=document.getElementById('fEnd').value;
@@ -515,6 +524,13 @@ function _doSubmit(){
 
   const m={id:Date.now().toString(),submittedAt:new Date().toISOString(),status:'pending',flags,flaggedStops:flaggedStops||[],driverName:name,driverNum:session?.driverNum||'',isSubstitute:session?!!session.isSub:false,subFor:session?session.subFor||'':'',truckNum:truck,date,dayOfWeek,startTime:st,endTime:et,totalMiles,startMileage:sm,endMileage:em,totalHours,ttlDeliveries:deliveries.length,ttlPickups:pickups.length,ttlShipments:uniqueMAWBs,ttlWeight:totalWeight,deliveries,pickups};
   var isEdit=(typeof editingManifestId!=='undefined'&&editingManifestId);
+  if(_submitInFlight)return; // ignore double-taps while a save is in progress
+  if(!isEdit){
+    // Reuse the id from an earlier failed attempt (same form or restored
+    // draft) so if that attempt actually reached the server, this one
+    // overwrites it instead of creating a duplicate manifest.
+    if(_pendingSubmitId)m.id=_pendingSubmitId;else _pendingSubmitId=m.id;
+  }
   if(isEdit){
     var existing=manifests.find(function(x){return x.id===editingManifestId;});
     m.id=editingManifestId;
@@ -529,11 +545,21 @@ function _doSubmit(){
   }
   var submitBtn=document.getElementById('submitBtn')||document.querySelector('#driverForm [onclick*="submitManifest"]');
   if(submitBtn)submitBtn.disabled=true;
-  showToast(isEdit?'Saving update…':'Submitting…',60000);
-  mergeAndSaveManifest(m).then(function(result){
+  // Lock in the draft (incl. end time/mileage from the End of Shift popup)
+  // before going to the network, so a failed submit can always be resumed.
+  if(!isEdit&&typeof saveDraft==='function')saveDraft();
+  showToast(isEdit?'Saving update…':'Submitting…',120000);
+  _submitInFlight=true;
+  mergeAndSaveManifest(m).catch(function(e){
+    console.error('Submit error:',e);
+    return {ok:false};
+  }).then(function(result){
+    _submitInFlight=false;
     if(submitBtn)submitBtn.disabled=false;
-    if(!result.ok){
-      showToast('\u26a0 Submit failed — check connection and try again. Your entries are still on this screen.',6000);
+    if(!result||!result.ok){
+      showToast(isEdit
+        ?'\u26a0 Save failed — check connection and try again.'
+        :'\u26a0 Not submitted — no connection. Your manifest is SAVED on this tablet. Tap Submit again, or finish it later from the home screen.',10000);
       return; // don't clear draft/form — nothing is confirmed saved
     }
     if(isEdit){
@@ -545,6 +571,7 @@ function _doSubmit(){
       wasEditingFromMgr=false;
       showToast('\u2713 Manifest submitted!');
     }
+    _pendingSubmitId=null;
     clearDraft();stopAutoSave();clearForm();
     var hdr=document.querySelector('#driverForm .app-header h1');
     if(hdr)hdr.textContent='New Manifest';
