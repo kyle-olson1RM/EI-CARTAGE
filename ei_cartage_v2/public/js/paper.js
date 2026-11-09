@@ -39,6 +39,21 @@ var PAPER_PU_COLS = [
 ];
 var PAPER_START_DEL_ROWS = 6, PAPER_START_PU_ROWS = 4;
 
+// Who sees the Paper-Style Manifest button. Limited to testers for now —
+// add {name, driverNum} entries here, or set PAPER_MODE_FOR_EVERYONE = true
+// to give it to every driver (regular and sub).
+var PAPER_MODE_FOR_EVERYONE = false;
+var PAPER_MODE_TESTERS = [
+  {name:'Kyle Olson', driverNum:'1125'}
+];
+function paperModeAllowed(){
+  if(!session) return false;
+  if(PAPER_MODE_FOR_EVERYONE) return true;
+  return PAPER_MODE_TESTERS.some(function(t){
+    return !session.isSub && t.name === session.name && String(session.driverNum || '') === t.driverNum;
+  });
+}
+
 var _ppDelRows = 0, _ppPuRows = 0, _ppSaveTimer = null, _ppPendingId = null, _ppInFlight = false;
 var _ppConsCity = {}; // CONSIGNEE -> most common CITY in history
 
@@ -263,6 +278,8 @@ document.addEventListener('visibilitychange', function(){
 // Home-screen button label: shows when a paper manifest is in progress / unsubmitted
 function paperUpdateHomeBtn(){
   var btn = _ppEl('paperBtn'); if(!btn) return;
+  if(!paperModeAllowed()){ btn.style.display = 'none'; return; }
+  btn.style.display = '';
   var d = loadPaperDraft();
   if(_ppDraftHasContent(d)){
     var old = d.savedOn !== localDateStr();
@@ -277,6 +294,7 @@ function paperUpdateHomeBtn(){
 
 // ── Open / close ─────────────────────────────────────────────────────────────
 function openPaperManifest(){
+  if(!paperModeAllowed()) return;
   _ppRender();
   _ppBuildHistory();
   var d = loadPaperDraft();
