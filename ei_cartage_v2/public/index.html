@@ -70,9 +70,20 @@
       <button onclick="discardDraft()" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);color:white;padding:4px 10px;border-radius:4px;font-size:11px;font-family:'Barlow Condensed',sans-serif;font-weight:700;cursor:pointer;touch-action:manipulation">Discard</button>
     </div>
     <button class="hbtn hbtn-p" onclick="startNewManifest()"><span>&#128665;</span> New Manifest</button>
+    <button class="hbtn hbtn-s" id="paperBtn" onclick="openPaperManifest()"><span>&#128221;</span> Paper-Style Manifest</button>
     <button class="hbtn hbtn-s" onclick="doLogout()"><span>&#128682;</span> Sign Out</button>
   </div>
   <div class="version">v3.0 &middot; Digital Manifest System</div>
+</div>
+
+<!-- PAPER-STYLE MANIFEST (js/paper.js) -->
+<div class="screen" id="paperForm">
+  <div class="app-header">
+    <button class="hdr-back" onclick="paperBack()">&#8592; Back</button>
+    <h1>Paper Manifest</h1>
+    <div class="hdr-meta" id="ppMeta"></div>
+  </div>
+  <div class="form-body" id="ppBody"></div>
 </div>
 
 <!-- DRIVER FORM -->
@@ -261,19 +272,20 @@
 
 
   <!-- API / Storage Layer -->
-  <script src="/js/config.js?v76"></script>
-  <script src="/js/api.js?v76"></script>
-  <script src="/js/drivers.js?v76"></script>
+  <script src="/js/config.js?v77"></script>
+  <script src="/js/api.js?v77"></script>
+  <script src="/js/drivers.js?v77"></script>
 
   <!-- Feature Modules -->
-  <script src="/js/auth.js?v76"></script>
-  <script src="/js/draft.js?v76"></script>
-  <script src="/js/form.js?v76"></script>
-  <script src="/js/manager.js?v76"></script>
-  <script src="/js/summary.js?v76"></script>
+  <script src="/js/auth.js?v77"></script>
+  <script src="/js/draft.js?v77"></script>
+  <script src="/js/form.js?v77"></script>
+  <script src="/js/paper.js?v77"></script>
+  <script src="/js/manager.js?v77"></script>
+  <script src="/js/summary.js?v77"></script>
 
   <!-- App Init (load last) -->
-  <script src="/js/app.js?v76"></script>
+  <script src="/js/app.js?v77"></script>
 
 
 
