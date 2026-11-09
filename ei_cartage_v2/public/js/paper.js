@@ -42,7 +42,7 @@ var PAPER_START_DEL_ROWS = 6, PAPER_START_PU_ROWS = 4;
 // Who sees the Paper-Style Manifest button. Limited to testers for now —
 // add {name, driverNum} entries here, or set PAPER_MODE_FOR_EVERYONE = true
 // to give it to every driver (regular and sub).
-var PAPER_MODE_FOR_EVERYONE = false;
+var PAPER_MODE_FOR_EVERYONE = true;
 var PAPER_MODE_TESTERS = [
   {name:'Kyle Olson', driverNum:'1125'}
 ];
