@@ -81,6 +81,7 @@ function checkForDraft(){
     var dels=(draft.deliveries||[]).length,pus=(draft.pickups||[]).length,t=new Date(draft.savedAt);
     if(sum){sum.style.display='flex';var txt=document.getElementById('draftSummaryText');if(txt)txt.textContent=(dels+pus)+' stop'+(dels+pus!==1?'s':'')+(isOld?' \u00b7 NOT SUBMITTED':' \u00b7 Last saved '+t.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}));}
   }else{btn.style.display='none';if(sum)sum.style.display='none';}
+  if(typeof paperUpdateHomeBtn==='function')paperUpdateHomeBtn();
 }
 function continueDraft(){
   var draft=loadDraft();if(!draft){showToast('No draft found');return;}

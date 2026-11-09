@@ -412,6 +412,57 @@ function confirmSubmit(){
   _doSubmit();
 }
 
+// Builds the stored manifest record (totals, flags, flaggedStops) from
+// already-collected header values + delivery/pickup arrays. Shared by the
+// stop-card form (_doSubmit) and the paper-style form (paper.js) so both
+// produce identical records.
+function _buildManifestRecord(o){
+  var name=o.name,truck=o.truck,date=o.date,st=o.st,et=o.et,sm=o.sm,em=o.em,deliveries=o.deliveries,pickups=o.pickups;
+  const dt=new Date(date+'T12:00:00');const dayOfWeek=DAYS[dt.getDay()];
+  const totalMiles=em>sm?em-sm:0;
+  var sArr=st.split(':').map(Number),eArr=et.split(':').map(Number);
+  var sMin2=sArr[0]*60+sArr[1],eMin2=eArr[0]*60+eArr[1];
+  if(eMin2<=sMin2)eMin2+=1440; // past midnight
+  const totalHours=Math.round(((eMin2-sMin2)/60-0.5)*100)/100;
+  var extraDel=0,extraPU=0; // no longer needed - sub-drops are full records now
+  const totalWeight=deliveries.reduce((s,r)=>s+r.weight,0)+pickups.reduce((s,r)=>s+r.weight,0);
+  // Count unique MAWBs (pro#/ref#) - each unique MAWB = one shipment
+  var allRefs=[];
+  deliveries.forEach(function(d){if(d.proNum&&d.proNum.trim())allRefs.push(d.proNum.trim().toUpperCase());});
+  pickups.forEach(function(p){if(p.proNum&&p.proNum.trim())allRefs.push(p.proNum.trim().toUpperCase());});
+  var uniqueMAWBs=allRefs.length>0?[...new Set(allRefs)].length:deliveries.length+pickups.length;
+  const flags=[];
+  if(totalMiles>300)flags.push('High mileage: '+totalMiles);
+  if(totalWeight>100000)flags.push('Weight over 100,000 lbs — verify');
+  if(totalHours<1||totalHours>14)flags.push('Unusual hours: '+totalHours);
+  // Flag any stops with wait time over 2 hours
+  var longWaits=[];
+  var flaggedStops=[]; // track which stops have issues for highlighting in modal
+  function calcWait(tIn, tOut, label, stopIdx, stopType){
+    if(!tIn||!tOut)return;
+    var si=tIn.split(':').map(Number),so=tOut.split(':').map(Number);
+    var minIn=si[0]*60+si[1],minOut=so[0]*60+so[1];
+    if(minOut<=minIn)minOut+=1440; // past midnight
+    var hrs=(minOut-minIn)/60;
+    if(hrs>2){
+      longWaits.push(label+' wait '+hrs.toFixed(1)+'hrs');
+      flaggedStops.push({type:stopType,idx:stopIdx,reason:'Long wait: '+hrs.toFixed(1)+'hrs'});
+    }
+  }
+  deliveries.forEach(function(d,i){calcWait(d.timeIn,d.timeOut,'DEL '+(i+1),i,'d');});
+  pickups.forEach(function(p,i){calcWait(p.pickupIn,p.pickupOut,'P/U '+(i+1),i,'p');});
+  if(longWaits.length>0)flags.push('Long wait: '+longWaits.join(', ')+' — verify times');
+
+  // Flag any notes
+  var noteCount=0;
+  deliveries.forEach(function(d){if(d.note)noteCount++;});
+  pickups.forEach(function(p){if(p.note)noteCount++;});
+  if(noteCount>0)flags.push(noteCount+' driver note'+(noteCount>1?'s':''));
+
+  const m={id:Date.now().toString(),submittedAt:new Date().toISOString(),status:'pending',flags,flaggedStops:flaggedStops||[],driverName:name,driverNum:session?.driverNum||'',isSubstitute:session?!!session.isSub:false,subFor:session?session.subFor||'':'',truckNum:truck,date,dayOfWeek,startTime:st,endTime:et,totalMiles,startMileage:sm,endMileage:em,totalHours,ttlDeliveries:deliveries.length,ttlPickups:pickups.length,ttlShipments:uniqueMAWBs,ttlWeight:totalWeight,deliveries,pickups};
+  return m;
+}
+
 var _submitInFlight=false;
 var _pendingSubmitId=null; // id of a new manifest whose submit hasn't been confirmed yet
 
@@ -420,12 +471,6 @@ function _doSubmit(){
   const date=document.getElementById('fDate').value,st=document.getElementById('fStart').value,et=document.getElementById('fEnd').value;
   const sm=parseInt(document.getElementById('fSMi').value)||0,em=parseInt(document.getElementById('fEMi').value)||0;
 
-  const dt=new Date(date+'T12:00:00');const dayOfWeek=DAYS[dt.getDay()];
-  const totalMiles=em>sm?em-sm:0;
-  var sArr=st.split(':').map(Number),eArr=et.split(':').map(Number);
-  var sMin2=sArr[0]*60+sArr[1],eMin2=eArr[0]*60+eArr[1];
-  if(eMin2<=sMin2)eMin2+=1440; // past midnight
-  const totalHours=Math.round(((eMin2-sMin2)/60-0.5)*100)/100;
   // Build full deliveries array - each sub-drop becomes its own delivery record
   var deliveries=[];
   delIds.forEach(function(id){
@@ -487,42 +532,7 @@ function _doSubmit(){
     });
   });
 
-  var extraDel=0,extraPU=0; // no longer needed - sub-drops are full records now
-  const totalWeight=deliveries.reduce((s,r)=>s+r.weight,0)+pickups.reduce((s,r)=>s+r.weight,0);
-  // Count unique MAWBs (pro#/ref#) - each unique MAWB = one shipment
-  var allRefs=[];
-  deliveries.forEach(function(d){if(d.proNum&&d.proNum.trim())allRefs.push(d.proNum.trim().toUpperCase());});
-  pickups.forEach(function(p){if(p.proNum&&p.proNum.trim())allRefs.push(p.proNum.trim().toUpperCase());});
-  var uniqueMAWBs=allRefs.length>0?[...new Set(allRefs)].length:deliveries.length+pickups.length;
-  const flags=[];
-  if(totalMiles>300)flags.push('High mileage: '+totalMiles);
-  if(totalWeight>100000)flags.push('Weight over 100,000 lbs — verify');
-  if(totalHours<1||totalHours>14)flags.push('Unusual hours: '+totalHours);
-  // Flag any stops with wait time over 2 hours
-  var longWaits=[];
-  var flaggedStops=[]; // track which stops have issues for highlighting in modal
-  function calcWait(tIn, tOut, label, stopIdx, stopType){
-    if(!tIn||!tOut)return;
-    var si=tIn.split(':').map(Number),so=tOut.split(':').map(Number);
-    var minIn=si[0]*60+si[1],minOut=so[0]*60+so[1];
-    if(minOut<=minIn)minOut+=1440; // past midnight
-    var hrs=(minOut-minIn)/60;
-    if(hrs>2){
-      longWaits.push(label+' wait '+hrs.toFixed(1)+'hrs');
-      flaggedStops.push({type:stopType,idx:stopIdx,reason:'Long wait: '+hrs.toFixed(1)+'hrs'});
-    }
-  }
-  deliveries.forEach(function(d,i){calcWait(d.timeIn,d.timeOut,'DEL '+(i+1),i,'d');});
-  pickups.forEach(function(p,i){calcWait(p.pickupIn,p.pickupOut,'P/U '+(i+1),i,'p');});
-  if(longWaits.length>0)flags.push('Long wait: '+longWaits.join(', ')+' — verify times');
-
-  // Flag any notes
-  var noteCount=0;
-  deliveries.forEach(function(d){if(d.note)noteCount++;});
-  pickups.forEach(function(p){if(p.note)noteCount++;});
-  if(noteCount>0)flags.push(noteCount+' driver note'+(noteCount>1?'s':''));
-
-  const m={id:Date.now().toString(),submittedAt:new Date().toISOString(),status:'pending',flags,flaggedStops:flaggedStops||[],driverName:name,driverNum:session?.driverNum||'',isSubstitute:session?!!session.isSub:false,subFor:session?session.subFor||'':'',truckNum:truck,date,dayOfWeek,startTime:st,endTime:et,totalMiles,startMileage:sm,endMileage:em,totalHours,ttlDeliveries:deliveries.length,ttlPickups:pickups.length,ttlShipments:uniqueMAWBs,ttlWeight:totalWeight,deliveries,pickups};
+  const m=_buildManifestRecord({name:name,truck:truck,date:date,st:st,et:et,sm:sm,em:em,deliveries:deliveries,pickups:pickups});
   var isEdit=(typeof editingManifestId!=='undefined'&&editingManifestId);
   if(_submitInFlight)return; // ignore double-taps while a save is in progress
   if(!isEdit){
@@ -537,6 +547,7 @@ function _doSubmit(){
     m.status=existing?existing.status:'pending';
     // Who/when: keep the review stamp, record this edit
     if(existing&&existing.reviewedBy){m.reviewedBy=existing.reviewedBy;m.reviewedAt=existing.reviewedAt;}
+    if(existing&&existing.entryMode)m.entryMode=existing.entryMode;
     var _st=(typeof mgrStamp==='function')?mgrStamp():{by:'Unknown',at:new Date().toISOString()};
     m.lastEditedBy=_st.by;m.lastEditedAt=_st.at;
     var _oldH=existing?getEffectiveHours(existing):0,_newH=getEffectiveHours(m),_r=rate(m.driverName);
