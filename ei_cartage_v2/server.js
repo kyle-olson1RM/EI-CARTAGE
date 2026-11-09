@@ -155,8 +155,67 @@ async function guardAgainstDataLoss(key, newValueStr, req) {
   return null;
 }
 
+// Serialize every write to ei_manifests on this server instance. Without this,
+// two tablets submitting at the same moment (end of shift) could each read
+// the array, add their own manifest, and write back — the second write
+// silently dropping the first driver's manifest.
+let _manifestLock = Promise.resolve();
+function withManifestLock(fn) {
+  const run = _manifestLock.then(fn, fn);
+  _manifestLock = run.catch(function(){});
+  return run;
+}
+
+// POST /api/manifests/upsert — save ONE manifest (new or edited).
+// The tablet sends only its own manifest (a few KB); the merge into the full
+// ei_manifests array happens here, next to the database. Previously the
+// tablet downloaded the entire store (~2.4 MB and growing) and re-uploaded
+// every manifest ever submitted (~2.2 MB) on each submit, over cellular.
+app.post('/api/manifests/upsert', async (req, res) => {
+  const m = req.body && req.body.manifest;
+  if (!m || typeof m !== 'object' || !m.id) {
+    return res.status(400).json({ error: 'manifest with id required' });
+  }
+  try {
+    const result = await withManifestLock(async () => {
+      const { status, body } = await sb('GET', 'kn_store?key=eq.ei_manifests&select=value');
+      if (status >= 400) return { status, error: body };
+      let arr = [];
+      if (body && body[0] && body[0].value) {
+        try { arr = JSON.parse(body[0].value); } catch (e) { return { status: 500, error: 'stored ei_manifests is not valid JSON' }; }
+        if (!Array.isArray(arr)) return { status: 500, error: 'stored ei_manifests is not an array' };
+      }
+      const idx = arr.findIndex(x => x && x.id === m.id);
+      if (idx >= 0) arr[idx] = m; else arr.push(m);
+      const w = await sb('POST', 'kn_store', {
+        key: 'ei_manifests',
+        value: JSON.stringify(arr),
+        updated_at: new Date().toISOString(),
+      });
+      if (w.status >= 400) return { status: w.status, error: w.body };
+      return { status: 200, count: arr.length };
+    });
+    if (result.status >= 400) {
+      console.error('POST /api/manifests/upsert failed:', result.status, result.error);
+      return res.status(result.status).json({ error: result.error });
+    }
+    res.json({ ok: true, id: m.id, count: result.count });
+  } catch (e) {
+    console.error('POST /api/manifests/upsert error:', e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // PUT /api/store/:key — upsert a value
 app.put('/api/store/:key', async (req, res) => {
+  if (req.params.key === 'ei_manifests') {
+    // Manager-side bulk edits/deletes still use this route; take the same
+    // lock so they can't interleave with a driver's upsert.
+    return withManifestLock(() => handlePut(req, res));
+  }
+  return handlePut(req, res);
+});
+async function handlePut(req, res) {
   try {
     const key = req.params.key;
     if (!isWritableKey(key)) {
@@ -183,7 +242,7 @@ app.put('/api/store/:key', async (req, res) => {
     console.error('PUT /api/store error:', e);
     res.status(500).json({ error: e.message });
   }
-});
+}
 
 // DELETE /api/store/:key — delete a key
 app.delete('/api/store/:key', async (req, res) => {
