@@ -38,7 +38,7 @@ function updateMgrStats(){
   document.getElementById('stTot').textContent=wm.length;
   document.getElementById('stPend').textContent=wm.filter(function(m){return m.status==='pending';}).length;
   document.getElementById('stDrvs').textContent=new Set(wm.map(function(m){return m.driverName;})).size;
-  document.getElementById('stFlgs').textContent=wm.filter(function(m){return m.flags&&m.flags.length>0;}).length;
+  document.getElementById('stFlgs').textContent=wm.filter(function(m){return (m.flags&&m.flags.length>0)||getLongShiftAlert(m);}).length;
 }
 
 async function refreshMgr(){
@@ -170,13 +170,15 @@ function renderCards(){
     var totChg=totHrs*r;
     var dayCount=entries.length+hDays.length;
     var anyPending=entries.some(function(m){return m.status==='pending';});
-    var anyFlag=entries.some(function(m){return m.flags&&m.flags.length>0;});
+    var longCount=entries.filter(function(m){return getLongShiftAlert(m);}).length;
+    var anyFlag=longCount>0||entries.some(function(m){return m.flags&&m.flags.length>0;});
     // Collect all notes from deliveries and pickups for tooltip
     var flagNotes=[];
     entries.forEach(function(m){
       (m.deliveries||[]).forEach(function(d){if(d.note&&d.note.trim())flagNotes.push(d.note.trim());});
       (m.pickups||[]).forEach(function(p){if(p.note&&p.note.trim())flagNotes.push(p.note.trim());});
       if(m.flags&&m.flags.length)m.flags.forEach(function(f){if(f&&f.trim())flagNotes.push(f.trim());});
+      var la=getLongShiftAlert(m);if(la)flagNotes.unshift(m.dayOfWeek+': '+la.replace(/\u2192/g,'->').replace(/\u2014/g,'-'));
     });
     var flagTooltip=flagNotes.length?flagNotes.join(' | '):'Has driver notes';
     flagNotesMap[name]=flagNotes;
@@ -208,7 +210,9 @@ function renderCards(){
         detailTbls+='<div style="padding:0 12px 8px"><div style="font-family:Barlow Condensed,sans-serif;font-size:12px;font-weight:700;color:var(--accent);letter-spacing:.5px;text-transform:uppercase;padding:6px 0 4px">Pick Ups</div><div style="overflow-x:auto"><table class="det-tbl"><thead><tr><th>#</th><th>Ref #</th><th>Shipper</th><th style="text-align:center">Pcs</th><th style="text-align:center">Wt</th><th>PU Times</th><th>Drop Times</th></tr></thead><tbody>'+puRows+'</tbody></table></div></div>';
       }
 
-      return '<div class="day-entry" id="dentry_'+m.id+'" style="border-top:1px solid var(--border)">'+
+      var longAlert=getLongShiftAlert(m);
+      return '<div class="day-entry" id="dentry_'+m.id+'" style="border-top:1px solid var(--border)'+(longAlert?';border-left:4px solid #dc2626':'')+'">'+
+        (longAlert?'<div style="background:#fee2e2;color:#991b1b;padding:8px 14px;font-size:13px;font-weight:700">&#9888; '+_escAttr(longAlert)+'</div>':'')+
         '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface2)">'+
           '<div>'+
             '<div style="font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:700">'+m.dayOfWeek+' &middot; '+ds+
@@ -262,6 +266,7 @@ function renderCards(){
           '<div class="mcard-meta">'+dayCount+' day'+(dayCount!==1?'s':'')+(hDays.length?' (incl. '+hDays.length+' holiday)':'')+' &middot; '+totDel+' del &middot; '+totPU+' PU &middot; '+totWt.toLocaleString()+' lbs &middot; '+totMi+' mi &middot; '+totHrs.toFixed(2)+' hrs</div>'+
         '</div>'+
         '<div style="display:flex;align-items:center;gap:8px">'+
+          (longCount?'<span class="mbadge" style="background:#fee2e2;color:#dc2626;border:1px solid #dc2626" title="Shift over '+LONG_SHIFT_HOURS+' hrs \u2014 check AM/PM before reviewing">&#9888; '+longCount+' OVER '+LONG_SHIFT_HOURS+' HRS</span>':'')+
           (anyFlag?'<span class="flag-icon" style="font-size:16px;cursor:pointer" onclick="showFlagPopup(this)" data-gid="'+name+'">&#9888;</span>':'')+
           (entries.length?'<span class="mbadge '+(anyPending?'bp':'br')+'">'+(anyPending?'PENDING':'REVIEWED')+'</span>':'<span class="mbadge" style="background:#d1fae5;color:#059669">HOLIDAY</span>')+
           '<div style="font-family:Barlow Condensed,sans-serif;font-size:17px;font-weight:800;color:var(--accent)">$'+totChg.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</div>'+
@@ -339,6 +344,8 @@ function openMod(id){
   });
 
   var html='';
+  var _la=getLongShiftAlert(m);
+  if(_la) html+='<div style="margin:0 0 8px;padding:10px 12px;border-radius:6px;background:#fee2e2;color:#991b1b;border:1.5px solid #dc2626;font-weight:700;font-size:13px">&#9888; '+_escAttr(_la)+'</div>';
   if(fh) html+='<div class="flag-bar" style="margin:0 0 8px">'+fh+'</div>';
 
   html+='<h2>'+m.driverName+' &mdash; '+m.dayOfWeek+'</h2>';
@@ -509,10 +516,21 @@ async function appM(id){
   var m=manifests.find(function(x){return x.id===id;});
   if(!m)return;
   var newStatus=m.status==='reviewed'?'pending':'reviewed';
+  // Long shifts need an explicit hours check before they can be reviewed.
+  var longAlert=newStatus==='reviewed'?getLongShiftAlert(m):'';
+  if(longAlert){
+    var ok=confirm('\u26a0 '+(m.driverName||'')+' \u2014 '+(m.dayOfWeek||'')+' '+(m.date||'')+'\n\n'
+      +'Start '+(m.startTime||'?')+' \u2192 End '+(m.endTime||'?')+' = '+getRoundedHours(m).toFixed(2)+' hrs\n\n'
+      +'This is over '+LONG_SHIFT_HOURS+' hours. Is the end time correct (not AM/PM swapped)?\n\n'
+      +'OK = hours are correct, mark reviewed\nCancel = go back and fix with \u270f Edit');
+    if(!ok)return;
+  }
   // Marking reviewed means any flags on this manifest have been addressed -
   // clear them so they stop showing. Un-reviewing doesn't resurrect them.
   var _st=mgrStamp();
-  var clearingFlags=newStatus==='reviewed'&&((m.flags&&m.flags.length)||(m.flaggedStops&&m.flaggedStops.length));
+  var clearingFlags=!!longAlert||(newStatus==='reviewed'&&((m.flags&&m.flags.length)||(m.flaggedStops&&m.flaggedStops.length)));
+  // Un-reviewing a long shift brings its alert back, so re-render then too.
+  if(newStatus==='pending'&&getRoundedHours(m)>LONG_SHIFT_HOURS)clearingFlags=true;
   var result=await refreshThenMutateManifests(function(fresh){
     var idx=fresh.findIndex(function(x){return x.id===id;});
     if(idx>=0){
@@ -526,7 +544,7 @@ async function appM(id){
   m.status=newStatus;
   if(newStatus==='reviewed'){m.flags=[];m.flaggedStops=[];m.reviewedBy=_st.by;m.reviewedAt=_st.at;}
   else{delete m.reviewedBy;delete m.reviewedAt;}
-  logChange(newStatus==='reviewed'?'Marked reviewed':'Marked pending',_mDesc(m));
+  logChange(newStatus==='reviewed'?(longAlert?'Marked reviewed (confirmed '+getRoundedHours(m).toFixed(2)+' hr shift)':'Marked reviewed'):'Marked pending',_mDesc(m));
   var isReviewed=newStatus==='reviewed';
 
   if(clearingFlags){
@@ -551,7 +569,7 @@ async function appM(id){
     }
     if(modalShowingThis)openMod(id);
     updateMgrStats();
-    showToast('Marked reviewed — flags cleared');
+    showToast(isReviewed?'Marked reviewed — flags cleared':'Marked pending');
     return;
   }
 
