@@ -402,6 +402,20 @@ function getEffectiveEndTime(m){
   return _minToHM(Math.round(sMin + (MIN_SHIFT_HOURS+0.5)*60));
 }
 
+// ── LONG-SHIFT ALERT ────────────────────────────────────────────────────────
+// Any shift billing over LONG_SHIFT_HOURS is flagged for dispatch, computed at
+// render time (not stored), so it can't be lost to edits or to the flag-clear
+// on Mark Reviewed. Most of these turn out to be AM/PM mix-ups (e.g. 07:15
+// entered for 19:15). The alert shows while the manifest is pending; marking
+// it reviewed requires an explicit confirmation of the hours (see appM()).
+var LONG_SHIFT_HOURS = 12;
+function getLongShiftAlert(m){
+  if(!m||m.status==='reviewed')return '';
+  var h=getRoundedHours(m);
+  if(h<=LONG_SHIFT_HOURS)return '';
+  return 'Over '+LONG_SHIFT_HOURS+' hrs: '+h.toFixed(2)+' hrs ('+(m.startTime||'?')+' \u2192 '+(m.endTime||'?')+') \u2014 check AM/PM';
+}
+
 // ── HOLIDAY BILLING ─────────────────────────────────────────────────────────
 // On company holidays no trucks run, but every real roster unit is billed a
 // flat HOLIDAY_HOURS at its truck-type rate. Like getEffectiveHours(), this
