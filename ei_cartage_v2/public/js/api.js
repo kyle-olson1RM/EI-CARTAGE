@@ -349,22 +349,57 @@ function getDriverUnit(driverName){
 // everywhere on the manager side (dashboard, Summary, exports, print) without
 // altering the driver's actual submitted start/end time on record.
 var MIN_SHIFT_HOURS = 8;
+// ── END-TIME ROUNDING ───────────────────────────────────────────────────────
+// Billing rounds the shift END time to the nearest 15 minutes, matching the
+// weekly invoice spreadsheet (standard rounding: :00-:07 down, :08-:14 up,
+// e.g. 17:37 -> 17:30, 17:38 -> 17:45). Start time is billed as entered.
+// Like the 8-hr minimum, this is applied at render/billing time only - the
+// driver's submitted endTime and totalHours are never modified.
+var BILL_ROUND_MIN = 15;
+function _hmToMin(t){
+  if(!t)return null;
+  var a=String(t).split(':').map(Number);
+  if(a.length<2||isNaN(a[0])||isNaN(a[1]))return null;
+  return a[0]*60+a[1];
+}
+function _minToHM(x){
+  x=((x%1440)+1440)%1440;
+  return String(Math.floor(x/60)).padStart(2,'0')+':'+String(x%60).padStart(2,'0');
+}
+// Rounded end, in minutes on the same timeline as the start (past-midnight
+// shifts carry +1440), or null if times are missing/unparseable.
+function _roundedEndMin(m){
+  var s=_hmToMin(m.startTime), e=_hmToMin(m.endTime);
+  if(s===null||e===null)return null;
+  if(e<=s)e+=1440; // past midnight - same rule as _buildManifestRecord
+  var r=Math.floor((e+BILL_ROUND_MIN/2)/BILL_ROUND_MIN)*BILL_ROUND_MIN;
+  if(r<=s)r=e; // never let rounding collapse a shift to zero or negative
+  return r;
+}
+// Hours billed before the 8-hr minimum: (rounded end - start) - 0.5hr break.
+// Falls back to the stored totalHours when times can't be parsed.
+function getRoundedHours(m){
+  var s=_hmToMin(m.startTime), r=_roundedEndMin(m);
+  if(s===null||r===null)return m.totalHours||0;
+  return Math.round(((r-s)/60-0.5)*100)/100;
+}
+function getRoundedEndTime(m){
+  var r=_roundedEndMin(m);
+  return r===null?m.endTime:_minToHM(r);
+}
 function getEffectiveHours(m){
-  var h = m.totalHours||0;
+  var h = getRoundedHours(m);
   return h < MIN_SHIFT_HOURS ? MIN_SHIFT_HOURS : h;
 }
-// Synthetic end time that, run back through the same (hours = span - 0.5hr
-// break) formula, yields exactly the 8-hour minimum. Only diverges from the
-// real submitted end time when the actual shift fell short.
+// Billed end time: the 15-min-rounded end, or - when the shift fell short of
+// the minimum - a synthetic end that, run back through the same
+// (hours = span - 0.5hr break) formula, yields exactly the 8-hour minimum.
 function getEffectiveEndTime(m){
-  var h = m.totalHours||0;
-  if(h >= MIN_SHIFT_HOURS || !m.startTime) return m.endTime;
-  var sArr = m.startTime.split(':').map(Number);
-  if(sArr.length<2 || isNaN(sArr[0]) || isNaN(sArr[1])) return m.endTime;
-  var sMin = sArr[0]*60+sArr[1];
-  var eMin = Math.round(sMin + (MIN_SHIFT_HOURS+0.5)*60) % 1440;
-  var eh = Math.floor(eMin/60), em = eMin%60;
-  return String(eh).padStart(2,'0')+':'+String(em).padStart(2,'0');
+  var h = getRoundedHours(m);
+  if(h >= MIN_SHIFT_HOURS) return getRoundedEndTime(m);
+  var sMin = _hmToMin(m.startTime);
+  if(sMin===null) return m.endTime;
+  return _minToHM(Math.round(sMin + (MIN_SHIFT_HOURS+0.5)*60));
 }
 
 // ── HOLIDAY BILLING ─────────────────────────────────────────────────────────
