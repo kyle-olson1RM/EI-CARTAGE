@@ -296,7 +296,8 @@ function openMod(id){
   var m=manifests.find(function(x){return x.id===id;});
   if(!m)return;
   var r=rate(m.driverName),chg=getEffectiveHours(m)*r;
-  var minApplied=getEffectiveHours(m)>(m.totalHours||0);
+  var minApplied=getEffectiveHours(m)>getRoundedHours(m);
+  var endAdjusted=!minApplied&&getEffectiveEndTime(m)!==m.endTime;
   var ds=new Date(m.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
   var fh=m.flags&&m.flags.length>0?m.flags.join(' &middot; '):'';
 
@@ -359,7 +360,7 @@ function openMod(id){
 
   html+='<div class="mod-times">'+
     '<div><span>Start:</span> '+(m.startTime||'&mdash;')+'</div>'+
-    '<div><span>End:</span> '+(getEffectiveEndTime(m)||'&mdash;')+(minApplied?' <span style="color:var(--warn);font-size:11px">(8-hr min, actual '+(m.endTime||'&mdash;')+')</span>':'')+'</div>'+
+    '<div><span>End:</span> '+(getEffectiveEndTime(m)||'&mdash;')+(minApplied?' <span style="color:var(--warn);font-size:11px">(8-hr min, actual '+(m.endTime||'&mdash;')+')</span>':endAdjusted?' <span style="color:var(--muted);font-size:11px">(rounded to 15 min, actual '+(m.endTime||'&mdash;')+')</span>':'')+'</div>'+
     '<div><span>Miles:</span> '+(m.totalMiles||0)+'</div>'+'<div><span>Hours:</span> '+getEffectiveHours(m).toFixed(2)+'</div>'+
   '</div>';
 
