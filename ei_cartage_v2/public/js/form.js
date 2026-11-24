@@ -589,8 +589,12 @@ function _doSubmit(){
     setTimeout(function(){
       if(wasEditingFromMgr){
         wasEditingFromMgr=false;
-        if(typeof refreshMgr==='function')refreshMgr();
         ss('manager');
+        // Re-render, then put the manager back where they were (open groups + scroll)
+        var _p=(typeof refreshMgr==='function')?refreshMgr():null;
+        Promise.resolve(_p).catch(function(){}).then(function(){
+          if(typeof _restoreMgrViewState==='function')_restoreMgrViewState();
+        });
       } else {
         ss(session?'home':'login');
         checkForDraft();
@@ -680,6 +684,18 @@ function _collapseAllExceptLast(){
       if(body) body.classList.remove('collapsed');
       if(chev) chev.style.transform = '';
     }
+    _updateIncompleteBadge(parseInt(cardId));
+  });
+}
+
+function _collapseAllStopCards(){
+  // Collapse every stop card (used when a manager opens a manifest to edit)
+  document.querySelectorAll('.stop-card').forEach(function(card){
+    var cardId = card.id.replace('stopcard_','');
+    var body = document.getElementById('stopbody_'+cardId);
+    var chev = document.getElementById('stchev_'+cardId);
+    if(body) body.classList.add('collapsed');
+    if(chev) chev.style.transform = 'rotate(-90deg)';
     _updateIncompleteBadge(parseInt(cardId));
   });
 }
