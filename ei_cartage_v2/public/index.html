@@ -535,6 +535,16 @@
         <span>&#128221; Change Log</span>
         <select id="changeLogWho" onchange="renderChangeLog()" style="height:32px;padding:0 8px;border:1.5px solid var(--border2);border-radius:5px;font-size:12px;text-transform:none;letter-spacing:normal;font-family:'Barlow',sans-serif"><option value="">All managers</option></select>
       </div>
+      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--border);font-size:12px">
+        <button class="cl-quick" data-days="1" onclick="setChangeLogRange(1)">Today</button>
+        <button class="cl-quick" data-days="7" onclick="setChangeLogRange(7)">Last 7 days</button>
+        <button class="cl-quick" data-days="30" onclick="setChangeLogRange(30)">Last 30 days</button>
+        <button class="cl-quick" data-days="0" onclick="setChangeLogRange(0)">All</button>
+        <span style="margin-left:auto;display:flex;align-items:center;gap:6px;color:var(--muted)">
+          From <input type="date" id="changeLogFrom" onchange="_clearChangeLogQuick();renderChangeLog()" style="height:32px;padding:0 6px;border:1.5px solid var(--border2);border-radius:5px;font-size:12px">
+          To <input type="date" id="changeLogTo" onchange="_clearChangeLogQuick();renderChangeLog()" style="height:32px;padding:0 6px;border:1.5px solid var(--border2);border-radius:5px;font-size:12px">
+        </span>
+      </div>
       <div id="changeLogList" style="padding:6px 12px 12px;max-height:50vh;overflow-y:auto"></div>
     </div>
 

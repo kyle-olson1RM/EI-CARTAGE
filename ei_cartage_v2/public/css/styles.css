@@ -330,3 +330,7 @@ html{overflow-x:hidden;max-width:100vw;}body{font-family:'Barlow',sans-serif;bac
 .pp-submit{width:100%;height:54px;border:none;border-radius:6px;background:var(--accent,#d0021b);color:#fff;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;letter-spacing:1px;cursor:pointer}
 .pp-submit:disabled{opacity:.6}
 .pp-clear{width:100%;margin-top:10px;padding:10px;background:none;border:none;color:#888;text-decoration:underline;cursor:pointer}
+
+/* Change log quick date-range buttons */
+.cl-quick{height:32px;padding:0 12px;border-radius:5px;border:1.5px solid var(--border2);background:var(--surface);color:var(--text2);font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;cursor:pointer;touch-action:manipulation}
+.cl-quick.active{border-color:var(--accent);background:var(--accent-light);color:var(--accent)}

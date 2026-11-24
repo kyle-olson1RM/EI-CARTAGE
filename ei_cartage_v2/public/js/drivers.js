@@ -514,9 +514,24 @@ function isMgrAdmin(){
 function canAccessManagerRoster(){return !hasAnyMgrAdmin()||isMgrAdmin();}
 function showManagerAccess(){
   if(!canAccessManagerRoster()){showToast('\u26a0 Admin access required',3000);return;}
-  renderManagerList();renderChangeLog();ss('managerAccess');
+  renderManagerList();setChangeLogRange(1);ss('managerAccess');
 }
-// Change log viewer (Manager Access screen): newest first, filter by manager
+// Change log date range. Defaults to today each time the screen opens.
+function _clDateStr(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function setChangeLogRange(days){
+  var f=document.getElementById('changeLogFrom'),t=document.getElementById('changeLogTo');
+  if(f&&t){
+    if(days>0){
+      var start=new Date();start.setDate(start.getDate()-(days-1));
+      f.value=_clDateStr(start);t.value=localDateStr();
+    }else{f.value='';t.value='';}
+  }
+  document.querySelectorAll('.cl-quick').forEach(function(b){b.classList.toggle('active',parseInt(b.dataset.days)===days);});
+  renderChangeLog();
+}
+function _clearChangeLogQuick(){document.querySelectorAll('.cl-quick').forEach(function(b){b.classList.remove('active');});}
+
+// Change log viewer (Manager Access screen): newest first, filter by manager + date range
 async function renderChangeLog(){
   var el=document.getElementById('changeLogList');if(!el)return;
   try{await apiRefresh('ei_change_log');}catch(e){} // best effort; falls back to cached copy
@@ -528,8 +543,17 @@ async function renderChangeLog(){
     sel.innerHTML='<option value="">All managers</option>'+names.sort().map(function(n){return '<option'+(n===cur?' selected':'')+'>'+_escAttr(n)+'</option>';}).join('');
     if(cur)log=log.filter(function(e){return e.by===cur;});
   }
+  var fromV=(document.getElementById('changeLogFrom')||{}).value||'';
+  var toV=(document.getElementById('changeLogTo')||{}).value||'';
+  if(fromV&&toV&&fromV>toV){var _sw=fromV;fromV=toV;toV=_sw;}
+  if(fromV||toV){
+    log=log.filter(function(e){
+      var ds=_clDateStr(new Date(e.at)); // entry's local date
+      return (!fromV||ds>=fromV)&&(!toV||ds<=toV);
+    });
+  }
   var shown=log.slice(0,300);
-  if(!shown.length){el.innerHTML='<div style="text-align:center;padding:18px;color:var(--muted);font-size:13px">No changes logged yet.</div>';return;}
+  if(!shown.length){el.innerHTML='<div style="text-align:center;padding:18px;color:var(--muted);font-size:13px">'+((fromV||toV)?'No changes in this date range.':'No changes logged yet.')+'</div>';return;}
   el.innerHTML=shown.map(function(e){
     var d=new Date(e.at);
     var when=d.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' '+d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
