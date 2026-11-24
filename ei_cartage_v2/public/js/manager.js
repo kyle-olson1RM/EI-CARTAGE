@@ -402,6 +402,9 @@ function editManifest(id){
   if(!m)return;
   if(!confirm('Edit this manifest? Changes will be saved immediately.'))return;
 
+  // Remember where the manager was on the dashboard so we can return there after saving
+  _captureMgrViewState();
+
   // Store the manifest ID being edited
   editingManifestId=id;
   wasEditingFromMgr=true; // skip EOS popup on submit
@@ -502,9 +505,45 @@ function editManifest(id){
       if(done) done.style.display='flex';
     });
     updateTotals();
-    if(typeof _collapseAllExceptLast==='function') _collapseAllExceptLast();
+    // Editing: start with every stop card closed and the page at the top.
+    // Adding each stop schedules its own scrollIntoView (~100ms later), so
+    // scroll back to the top after those have fired.
+    if(typeof _collapseAllStopCards==='function') _collapseAllStopCards();
+    window.scrollTo(0,0);
+    setTimeout(function(){window.scrollTo({top:0,left:0,behavior:'auto'});},350);
     showToast('\u270e Editing manifest — submit to save changes');
   }, 300);
+}
+
+// ── DASHBOARD VIEW STATE (return to the same spot after editing) ────────────
+var _mgrViewState=null;
+function _captureMgrViewState(){
+  var openGroups=[],openCards=[];
+  document.querySelectorAll('#manager .driver-group').forEach(function(g){
+    var b=g.querySelector('.dg-body');
+    if(b&&b.style.display==='block'&&g.dataset.gid)openGroups.push(g.dataset.gid);
+  });
+  document.querySelectorAll('#manager [id^="expand_"]').forEach(function(e){
+    if(e.style.display==='block')openCards.push(e.id);
+  });
+  _mgrViewState={scrollY:window.scrollY||window.pageYOffset||0,openGroups:openGroups,openCards:openCards};
+}
+function _restoreMgrViewState(){
+  var st=_mgrViewState;_mgrViewState=null;
+  if(!st)return;
+  document.querySelectorAll('#manager .driver-group').forEach(function(g){
+    if(st.openGroups.indexOf(g.dataset.gid)<0)return;
+    var b=g.querySelector('.dg-body'),a=g.querySelector('.dg-arrow');
+    if(b)b.style.display='block';
+    if(a)a.style.transform='rotate(180deg)';
+  });
+  st.openCards.forEach(function(eid){
+    var e=document.getElementById(eid);if(!e)return;
+    e.style.display='block';
+    var a=document.getElementById(eid.replace('expand_','arrow_'));
+    if(a)a.style.transform='rotate(180deg)';
+  });
+  window.scrollTo({top:st.scrollY,left:0,behavior:'auto'});
 }
 
 var editingManifestId=null;
