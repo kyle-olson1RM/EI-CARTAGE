@@ -72,6 +72,7 @@ const WRITABLE_KEYS = new Set([
   'ei_change_log',
   'ei_manager_roster',
   'ei_roster_version',
+  'ei_holiday_exclusions',
 ]);
 function isWritableKey(key) {
   return WRITABLE_KEYS.has(key) || /^manifest:/.test(key) || /^jfile:/.test(key);
