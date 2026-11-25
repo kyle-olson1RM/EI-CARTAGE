@@ -98,7 +98,7 @@ function renderCards(){
     if(fd&&d.name!==fd)return false;
     if(funit&&!(d.unit||'').toUpperCase().startsWith(funit))return false;
     return true;
-  }}).filter(function(h){return !fdy||h.dayOfWeek===fdy;});
+  },includeRemoved:true}).filter(function(h){return !fdy||h.dayOfWeek===fdy;});
   var hlByDrv=getHolidayDaysByDriver(holidays);
   if(!list.length&&!holidays.length){
     c.innerHTML='<div class="no-data"><div style="font-size:40px;margin-bottom:12px">&#128203;</div><div style="font-family:Barlow Condensed,sans-serif;font-size:20px;font-weight:700;color:var(--text2)">No manifests found</div></div>';
@@ -251,7 +251,10 @@ function renderCards(){
               '<div style="font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:700">'+x.dayOfWeek+' &middot; '+ds+' <span class="mbadge" style="background:#d1fae5;color:#059669;font-size:10px;vertical-align:middle">&#127881; '+x.holiday.toUpperCase()+'</span></div>'+
               '<div style="font-size:11px;color:var(--muted);margin-top:2px">Company holiday &middot; no service &middot; '+x.hours.toFixed(2)+' hrs billed @ $'+x.rate+'/hr</div>'+
             '</div>'+
-            '<span style="font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;color:#059669">$'+(x.hours*r).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</span>'+
+            '<div style="display:flex;align-items:center;gap:10px">'+
+              '<span style="font-family:Barlow Condensed,sans-serif;font-size:15px;font-weight:700;color:#059669">$'+(x.hours*r).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})+'</span>'+
+              '<button class="ea-btn ea-del" style="flex:none;width:42px;height:36px" title="Remove holiday pay" data-hdate="'+x.date+'" data-hname="'+name+'" data-hlbl="'+x.holiday+'" onclick="event.stopPropagation();removeHolidayPay(this.dataset.hdate,this.dataset.hname,this.dataset.hlbl)">&#128465;</button>'+
+            '</div>'+
           '</div>'+
         '</div>'});
     });
@@ -294,7 +297,49 @@ function renderCards(){
       +'</div>'
       +'</div>';
   }
-  c.innerHTML=totalsBox+driverCardsHtml+jfCardHtml+extrasCardsHtml(extras);
+  c.innerHTML=totalsBox+driverCardsHtml+jfCardHtml+removedHolidayHtml(holidays)+extrasCardsHtml(extras);
+}
+
+// ── HOLIDAY PAY REMOVE / RESTORE ─────────────────────────────────────────────
+// Holiday pay is computed from the roster (see getHolidayCharges in api.js).
+// Removing one adds {date,name} to 'ei_holiday_exclusions'; restoring deletes
+// it. No manifests or roster entries are touched.
+function removedHolidayHtml(holidays){
+  var rows=[];
+  (holidays||[]).forEach(function(h){(h.removed||[]).forEach(function(u){rows.push({h:h,u:u});});});
+  if(!rows.length)return '';
+  return '<div class="driver-group" style="border:1.5px dashed var(--border);border-radius:8px;margin-bottom:10px;overflow:hidden">'
+    +'<div style="background:var(--surface2);padding:10px 14px;font-family:Barlow Condensed,sans-serif;font-size:16px;font-weight:700">&#127881; Removed Holiday Pay <span style="font-size:13px;font-weight:400;color:var(--muted)">('+rows.length+' &middot; not billed)</span></div>'
+    +'<div style="padding:6px 14px;font-size:12px;color:var(--text2)">'
+    +rows.map(function(x){
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border)">'
+        +'<span><strong>'+x.u.name+'</strong> <span style="color:var(--muted)">'+(x.u.unit||'')+'</span> &nbsp;&middot;&nbsp; '+holidayLabel(x.h)+'</span>'
+        +'<button class="ea-btn" style="width:auto;padding:0 12px;font-size:12px" data-hdate="'+x.h.date+'" data-hname="'+x.u.name+'" data-hlbl="'+x.h.name+'" onclick="restoreHolidayPay(this.dataset.hdate,this.dataset.hname,this.dataset.hlbl)">Restore</button>'
+        +'</div>';
+    }).join('')
+    +'</div></div>';
+}
+async function removeHolidayPay(date,name,label){
+  if(!confirm('Remove '+(label||'holiday')+' pay for '+name+'?\n\nThey will not be billed 8 hrs for '+date+'. You can restore it from the "Removed Holiday Pay" list.'))return;
+  var u=(typeof currentMgr==='function')?currentMgr():null;
+  var result=await refreshThenMutateList('ei_holiday_exclusions',function(fresh){
+    if(fresh.some(function(x){return x.date===date&&x.name===name;}))return fresh;
+    fresh.push({date:date,name:name,by:u?u.name:'Unknown',at:new Date().toISOString()});
+    return fresh;
+  });
+  if(!result.ok){showToast('\u26a0 Could not remove \u2014 check connection and try again',4000);return;}
+  logChange('Removed holiday pay',name+' \u2014 '+(label||'Holiday')+' '+date);
+  refreshMgr();
+  showToast('Holiday pay removed');
+}
+async function restoreHolidayPay(date,name,label){
+  var result=await refreshThenMutateList('ei_holiday_exclusions',function(fresh){
+    return fresh.filter(function(x){return !(x.date===date&&x.name===name);});
+  });
+  if(!result.ok){showToast('\u26a0 Could not restore \u2014 check connection and try again',4000);return;}
+  logChange('Restored holiday pay',name+' \u2014 '+(label||'Holiday')+' '+date);
+  refreshMgr();
+  showToast('Holiday pay restored');
 }
 
 function openMod(id){

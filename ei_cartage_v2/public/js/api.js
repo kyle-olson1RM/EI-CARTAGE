@@ -485,11 +485,23 @@ function isSpareDriver(d){
 function isHolidayBillableDriver(d){
   return !!(d&&d.name&&!d.isAdmin&&d.unit!=='ADMIN'&&!isSpareDriver(d));
 }
+// Holiday pay removals. A manager can remove one unit's holiday pay for one
+// holiday (e.g. the roster wasn't kept current and someone who has left is
+// still listed). Stored as 'ei_holiday_exclusions':
+//   [{date:'YYYY-MM-DD', name:'Driver Name', by, at}]
+// getHolidayCharges() skips these, so every surface (dashboard, summaries,
+// customer view, print/CSV) drops them. Restoring deletes the entry.
+function getHolidayExclusions(){
+  try{ var a=JSON.parse(cacheGet('ei_holiday_exclusions')||'[]'); return Array.isArray(a)?a:[]; }catch(e){ return []; }
+}
 // Holiday charges for the range. from/to may be '' (open-ended): an open
 // start means HOLIDAY_FIRST_YEAR-01-01, an open end means today, so
 // "All Time" style views never bill a holiday that hasn't happened yet.
 // opts.unitFilter(d) -> bool can narrow which roster units are included.
-// Returns [{date,name,dayOfWeek,units:[{name,unit,hours,rate,cost}],hours,cost}]
+// opts.includeRemoved: also keep holidays whose units were all removed, so
+// the manager dashboard can offer Restore.
+// Returns [{date,name,dayOfWeek,units:[{name,unit,hours,rate,cost}],
+//           removed:[{name,unit}],hours,cost}]
 function getHolidayCharges(from,to,opts){
   opts=opts||{};
   var f=from||(HOLIDAY_FIRST_YEAR+'-01-01');
@@ -499,6 +511,8 @@ function getHolidayCharges(from,to,opts){
   var roster=(typeof getDriverRoster==='function')?getDriverRoster():[];
   var units=roster.filter(isHolidayBillableDriver);
   if(opts.unitFilter)units=units.filter(opts.unitFilter);
+  var excl={};
+  getHolidayExclusions().forEach(function(x){excl[x.date+'|'+x.name]=true;});
   return hols.map(function(h){
     // Units that actually worked this day are billed from their manifest.
     var worked={};
@@ -507,17 +521,22 @@ function getHolidayCharges(from,to,opts){
       worked[m.driverName]=true;
       if(m.isSubstitute&&m.subFor)worked[m.subFor]=true;
     });
-    var list=units.filter(function(d){return !worked[d.name];}).map(function(d){
+    var removed=[];
+    var list=units.filter(function(d){
+      if(worked[d.name])return false;
+      if(excl[h.date+'|'+d.name]){removed.push({name:d.name,unit:d.unit});return false;}
+      return true;
+    }).map(function(d){
       var r=rate(d.name);
       return {name:d.name,unit:d.unit,hours:HOLIDAY_HOURS,rate:r,cost:HOLIDAY_HOURS*r};
     });
     var dow=new Date(h.date+'T12:00:00').toLocaleDateString('en-US',{weekday:'long'});
     return {
-      date:h.date,name:h.name,dayOfWeek:dow,units:list,
+      date:h.date,name:h.name,dayOfWeek:dow,units:list,removed:removed,
       hours:list.reduce(function(s,u){return s+u.hours;},0),
       cost:list.reduce(function(s,u){return s+u.cost;},0)
     };
-  }).filter(function(h){return h.units.length>0;});
+  }).filter(function(h){return h.units.length>0||(opts.includeRemoved&&h.removed.length>0);});
 }
 // Short label, e.g. "Labor Day (Mon 9/7)"
 function holidayLabel(h){
